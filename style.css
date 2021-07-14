@@ -19,30 +19,11 @@ footer {
   padding: 24px 10vw;
 }
 
-header {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  align-items: center;
-}
-
-nav {
-  display: flex;
-  gap: 88px;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: 18px;
-}
-
-nav a {
-  text-decoration: none;
-  color: #000000;
-}
-
 
 .mainLeft {
   display: grid;
   width: 50%;
-  height: 30%;
+  height: 40%;
   align-content: center;
   row-gap: 36px;
   transform: translateY(-10%);
@@ -50,7 +31,7 @@ nav a {
 
 .mainLeft h1 {
   font-size: 64px;
-  text-shadow: -6px 6px #fcb671;
+  text-shadow: -10px 6px #fcb671;
 }
 
 .mainLeft p {
