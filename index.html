@@ -7,7 +7,33 @@
     <title>水神崛起的个人主页</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="shortcut icon" href="logo.jpg" />
+    <script type="text/javascript" charset="utf-8" async="" src="https://cdn.jsdelivr.net/npm/live2d-widget@3.0.4/lib/L2Dwidget.min.js"></script> 
 </head>
+<!-- 右下角live2d效果 -->
+<script type="text/javascript">
+  setTimeout(() => {
+          L2Dwidget.init({
+                  "model": {
+                          "scale": 0.5
+                  },
+                  "display": {
+                          "position": "right",
+                          "width": 180,
+                          "height": 260,
+                          "hOffset": 0,
+                          "vOffset": -20
+                  },
+                  "mobile": {
+                          "show": true,
+                          "scale": 0.5
+                  },
+                  "react": {
+                          "opacityDefault": 0.7,
+                          "opacityOnHover": 0.2
+                  }
+          });
+  }, 1000)
+</script>
 <body>
   <div class="container">
     <header>
@@ -22,7 +48,7 @@
         </p>
       </div>
       <h1>我的项目</h1>
-      <a href="https://github.com/TBssjq/Demo/tree/master/ShootingGame">射击游戏</a><
+      <a href="https://github.com/TBssjq/Demo/tree/master/ShootingGame">射击游戏</a>
       <a href="https://github.com/TBssjq/Demo/tree/master/pvz2Strategy">pvz2Strategy</a>
     </main>
     <footer>
