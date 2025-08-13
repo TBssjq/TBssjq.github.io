@@ -1,0 +1,222 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Helvetica, "PingFang SC", sans-serif;
+}
+
+/* 新增通用按钮样式 */
+.project-btn {
+  background: #1E90FF;
+  color: #fff;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s;
+}
+.project-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* 统一图标尺寸 */
+.socialMedia img {
+  width: 32px;
+  height: 32px;
+}
+
+.container {
+  width: 100vw;
+  max-width: 100%;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 120px 1fr 120px;
+}
+
+
+header,
+main,
+footer {
+  padding: 24px 10vw;
+}
+
+/* CSS部分 */
+.love-text {
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; /* 通用无衬线字体，更亲切 */
+  font-size: 2.2rem; /* 根据需求调整大小 */
+  font-weight: 600; /* 中等字重，兼顾清晰与柔和 */
+  color: #ffffff; /* 文字主色（假设背景较深） */
+  line-height: 1.6; /* 行高更宽松 */
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* 文字基础阴影，增强立体感 */
+  position: relative; /* 为爱心定位做准备 */
+  display: inline-block; /* 确保包裹性 */
+}
+
+/* 核心：美化后的爱心样式 */
+.heart {
+  /* 基础形状 */
+  display: inline-block;
+  width: 1.2em; /* 与文字等宽，保持比例 */
+  height: 1.2em;
+  margin: 0 0.3em; /* 爱心与文字的间距 */
+  position: relative;
+  vertical-align: middle; /* 垂直居中对齐文字 */
+  
+  /* 爱心图形（通过CSS绘制） */
+  background: linear-gradient(45deg, #ff6b9d, #ff8eb4); /* 粉色渐变 */
+  clip-path: path("M0.5 1.2C0.5 1.2 0 0.7 0 0.3C0 -0.1 0.3 -0.3 0.5 -0.3C0.7 -0.3 1 -0.1 1 0.3C1 0.7 0.5 1.2 0.5 1.2Z"); /* 爱心路径 */
+  transform: scale(0.9); /* 初始缩放，配合动画 */
+  
+  /* 动态效果 */
+  animation: heart-beat 1.2s ease-in-out infinite; /* 心跳动画 */
+  filter: drop-shadow(0 2px 4px rgba(255, 107, 157, 0.3)); /* 爱心投影，增强立体感 */
+}
+
+/* 关键帧：心跳动画 */
+@keyframes heart-beat {
+  0%, 100% {
+    transform: scale(0.9) translateY(0);
+    background: linear-gradient(45deg, #ff6b9d, #ff8eb4); /* 初始颜色 */
+  }
+  25% {
+    transform: scale(1.05) translateY(-2px); /* 向上轻微跳动 */
+    background: linear-gradient(45deg, #ff8eb4, #ffa1c8); /* 颜色渐变 */
+  }
+  50% {
+    transform: scale(0.95) translateY(0); /* 回到中间位置 */
+    background: linear-gradient(45deg, #ffa1c8, #ffc2dc); /* 更浅的渐变 */
+  }
+  75% {
+    transform: scale(1.02) translateY(-1px); /* 第二次小幅度跳动 */
+    background: linear-gradient(45deg, #ffc2dc, #ffe3f0); /* 接近白色的渐变 */
+  }
+}
+
+/* 响应式调整（小屏幕下缩小爱心） */
+@media (max-width: 768px) {
+  .love-text {
+    font-size: 1.8rem;
+  }
+  .heart {
+    width: 1.1em;
+    height: 1.1em;
+    margin: 0 0.2em;
+  }
+}
+.heart::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: heart-glow 1.2s ease-in-out infinite;
+}
+
+/* 新增文字样式 */
+.intro {
+  font-family: 'Montserrat', sans-serif; /* 更换为现代无衬线字体 */
+  font-weight: 800; /* 加强字重 */
+  letter-spacing: 0.5px; /* 微调字符间距 */
+  line-height: 1.4; /* 优化行高 */
+  color: rgba(255,255,255,0.9); /* 提高文字透明度对比 */
+  text-shadow: 0 0 5px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2); /* 双层阴影增强立体感 */
+  animation: text-glow 2s ease-in-out infinite alternate; /* 添加发光动画 */
+}
+/* 新增关键帧动画 */
+@keyframes text-glow {
+  from {
+    text-shadow: 0 0 5px rgba(255,192,77,0.8),
+                 0 0 10px rgba(255,192,77,0.6),
+                 0 0 15px rgba(255,192,77,0.4);
+  }
+  to {
+    text-shadow: 0 0 10px rgba(255,192,77,1),
+                 0 0 20px rgba(255,192,77,0.8),
+                 0 0 30px rgba(255,192,77,0.6);
+  }
+}
+.intro-enhanced {
+  position: relative;
+  display: inline-block;
+}
+.intro-enhanced::after {
+  content: "";
+  position: absolute;
+  top: 120%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, 
+    rgba(255,192,77,0) 0%,
+    rgba(255,192,77,1) 50%,
+    rgba(255,192,77,0) 100%);
+  animation: shine 2s ease-in-out infinite;
+}
+@keyframes shine {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+body {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    135deg,
+    hsl(170deg, 80%, 70%),
+    hsl(190deg, 80%, 70%),
+    hsl(250deg, 80%, 70%),
+    hsl(320deg, 80%, 70%)
+  );
+  background-size: 200% 200%;
+  animation: gradient-move 15s ease alternate infinite;
+}
+
+@keyframes gradient-move {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+
+.mainLeft {
+  display: grid;
+  width: 50%;
+  height: 40%;
+  align-content: center;
+  row-gap: 36px;
+  transform: translateY(-10%);
+}
+
+.mainLeft h1 {
+  font-size: 64px;
+  text-shadow: -10px 6px #fcb671;
+}
+
+.mainLeft p {
+  font-weight: 300;
+  text-align: justify;
+}
+
+.mainLeft button {
+  background: #fcb671;
+  box-shadow: -4px 6px #000000;
+}
+
+footer {
+  padding-top: 32px;
+}
+
+.socialMedia {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+}

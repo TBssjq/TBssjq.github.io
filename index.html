@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CH">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水神崛起的个人主页</title>
+    <style>
+      /* 加载遮罩层 */
+      .loader-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999; /* 确保在最上层 */
+          transition: opacity 0.3s ease-out; /* 隐藏时的淡出效果 */
+      }
+
+      /* 加载动画核心元素 */
+      .loader {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          position: relative;
+          animation: rotate 1.2s linear infinite; /* 旋转动画 */
+      }
+
+      /* 圆环的渐变边框 */
+      .loader::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          border: 4px solid transparent;
+          border-top-color: #3498db; /* 蓝色 */
+          border-right-color: #2ecc71; /* 绿色 */
+          border-bottom-color: #e74c3c; /* 红色 */
+          border-left-color: #f1c40f; /* 黄色 */
+          animation: gradient 2s linear infinite; /* 渐变颜色流动 */
+      }
+
+      /* 旋转动画关键帧 */
+      @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+      }
+
+      /* 边框颜色流动动画 */
+      @keyframes gradient {
+          0% { filter: hue-rotate(0deg); } /* 初始色调 */
+          100% { filter: hue-rotate(360deg); } /* 360度色调循环 */
+      }
+
+      /* 页面内容（示例） */
+      .content {
+          padding: 20px;
+          text-align: center;
+          margin-top: 50px;
+      }
+  </style>
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" charset="utf-8" async="" src="https://cdn.jsdelivr.net/npm/live2d-widget@3.0.4/lib/L2Dwidget.min.js"></script> 
+</head>
+
+
+<!-- 右下角live2d效果 -->
+<script type="text/javascript">
+  setTimeout(() => {
+          L2Dwidget.init({
+                  "model": {
+                          "scale": 0.5
+                  },
+                  "display": {
+                          "position": "right",
+                          "width": 180,
+                          "height": 260,
+                          "hOffset": 0,
+                          "vOffset": -20
+                  },
+                  "mobile": {
+                          "show": true,
+                          "scale": 0.5
+                  },
+                  "react": {
+                          "opacityDefault": 0.7,
+                          "opacityOnHover": 0.2
+                  }
+          });
+  }, 1000)
+</script>
+<body>
+  <div class="container">
+    <header>
+      <iframe frameborder="yes" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1893256776&auto=1&height=66"></iframe>
+    </header>
+    <main>
+       <!-- 加载动画遮罩 -->
+    <div class="loader-overlay" id="loaderOverlay">
+      <div class="loader"></div>
+  </div>
+
+  <!-- 页面内容（加载完成后显示）
+  <div class="content" id="pageContent" style="display: none;">
+      <h1>页面加载完成！</h1>
+      <p>这是页面的主要内容区域。</p>
+  </div> -->
+
+  <script>
+      // 页面所有资源加载完成后隐藏加载动画
+      window.addEventListener('load', function() {
+          const loaderOverlay = document.getElementById('loaderOverlay');
+          const pageContent = document.getElementById('pageContent');
+          
+          // 延迟 500ms 隐藏（可选，让动画完成一个周期）
+          setTimeout(() => {
+              loaderOverlay.style.opacity = '0';
+              setTimeout(() => {
+                  loaderOverlay.style.display = 'none';
+                  pageContent.style.display = 'block';
+              }, 300); // 匹配淡出过渡时间
+          }, 500);
+      });
+  </script>
+      <br><br><br>
+      <div class="mainLeft">
+        <h1>你好！我是水神崛起</h1>
+        <!-- 在mainLeft容器内添加 -->
+        <p class="intro intro-enhanced">
+          前端开发者 | 游戏爱好者 | 动态视觉魔法师
+        </p>
+        <p class="love-text">
+          <span class="hert">❤❤❤</span>
+        </p>
+      </div>
+      <h1>我的项目</h1>
+      <a href="https://github.com/TBssjq/Demo/tree/master/ShootingGame">
+        <button class="project-btn">射击游戏</button>
+      </a>
+      <a href="https://github.com/TBssjq/Demo/tree/master/pvz2Strategy">
+        <button class="project-btn">pvz2策略版</button>
+      </a>
+    </main>
+    <footer>
+      <div class="socialMedia">
+        <!-- <a href="src/wechatID.jpg"><img src="src/wechat.svg" alt="wechat" /></a> -->
+        <a href="https://github.com/TBssjq"><img src="src/github.svg" alt="github" /></a>
+        <a href="mailto:653294795@qq.com?subject=你好！&body=你好！" rel="nofollow"><img src="src/email.svg" alt="email" /></a>
+        <a href="https://space.bilibili.com/439038862"><img src="src/bilibili.svg" alt="bilibili" /></a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
