@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#ff6b6b',
+                        accent: '#f97316',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+            --success: #22c55e;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        .dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        
+        /* Header Styles */
+        header {
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        header:hover {
+            backdrop-filter: blur(12px);
+        }
+        
+        /* Article Container */
+        .article-container {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Title Styles */
+        article h1 {
+            background: linear-gradient(135deg, var(--accent), #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+        
+        article h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            border-radius: 2px;
+        }
+        
+        /* Article Content */
+        .article-content {
+            line-height: 1.85;
+            color: var(--text-secondary);
+        }
+        
+        .article-content p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+            text-indent: 2em;
+        }
+        
+        .article-content p:first-of-type::first-letter {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--accent);
+            float: left;
+            line-height: 1;
+            margin-right: 0.1em;
+            margin-top: 0.1em;
+        }
+        
+        .article-content h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 2.5rem 0 1.25rem;
+            color: var(--text-primary);
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .article-content h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 1.2em;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        .article-content h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+        
+        .article-content ul, .article-content ol {
+            margin: 1.25rem 0;
+            padding-left: 2rem;
+        }
+        
+        .article-content li {
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+        
+        .article-content ul li::marker {
+            color: var(--accent);
+            font-size: 1.1em;
+        }
+        
+        .article-content ol li::marker {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* Blockquote */
+        .article-content blockquote {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(249, 115, 22, 0.03));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+            font-style: italic;
+            color: var(--text-secondary);
+            position: relative;
+        }
+        
+        .article-content blockquote::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            font-size: 4rem;
+            color: rgba(249, 115, 22, 0.15);
+            font-family: Georgia, serif;
+        }
+        
+        /* Code Blocks */
+        .article-content pre {
+            background: linear-gradient(135deg, #1e1e2e, #1a1a2e);
+            color: #cdd6f4;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 2rem 0;
+            font-size: 0.875rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        
+        .article-content code {
+            background: rgba(249, 115, 22, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: var(--accent);
+            font-family: 'Fira Code', 'JetBrains Mono', monospace;
+        }
+        
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        
+        /* Code Copy Button */
+        .code-block {
+            position: relative;
+        }
+        
+        .copy-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Next Article Button */
+        .next-article {
+            background: linear-gradient(135deg, var(--accent), #fb923c);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .next-article:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Dark Mode Adjustments */
+        .dark .article-content blockquote {
+            background: rgba(249, 115, 22, 0.05);
+        }
+        
+        .dark .article-content code {
+            background: rgba(249, 115, 22, 0.15);
+        }
+        
+        /* Responsive Typography */
+        @media (max-width: 768px) {
+            article h1 {
+                font-size: 1.8rem;
+            }
+            
+            .article-content h2 {
+                font-size: 1.35rem;
+            }
+            
+            .article-content h3 {
+                font-size: 1.15rem;
+            }
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition-property: background-color, border-color, color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 h-16 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md z-40">
+        <div class="h-full flex items-center justify-between px-6">
+            <!-- Logo -->
+            <a href="#" class="text-xl font-bold text-gray-900 dark:text-white">My Blog</a>
+            
+            <!-- Right: Theme Toggle -->
+            <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-16">
+        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
+            <article>
+                <h1 class="text-3xl lg:text-4xl font-bold text-center mb-8">标题</h1>
+
+                <!-- Article Content -->
+                <div class="article-container article-content text-gray-700 dark:text-gray-300">
+                    <h2>标题示例 H2</h2>
+                    <p>这是正文段落示例。极简主义排版，舒适阅读体验，支持多种Markdown元素渲染。</p>
+
+                    <h3>列表示例</h3>
+                    <ul>
+                        <li>无序列表项 1</li>
+                        <li>无序列表项 2</li>
+                    </ul>
+
+                    <ol>
+                        <li>有序列表项 1</li>
+                        <li>有序列表项 2</li>
+                    </ol>
+
+                    <blockquote>
+                        <p>引用块示例 - 带左侧边框强调</p>
+                    </blockquote>
+
+                    <h3>代码块示例</h3>
+                    <div class="code-block relative group">
+                        <button class="copy-btn absolute top-3 right-3 p-2 rounded-lg bg-gray-700/80 hover:bg-gray-600 text-gray-200 opacity-0 group-hover:opacity-100 transition-all" onclick="copyCode(this)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>// 代码块示例
+function example() {
+    console.log("Hello World");
+}</code></pre>
+                    </div>
+
+                    <p><em>斜体</em> 和 <strong>粗体</strong> 示例</p>
+                </div>
+
+                <!-- Next Article -->
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <a href="#" class="next-article inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium transition-all">
+                        <span>目录</span>
+                        <span class="font-semibold">Go!</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <script>
+        // Dark Mode Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check saved theme
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Copy Code Function
+        function copyCode(btn) {
+            const code = btn.parentElement.querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                btn.style.opacity = '1';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

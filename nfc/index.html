@@ -1,120 +1,247 @@
-<!DOCTYPE html>  
-<html>  
-<head>  
-    <title>水神崛起</title>  
-    <style>  
-        body {  
-            font-family: Arial, sans-serif;  
-            background-color: #f2f2f2;  
-            margin: 0;  
-            padding: 0;  
-            background-color: cornflowerblue;
-            }
-  
-        header {  
-            text-align: center;  
-            padding: 20px 0;  
-            font-size: 36px;  
-            font-weight: bold;  
-            background-color: #333;  
-            color: #fff;  
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水神崛起</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        div{
-            .qq{
-                text-align: center;
-                color: black;
-            }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #6dd5ed 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
         }
-        .square{
-            position: relative;
-            width: 400px;
-            height: 400px;
+
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header h1 {
+            font-size: 42px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(109, 213, 237, 0.8);
+            margin-bottom: 10px;
+            letter-spacing: 8px;
+        }
+
+        .time_box {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+
+        .container {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            }
-            .square span:nth-child(1) {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                border: 2px solid #fff;
-                background: rgba(0,0,255,0.8);
-                border-radius: 36% 62% 63% 37% / 41% 44% 56% 59%;
-                transition: 0.5s;
-                animation: animate 6s linear infinite;
-            }
+            padding: 40px 20px;
+            width: 100%;
+        }
 
-            /* .square span:nth-child(2) {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                border: 2px solid #fff;
-                background: rgba(0,0,255,0.8);
-                border-radius: 36% 62% 63% 37% / 41% 44% 56% 59%;
-                transition: 0.5s;
-                animation: animate 4s linear infinite;
+        .card {
+            position: relative;
+            width: 380px;
+            height: 380px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .blob {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            background: rgba(0, 100, 255, 0.25);
+            border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%;
+            animation: morph 8s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 150, 255, 0.3), inset 0 0 40px rgba(0, 200, 255, 0.1);
+        }
+
+        .blob:nth-child(2) {
+            animation-delay: -2s;
+            background: rgba(0, 150, 255, 0.15);
+            border-radius: 60% 40% 35% 65% / 50% 55% 45% 50%;
+        }
+
+        .blob:nth-child(3) {
+            animation-delay: -4s;
+            background: rgba(100, 200, 255, 0.1);
+            border-radius: 35% 65% 50% 50% / 60% 40% 60% 40%;
+        }
+
+        @keyframes morph {
+            0%, 100% {
+                border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%;
+                transform: rotate(0deg) scale(1);
             }
-            .square span:nth-child(3) {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                border: 2px solid #fff;
-                background: rgba(0,0,255,0.8);
-                border-radius: 36% 62% 63% 37% / 41% 44% 56% 59%;
-                transition: 0.5s;
-                animation: animate2 10s linear infinite;
-            } */
-        @keyframes animate {
-            0%{
-                transform: rotate(0deg);
+            25% {
+                border-radius: 65% 35% 40% 60% / 55% 45% 50% 50%;
+                transform: rotate(90deg) scale(1.05);
             }
-            100%{
-                transform: rotate(360deg);
+            50% {
+                border-radius: 35% 65% 50% 50% / 50% 60% 40% 60%;
+                transform: rotate(180deg) scale(1);
+            }
+            75% {
+                border-radius: 50% 50% 35% 65% / 45% 55% 60% 40%;
+                transform: rotate(270deg) scale(1.05);
             }
         }
-        @keyframes animate2 {
-            0%{
-                transform: rotate(360deg);
+
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: #fff;
+        }
+
+        .content h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            letter-spacing: 4px;
+        }
+
+        .qq-info {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .qq-info:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 150, 255, 0.4);
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
             }
-            100%{
-                transform: rotate(0deg);
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(720deg);
+                opacity: 0;
             }
         }
-    </style>  
+
+        footer {
+            padding: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <header>
+        <h1>水神崛起</h1>
+        <div class="time_box"></div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="blob"></div>
+            <div class="blob"></div>
+            <div class="blob"></div>
+            <div class="content">
+                <h2>联系QQ</h2>
+                <div class="qq-info">653294795</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>水神崛起 &copy; 版权所有</p>
+    </footer>
+
     <script>
         function getTime() {
-            var date = new Date();
-            var year = date.getFullYear(); //获取年份
-            var month = date.getMonth() + 1; //获取月份
-            var day = date.getDate(); //获取日期
-            var hour = date.getHours(); //获取小时
-            hour = hour < 10 ? '0' + hour : hour;
-            var minute = date.getMinutes(); // 获取分
-            minute = minute < 10 ? '0' + minute : minute;
-            var seconds = date.getSeconds(); //获取秒
-            seconds = seconds < 10 ? '0' + seconds : seconds;
-            return year + '年' + month + '月' + day + '日&nbsp;' + hour + ':' + minute + ':' + seconds;
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hour = String(date.getHours()).padStart(2, '0');
+            const minute = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}年${month}月${day}日 ${hour}:${minute}:${seconds}`;
         }
-        setInterval(function() {
-            document.querySelector('.time_box').innerHTML = getTime();
-        }, 1000)
+
+        function updateTime() {
+            document.querySelector('.time_box').textContent = getTime();
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 生成背景粒子
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+            particle.style.width = particle.style.height = (2 + Math.random() * 4) + 'px';
+            particlesContainer.appendChild(particle);
+        }
     </script>
-</head>  
-<body>  
-    <header>水神崛起
-        <div class="time_box" >
-        </div>
-    </header>  
-    <div class="square">
-        <span></span>
-    <div class="qq"><h3 class="qq">qq:653294795</h3></div>
-    </div>
-</body>  
+</body>
 </html>

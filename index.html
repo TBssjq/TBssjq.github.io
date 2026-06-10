@@ -43,14 +43,14 @@
                 </p>
             </div>
             <!-- <h2 class="animate-fade-in-top">我的项目</h2> -->
-            <div class="projects">
-                <a href="https://github.com/TBssjq/Demo/tree/master/ShootingGame" class="draggable-item">
-                    <button class="project-btn animate-fade-in-left">射击游戏</button>
+            <!-- <div class="projects">
+                <a href="" class="draggable-item">
+                    <button class="project-btn animate-fade-in-left">Button1</button>
                 </a>
-                <a href="https://github.com/TBssjq/Demo/tree/master/pvz2Strategy" class="draggable-item">
-                    <button class="project-btn animate-fade-in-left">pvz2Strategy</button>
+                <a href="" class="draggable-item">
+                    <button class="project-btn animate-fade-in-left">Button2</button>
                 </a>
-            </div>
+            </div> -->
             <!-- 联系方式部分移到main中 -->
             <div class="contact-section animate-fade-in-bottom">
                 <h3>联系我</h3>
@@ -83,10 +83,45 @@
     </div>
     <!-- 樱花飘落效果 -->
     <canvas id="sakuraCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998;"></canvas>
-    <!-- 右下角live2d效果 -->
+    <!-- 博客目录弹窗 -->
+    <div id="blogModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div class="modal-body">
+                <h2 class="modal-title">我的博客</h2>
+                <p class="modal-desc">欢迎访问我的个人随笔空间</p>
+            </div>
+            <button class="modal-go-btn" onclick="goToBlog()">
+                <span>Go!</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
     <script>
+        // 弹窗控制
+        function showModal() {
+            document.getElementById('blogModal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('blogModal').classList.remove('show');
+        }
+        
+        function goToBlog() {
+            window.location.href = 'doc/index.html';
+        }
+
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function() {
+            // 显示弹窗
+            setTimeout(showModal, 2000);
+            
             // 初始化所有功能
             initLoadingScreen();
             initLive2D();
@@ -562,8 +597,8 @@
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
                     size: Math.random() * 8 + 4,
-                    speedX: Math.random() * 2 - 1,
-                    speedY: Math.random() * 3 + 1,
+                    speedX: Math.random() * 0.8 - 0.4,
+                    speedY: Math.random() * 1 + 0.3,
                     opacity: Math.random() * 0.8 + 0.2,
                     rotation: Math.random() * Math.PI * 2,
                     rotationSpeed: Math.random() * 0.02 - 0.01
