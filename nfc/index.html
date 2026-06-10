@@ -4,50 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>水神崛起</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --font-display: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+            --font-body: 'Noto Serif SC', 'PingFang SC', sans-serif;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #6dd5ed 100%);
+            font-family: var(--font-body);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(162, 155, 254, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(129, 236, 236, 0.3) 0%, transparent 50%),
+                linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+            color: #fff;
         }
 
+        /* ── Header ── */
         header {
-            text-align: center;
-            padding: 30px 20px;
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            padding: 36px 20px 28px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         header h1 {
-            font-size: 42px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(109, 213, 237, 0.8);
-            margin-bottom: 10px;
-            letter-spacing: 8px;
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 5vw, 2.6rem);
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 0 30px rgba(129, 236, 236, 0.3);
         }
 
-        .time_box {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.9);
+        .clock {
             font-family: 'Courier New', monospace;
-            letter-spacing: 2px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.15em;
             margin-top: 10px;
         }
 
-        .container {
+        /* ── Main Card ── */
+        .stage {
             flex: 1;
             display: flex;
             justify-content: center;
@@ -58,133 +70,110 @@
 
         .card {
             position: relative;
-            width: 380px;
-            height: 380px;
+            width: min(380px, 85vw);
+            height: min(380px, 85vw);
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
         }
 
         .blob {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            background: rgba(0, 100, 255, 0.25);
+            inset: 0;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(100, 200, 255, 0.08);
             border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%;
-            animation: morph 8s ease-in-out infinite;
-            box-shadow: 0 0 40px rgba(0, 150, 255, 0.3), inset 0 0 40px rgba(0, 200, 255, 0.1);
+            animation: morph 10s ease-in-out infinite;
+            box-shadow: 0 0 60px rgba(100, 200, 255, 0.08), inset 0 0 60px rgba(100, 200, 255, 0.04);
         }
 
         .blob:nth-child(2) {
-            animation-delay: -2s;
-            background: rgba(0, 150, 255, 0.15);
+            animation-delay: -3s;
+            background: rgba(162, 155, 254, 0.06);
             border-radius: 60% 40% 35% 65% / 50% 55% 45% 50%;
         }
 
         .blob:nth-child(3) {
-            animation-delay: -4s;
-            background: rgba(100, 200, 255, 0.1);
+            animation-delay: -6s;
+            background: rgba(129, 236, 236, 0.05);
             border-radius: 35% 65% 50% 50% / 60% 40% 60% 40%;
         }
 
         @keyframes morph {
-            0%, 100% {
-                border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%;
-                transform: rotate(0deg) scale(1);
-            }
-            25% {
-                border-radius: 65% 35% 40% 60% / 55% 45% 50% 50%;
-                transform: rotate(90deg) scale(1.05);
-            }
-            50% {
-                border-radius: 35% 65% 50% 50% / 50% 60% 40% 60%;
-                transform: rotate(180deg) scale(1);
-            }
-            75% {
-                border-radius: 50% 50% 35% 65% / 45% 55% 60% 40%;
-                transform: rotate(270deg) scale(1.05);
-            }
+            0%, 100% { border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%; transform: rotate(0deg) scale(1); }
+            25%      { border-radius: 65% 35% 40% 60% / 55% 45% 50% 50%; transform: rotate(90deg) scale(1.04); }
+            50%      { border-radius: 35% 65% 50% 50% / 50% 60% 40% 60%; transform: rotate(180deg) scale(1); }
+            75%      { border-radius: 50% 50% 35% 65% / 45% 55% 60% 40%; transform: rotate(270deg) scale(1.04); }
         }
 
-        .content {
+        .card-content {
             position: relative;
             z-index: 10;
             text-align: center;
-            color: #fff;
         }
 
-        .content h2 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            letter-spacing: 4px;
+        .card-content h2 {
+            font-family: var(--font-body);
+            font-size: 1.2rem;
+            font-weight: 400;
+            letter-spacing: 0.25em;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
         }
 
-        .qq-info {
+        .qq-badge {
             display: inline-block;
-            padding: 12px 30px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
+            padding: 14px 36px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 40px;
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.9);
             cursor: pointer;
+            transition: all 0.4s var(--ease-spring);
         }
 
-        .qq-info:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 150, 255, 0.4);
+        .qq-badge:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(100, 200, 255, 0.15);
         }
 
+        /* ── Particles ── */
         .particles {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             pointer-events: none;
             z-index: 0;
         }
 
-        .particle {
+        .dot {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.6);
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.4);
             border-radius: 50%;
-            animation: float 15s infinite;
+            animation: rise 18s infinite;
         }
 
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-10vh) rotate(720deg);
-                opacity: 0;
-            }
+        @keyframes rise {
+            0%, 100% { transform: translateY(100vh); opacity: 0; }
+            8%       { opacity: 1; }
+            92%      { opacity: 1; }
+            100%     { transform: translateY(-10vh); opacity: 0; }
         }
 
+        /* ── Footer ── */
         footer {
             padding: 20px;
             text-align: center;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 14px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.1em;
         }
     </style>
 </head>
@@ -193,54 +182,45 @@
 
     <header>
         <h1>水神崛起</h1>
-        <div class="time_box"></div>
+        <div class="clock" id="clock"></div>
     </header>
 
-    <div class="container">
+    <div class="stage">
         <div class="card">
             <div class="blob"></div>
             <div class="blob"></div>
             <div class="blob"></div>
-            <div class="content">
+            <div class="card-content">
                 <h2>联系QQ</h2>
-                <div class="qq-info">653294795</div>
+                <div class="qq-badge">653294795</div>
             </div>
         </div>
     </div>
 
-    <footer>
-        <p>水神崛起 &copy; 版权所有</p>
-    </footer>
+    <footer>水神崛起 &copy; 版权所有</footer>
 
     <script>
-        function getTime() {
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hour = String(date.getHours()).padStart(2, '0');
-            const minute = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-            return `${year}年${month}月${day}日 ${hour}:${minute}:${seconds}`;
+        /* ── Clock ── */
+        const pad = n => String(n).padStart(2, '0');
+        function tick() {
+            const d = new Date();
+            document.getElementById('clock').textContent =
+                `${d.getFullYear()}年${pad(d.getMonth() + 1)}月${pad(d.getDate())}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
         }
+        tick();
+        setInterval(tick, 1000);
 
-        function updateTime() {
-            document.querySelector('.time_box').textContent = getTime();
-        }
-
-        setInterval(updateTime, 1000);
-        updateTime();
-
-        // 生成背景粒子
-        const particlesContainer = document.getElementById('particles');
-        for (let i = 0; i < 50; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 15 + 's';
-            particle.style.animationDuration = (10 + Math.random() * 10) + 's';
-            particle.style.width = particle.style.height = (2 + Math.random() * 4) + 'px';
-            particlesContainer.appendChild(particle);
+        /* ── Particles ── */
+        const box = document.getElementById('particles');
+        for (let i = 0; i < 40; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.left = Math.random() * 100 + '%';
+            dot.style.animationDelay = Math.random() * 18 + 's';
+            dot.style.animationDuration = (12 + Math.random() * 10) + 's';
+            const s = 2 + Math.random() * 3;
+            dot.style.width = dot.style.height = s + 'px';
+            box.appendChild(dot);
         }
     </script>
 </body>

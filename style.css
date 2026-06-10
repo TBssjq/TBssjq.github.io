@@ -1,891 +1,453 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: Helvetica, "PingFang SC", sans-serif;
+/* ═══════════════════════════════════════════
+   水神崛起 · 个人主页
+   Design System — Wabi-Sabi meets Digital Craft
+   ═══════════════════════════════════════════ */
+
+/* ── Design Tokens ── */
+:root {
+    --font-display: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+    --font-body: 'Noto Serif SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+
+    --color-bg:        hsl(210, 60%, 92%);
+    --color-surface:   rgba(255, 255, 255, 0.12);
+    --color-text:      #2d3436;
+    --color-text-soft: rgba(255, 255, 255, 0.92);
+    --color-accent:    #5b9bd5;
+    --color-shadow:    #7ec8e3;
+    --color-sakura:    #a8d8ea;
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 载入页面样式 */
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(
-    135deg,
-    hsl(170deg, 80%, 70%),
-    hsl(190deg, 80%, 70%),
-    hsl(250deg, 80%, 70%),
-    hsl(320deg, 80%, 70%)
-  );
-  background-size: 200% 200%;
-  animation: gradient-move 15s ease alternate infinite;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  transition: opacity 2s ease-out;
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.loading-text {
-  font-size: 3rem;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  animation: fadeInOut 3s ease-in-out forwards;
+/* ── Body & Background ── */
+body {
+    width: 100vw;
+    min-height: 100vh;
+    font-family: var(--font-body);
+    color: var(--color-text-soft);
+    overflow-x: hidden;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(100, 180, 255, 0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(130, 160, 255, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(160, 220, 255, 0.25) 0%, transparent 50%),
+        linear-gradient(135deg,
+            hsl(195, 60%, 72%),
+            hsl(210, 60%, 72%),
+            hsl(230, 50%, 72%),
+            hsl(250, 50%, 72%)
+        );
+    background-size: 100% 100%, 100% 100%, 100% 100%, 300% 300%;
+    animation: bgShift 20s ease-in-out infinite alternate;
 }
 
-@keyframes fadeInOut {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  30% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  70% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.2);
-  }
+@keyframes bgShift {
+    0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 50%; }
+    100% { background-position: 100% 100%, 0% 100%, 50% 0%, 100% 50%; }
 }
 
-.loading-screen.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* 新增通用按钮样式 */
-.project-btn {
-  background: #1E90FF;
-  color: #fff;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.3s ease;
-  transform-style: preserve-3d;
-  perspective: 1000px;
-  position: relative;
-}
-
-.project-btn:hover {
-  transform: translateY(-2px) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
-  box-shadow: 
-    calc(var(--rotateY, 0deg) * 0.5) calc(var(--rotateX, 0deg) * -0.5) 20px rgba(0,0,0,0.3);
-}
-
-/* 统一图标尺寸 */
-.socialMedia img {
-  width: 32px;
-  height: 32px;
-}
-
+/* ── Layout ── */
 .container {
-  width: 100vw;
-  max-width: 100%;
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+    width: 100%;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
 }
-
 
 header {
-  padding: 20px 10vw;
+    padding: 24px clamp(16px, 8vw, 120px);
 }
 
 main {
-  padding: 20px 10vw 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    padding: 20px clamp(16px, 8vw, 120px) 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-footer {
-  padding: 20px 10vw;
+footer { padding: 20px clamp(16px, 8vw, 120px); }
+
+/* ── Loading Screen ── */
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    background:
+        radial-gradient(ellipse at 30% 40%, rgba(100, 180, 255, 0.5) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 60%, rgba(130, 160, 255, 0.4) 0%, transparent 60%),
+        linear-gradient(135deg, hsl(195, 60%, 72%), hsl(230, 50%, 72%));
+    transition: opacity 2s var(--ease-out-expo);
 }
 
-/* CSS部分 */
-.love-text {
-  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; /* 通用无衬线字体，更亲切 */
-  font-size: 2.2rem; /* 根据需求调整大小 */
-  font-weight: 600; /* 中等字重，兼顾清晰与柔和 */
-  color: #ffffff; /* 文字主色（假设背景较深） */
-  line-height: 1.6; /* 行高更宽松 */
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* 文字基础阴影，增强立体感 */
-  position: relative; /* 为爱心定位做准备 */
-  display: inline-block; /* 确保包裹性 */
+.loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* 核心：美化后的爱心样式 */
-.heart {
-  /* 基础形状 */
-  display: inline-block;
-  width: 1.2em; /* 与文字等宽，保持比例 */
-  height: 1.2em;
-  margin: 0 0.3em; /* 爱心与文字的间距 */
-  position: relative;
-  vertical-align: middle; /* 垂直居中对齐文字 */
-  
-  /* 爱心图形（通过CSS绘制） */
-  background: linear-gradient(45deg, #ff6b9d, #ff8eb4); /* 粉色渐变 */
-  clip-path: path("M0.5 1.2C0.5 1.2 0 0.7 0 0.3C0 -0.1 0.3 -0.3 0.5 -0.3C0.7 -0.3 1 -0.1 1 0.3C1 0.7 0.5 1.2 0.5 1.2Z"); /* 爱心路径 */
-  transform: scale(0.9); /* 初始缩放，配合动画 */
-  
-  /* 动态效果 */
-  animation: heart-beat 1.2s ease-in-out infinite; /* 心跳动画 */
-  filter: drop-shadow(0 2px 4px rgba(255, 107, 157, 0.3)); /* 爱心投影，增强立体感 */
+.loading-text {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 5vw, 3rem);
+    color: #fff;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: loadPulse 3s ease-in-out forwards;
 }
 
-/* 关键帧：心跳动画 */
-@keyframes heart-beat {
-  0%, 100% {
-    transform: scale(0.9) translateY(0);
-    background: linear-gradient(45deg, #ff6b9d, #ff8eb4); /* 初始颜色 */
-  }
-  25% {
-    transform: scale(1.05) translateY(-2px); /* 向上轻微跳动 */
-    background: linear-gradient(45deg, #ff8eb4, #ffa1c8); /* 颜色渐变 */
-  }
-  50% {
-    transform: scale(0.95) translateY(0); /* 回到中间位置 */
-    background: linear-gradient(45deg, #ffa1c8, #ffc2dc); /* 更浅的渐变 */
-  }
-  75% {
-    transform: scale(1.02) translateY(-1px); /* 第二次小幅度跳动 */
-    background: linear-gradient(45deg, #ffc2dc, #ffe3f0); /* 接近白色的渐变 */
-  }
+@keyframes loadPulse {
+    0%   { opacity: 0; transform: scale(0.85); filter: blur(8px); }
+    25%  { opacity: 1; transform: scale(1); filter: blur(0); }
+    75%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.05); filter: blur(4px); }
 }
 
-/* 响应式调整（小屏幕下缩小爱心） */
-@media (max-width: 768px) {
-  .love-text {
-    font-size: 1.8rem;
-  }
-  .heart {
-    width: 1.1em;
-    height: 1.1em;
-    margin: 0 0.2em;
-  }
-}
-.heart::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 150%;
-  height: 150%;
-  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  animation: heart-glow 1.2s ease-in-out infinite;
+/* ── Music Player ── */
+.music-player {
+    max-width: 330px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s ease;
 }
 
-/* 新增文字样式 */
-.intro {
-  font-family: 'Montserrat', sans-serif; /* 更换为现代无衬线字体 */
-  font-weight: 800; /* 加强字重 */
-  letter-spacing: 0.5px; /* 微调字符间距 */
-  line-height: 1.4; /* 优化行高 */
-  color: rgba(255,255,255,0.9); /* 提高文字透明度对比 */
-  text-shadow: 0 0 5px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2); /* 双层阴影增强立体感 */
-  animation: text-glow 2s ease-in-out infinite alternate; /* 添加发光动画 */
-}
-/* 新增关键帧动画 */
-@keyframes text-glow {
-  from {
-    text-shadow: 0 0 5px rgba(255,192,77,0.8),
-                 0 0 10px rgba(255,192,77,0.6),
-                 0 0 15px rgba(255,192,77,0.4);
-  }
-  to {
-    text-shadow: 0 0 10px rgba(255,192,77,1),
-                 0 0 20px rgba(255,192,77,0.8),
-                 0 0 30px rgba(255,192,77,0.6);
-  }
-}
-.intro-enhanced {
-  position: relative;
-  display: inline-block;
-}
-.intro-enhanced::after {
-  content: "";
-  position: absolute;
-  top: 120%;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, 
-    rgba(255,192,77,0) 0%,
-    rgba(255,192,77,1) 50%,
-    rgba(255,192,77,0) 100%);
-  animation: shine 2s ease-in-out infinite;
-}
-@keyframes shine {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
-}
-body {
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(
-    135deg,
-    hsl(170deg, 80%, 70%),
-    hsl(190deg, 80%, 70%),
-    hsl(250deg, 80%, 70%),
-    hsl(320deg, 80%, 70%)
-  );
-  background-size: 200% 200%;
-  animation: gradient-move 15s ease alternate infinite;
+.music-player:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
-@keyframes gradient-move {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: 100% 100%;
-  }
+/* ── Hero Section ── */
+.hero {
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin-top: clamp(20px, 5vh, 60px);
 }
 
-
-.mainLeft {
-  display: grid;
-  width: 50%;
-  height: auto;
-  align-content: center;
-  row-gap: 36px;
-  margin-top: 20px;
+.hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 8vw, 5rem);
+    font-weight: 900;
+    line-height: 1.2;
+    color: #fff;
+    text-shadow:
+        -3px 3px 0 var(--color-shadow),
+        0 6px 24px rgba(0, 0, 0, 0.12);
+    min-height: 1.3em;
 }
 
-.mainLeft h1 {
-  font-size: 64px;
-  text-shadow: -10px 6px #fcb671;
+.hero-subtitle {
+    font-family: var(--font-body);
+    font-size: clamp(0.85rem, 2.5vw, 1.15rem);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 20px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.mainLeft p {
-  font-weight: 300;
-  text-align: justify;
+.hero-hearts {
+    margin-top: 28px;
+    font-size: 1.6rem;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
 }
 
-.mainLeft button {
-  background: #fcb671;
-  box-shadow: -4px 6px #000000;
+.heart-char {
+    display: inline-block;
+    animation: heartbeat 1.4s ease-in-out infinite;
+    filter: drop-shadow(0 2px 6px rgba(91, 155, 213, 0.4));
 }
 
-footer {
-  padding-top: 32px;
+.heart-char:nth-child(2) { animation-delay: 0.15s; }
+.heart-char:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    15%      { transform: scale(1.25); }
+    30%      { transform: scale(1); }
+    45%      { transform: scale(1.15); }
 }
 
-.socialMedia {
-  display: flex;
-  align-items: center;
-  gap: 64px;
+/* ── Contact Section ── */
+.contact {
+    margin-top: clamp(32px, 6vh, 60px);
+    text-align: center;
 }
 
-/* 自定义右键菜单样式 */
+.contact-heading {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 20px;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: clamp(20px, 5vw, 56px);
+}
+
+.social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.35s var(--ease-spring);
+}
+
+.social-links a:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.social-links img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.social-links a:hover img { opacity: 1; }
+
+/* ── Context Menu ── */
 .context-menu {
-  position: fixed;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 99999;
-  display: none;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+    position: fixed;
+    display: none;
+    z-index: 99999;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
 }
 
 .context-menu ul {
-  list-style: none;
-  margin: 0;
-  padding: 8px 0;
-  min-width: 180px;
+    list-style: none;
+    padding: 6px 0;
+    min-width: 160px;
 }
 
 .context-menu li {
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #333;
-  font-size: 14px;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .context-menu li:hover {
-  background: rgba(30, 144, 255, 0.1);
-  color: #1E90FF;
+    background: rgba(91, 155, 213, 0.08);
+    color: var(--color-accent);
+    padding-left: 24px;
 }
 
-.context-menu li:hover {
-  transform: translateX(5px);
-}
-
-/* 元素渐入动画 */
-.animate-fade-in-top {
-  opacity: 0;
-  transform: translateY(-50px);
-  animation: fadeInTop 0.8s ease forwards;
-}
-
-.animate-fade-in-bottom {
-  opacity: 0;
-  transform: translateY(50px);
-  animation: fadeInBottom 0.8s ease forwards;
-}
-
-.animate-fade-in-left {
-  opacity: 0;
-  transform: translateX(-50px);
-  animation: fadeInLeft 0.8s ease forwards;
-}
-
-.animate-fade-in-right {
-  opacity: 0;
-  transform: translateX(50px);
-  animation: fadeInRight 0.8s ease forwards;
-}
-
-@keyframes fadeInTop {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInBottom {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInLeft {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeInRight {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* 动画延迟 */
-.mainLeft h1 {
-  animation-delay: 0.2s;
-}
-
-.mainLeft p.intro {
-  animation-delay: 0.4s;
-}
-
-.mainLeft p.love-text {
-  animation-delay: 0.6s;
-}
-
-main h2 {
-  animation-delay: 0.8s;
-}
-
-.projects .project-btn:first-child {
-  animation-delay: 1s;
-}
-
-.projects .project-btn:last-child {
-  animation-delay: 1.2s;
-}
-
-/* 调整项目按钮位置 */
-.projects {
-  margin-top: 40px;
-  margin-bottom: 40px;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 600px;
-}
-
-/* 联系方式部分 */
-.contact-section {
-  margin-top: 40px;
-  margin-bottom: 40px;
-  text-align: center;
-  width: 100%;
-  max-width: 600px;
-}
-
-.socialMedia a:nth-child(1) {
-  animation-delay: 1.4s;
-}
-
-.socialMedia a:nth-child(2) {
-  animation-delay: 1.6s;
-}
-
-.socialMedia a:nth-child(3) {
-  animation-delay: 1.8s;
-}
-
-/* 联系方式部分样式 */
-.contact-section {
-  margin-top: 40px;
-  text-align: center;
-}
-
-.contact-section h3 {
-  font-size: 18px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 20px;
-}
-
-/* 响应式设计 - 竖屏手机端 */
-@media (max-width: 768px) {
-  /* 容器布局调整 */
-  .container {
-    height: auto;
-    min-height: 100vh;
-    grid-template-rows: auto 1fr auto;
-  }
-  
-  /* 内边距调整 */
-  header,
-  main {
-    padding: 20px 6vw;
-  }
-  
-  footer {
-    padding: 10px 6vw;
-  }
-  
-  /* 标题大小调整 */
-  .mainLeft h1 {
-    font-size: 32px;
-    text-shadow: -5px 3px #fcb671;
-  }
-  
-  /* 主内容区域调整 */
-  .mainLeft {
+/* ── Sakura Canvas ── */
+#sakuraCanvas {
+    position: fixed;
+    inset: 0;
     width: 100%;
-    height: auto;
-    transform: translateY(0);
-    row-gap: 24px;
-    margin-bottom: 40px;
-  }
-  
-  /* 项目按钮布局调整 */
-  .projects {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-  
-  /* 项目按钮大小调整 */
-  .project-btn {
-    font-size: 16px;
-    padding: 12px 24px;
-    width: 100%;
-    max-width: 200px;
-  }
-  
-  /* 联系方式部分调整 */
-  .contact-section {
-    margin-top: 40px;
-    margin-bottom: 60px; /* 为live2d留出空间 */
-  }
-  
-  .contact-section h3 {
-    font-size: 16px;
-    margin-bottom: 16px;
-  }
-  
-  /* 社交图标布局调整 */
-  .socialMedia {
-    gap: 24px;
-    justify-content: center;
-    padding: 16px 0;
-  }
-  
-  /* 社交图标大小调整 */
-  .socialMedia img {
-    width: 32px;
-    height: 32px;
-  }
-  
-  /* 载入页面文字大小调整 */
-  .loading-text {
-    font-size: 1.8rem;
-    text-align: center;
-    padding: 0 20px;
-  }
-  
-  /* 简介文字调整 */
-  .intro {
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  
-  /* 爱心文字大小调整 */
-  .love-text {
-    font-size: 1.5rem;
-    margin: 20px 0;
-  }
-  
-  /* 确保页面可滚动 */
-  body {
-    overflow-x: hidden;
-  }
-  
-  /* 调整iframe大小 */
-  header iframe {
-    width: 100%;
-    height: 66px;
-    margin-bottom: 20px;
-  }
-  
-  /* 底部区域调整 */
-  footer {
-    margin-top: 0;
-    padding-bottom: 20px;
-  }
-  
-  /* live2d位置调整 */
-  #live2d-widget {
-    transform: scale(0.7);
-    transform-origin: bottom right;
-    bottom: 20px !important;
-    right: 10px !important;
-  }
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
 }
 
-/* 响应式设计 - 横屏模式 */
-@media (min-width: 769px) and (orientation: landscape) {
-  /* 主内容区域调整 */
-  .mainLeft {
-    width: 50%;
-    height: auto;
-    row-gap: 36px;
-    margin-top: 20px;
-    margin-bottom: 40px;
-  }
-  
-  /* 项目按钮布局调整 */
-  .projects {
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 40px;
-  }
-  
-  /* 项目按钮大小调整 */
-  .project-btn {
-    font-size: 18px;
-    padding: 12px 24px;
-    width: auto;
-    max-width: none;
-  }
-  
-  /* 联系方式部分调整 */
-  .contact-section {
-    margin-top: 40px;
-    margin-bottom: 40px;
-  }
-  
-  .contact-section h3 {
-    font-size: 18px;
-    margin-bottom: 20px;
-  }
-  
-  /* 社交图标布局调整 */
-  .socialMedia {
-    gap: 32px;
-    justify-content: center;
-    padding: 20px 0;
-  }
-  
-  /* 社交图标大小调整 */
-  .socialMedia img {
-    width: 32px;
-    height: 32px;
-  }
-  
-  /* 底部区域调整 */
-  footer {
-    margin-top: 0;
-    padding-bottom: 40px;
-  }
-  
-  /* live2d位置调整 */
-  #live2d-widget {
-    transform: scale(0.8);
-    transform-origin: bottom right;
-    bottom: 40px !important;
-    right: 40px !important;
-  }
-}
-
-/* 响应式设计 - 大屏横屏模式 */
-@media (min-width: 1024px) and (orientation: landscape) {
-  /* 标题大小调整 */
-  .mainLeft h1 {
-    font-size: 64px;
-    text-shadow: -10px 6px #fcb671;
-  }
-  
-  /* 项目按钮大小调整 */
-  .project-btn {
-    font-size: 18px;
-    padding: 12px 24px;
-  }
-  
-  /* live2d位置调整 */
-  #live2d-widget {
-    transform: scale(1);
-    bottom: 40px !important;
-    right: 40px !important;
-  }
-}
-
-/* 可拖拽元素样式 */
-.draggable-item {
-  position: relative;
-  display: inline-block;
-  cursor: grab;
-  user-select: none;
-  z-index: 100;
-}
-
-.draggable-item:active {
-  cursor: grabbing;
-}
-
-.draggable-item.dragging {
-  position: fixed;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-/* 自定义选中文本样式 */
-::selection {
-  background: linear-gradient(135deg, rgba(255, 183, 197, 0.8), rgba(147, 112, 219, 0.8));
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  text-shadow: 0 0 1px rgba(255, 255, 255, 0.8), 0 0 2px rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 0 1px rgba(255, 183, 197, 0.8);
-}
-
-/* 选中文字弹跳动画 */
-@keyframes text-bounce {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.text-bounce {
-  animation: text-bounce 0.3s ease-in-out;
-}
-
-/* Three.js 容器样式 */
-#three-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  overflow: hidden;
-}
-
-/* 音乐播放器容器样式 */
-.music-player-container {
-  max-width: 330px;
-  width: 100%;
-  margin: 1rem auto;
-  padding: 16px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(255, 183, 197, 0.8), rgba(147, 112, 219, 0.8));
-  box-shadow: 8px 8px 16px rgba(209, 217, 230, 0.8), -8px -8px 16px rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  text-align: center;
-}
-
-.music-player-container:hover {
-  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.9), -10px -10px 20px rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-}
-
-/* 弹窗样式 */
+/* ── Modal ── */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  animation: fadeIn 0.3s ease;
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-overlay.show {
-  display: flex;
+    display: flex;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.modal-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 48px 40px 40px;
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.15);
+    animation: modalIn 0.5s var(--ease-out-expo);
 }
 
-.modal-content {
-  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-  border-radius: 20px;
-  padding: 40px;
-  width: 90%;
-  max-width: 400px;
-  position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.4s ease;
-}
-
-@keyframes slideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 50%;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 50%;
+    color: #999;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
 }
 
 .modal-close:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #333;
-  transform: rotate(90deg);
-}
-
-.modal-body {
-  text-align: center;
+    background: rgba(0, 0, 0, 0.08);
+    color: #555;
+    transform: rotate(90deg);
 }
 
 .modal-title {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8px;
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: #2d3436;
+    margin-bottom: 8px;
 }
 
 .modal-desc {
-  color: #666;
-  margin-bottom: 32px;
-  font-size: 1rem;
-}
-
-.blog-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 50px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  margin-bottom: 24px;
-}
-
-.blog-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-}
-
-.modal-go-btn {
-  width: 120px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  margin: 0 auto;
-  transition: all 0.3s ease;
-}
-
-.modal-go-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
-}
-
-.modal-go-btn:active {
-  transform: translateY(0);
-}
-
-/* 响应式弹窗 */
-@media (max-width: 768px) {
-  .modal-content {
-    padding: 24px;
-    margin: 20px;
-  }
-  
-  .modal-title {
-    font-size: 1.5rem;
-  }
-  
-  .blog-link {
-    padding: 12px 24px;
     font-size: 0.9rem;
-  }
-  
-  .modal-go-btn {
-    padding: 14px;
+    color: #888;
+    margin-bottom: 32px;
+}
+
+.modal-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, var(--color-accent), #a8d8ea);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-family: var(--font-body);
     font-size: 1rem;
-  }
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.35s var(--ease-spring);
+    box-shadow: 0 4px 16px rgba(91, 155, 213, 0.3);
+}
+
+.modal-go:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 28px rgba(91, 155, 213, 0.4);
+}
+
+.modal-go:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* ── Scroll Reveal Animation ── */
+.animate-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+}
+
+.animate-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Text Selection ── */
+::selection {
+    background: rgba(100, 180, 255, 0.4);
+    color: inherit;
+}
+
+/* ── Live2D Responsive ── */
+#live2d-widget {
+    transition: all 0.3s ease;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .hero {
+        margin-top: 16px;
+    }
+
+    .hero-hearts {
+        font-size: 1.3rem;
+    }
+
+    .social-links a {
+        width: 42px;
+        height: 42px;
+    }
+
+    .social-links img {
+        width: 20px;
+        height: 20px;
+    }
+
+    .modal-card {
+        padding: 36px 28px 32px;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+    }
+
+    #live2d-widget {
+        transform: scale(0.7);
+        transform-origin: bottom right;
+        bottom: 20px !important;
+        right: 10px !important;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    #live2d-widget {
+        transform: scale(0.8);
+        transform-origin: bottom right;
+        bottom: 40px !important;
+        right: 40px !important;
+    }
+}
+
+@media (min-width: 1025px) {
+    #live2d-widget {
+        bottom: 40px !important;
+        right: 40px !important;
+    }
 }

@@ -7,14 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        sans: ['Noto Serif SC', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        display: ['ZCOOL KuaiLe', 'cursive'],
                     },
                     colors: {
                         accent: '#f97316',
@@ -24,6 +25,7 @@
         }
     </script>
     <style>
+        /* ====== 设计 Token ====== */
         :root {
             --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
@@ -32,8 +34,9 @@
             --text-muted: #94a3b8;
             --border-color: #e2e8f0;
             --accent: #f97316;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
         .dark {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
@@ -42,46 +45,71 @@
             --text-muted: #64748b;
             --border-color: #334155;
         }
-        
+
+        /* ====== 基础样式 ====== */
         body {
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
             color: var(--text-primary);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             line-height: 1.7;
             min-height: 100vh;
         }
-        
-        header {
+
+        /* ====== 导航栏 ====== */
+        .site-header {
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
         }
-        
+
+        .theme-toggle {
+            transition: background-color 0.2s var(--ease);
+        }
+
+        /* ====== 页面标题 ====== */
+        .page-title {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            background: linear-gradient(135deg, #f97316, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ====== 文章列表动画 ====== */
         .article-list {
-            animation: fadeIn 0.5s ease-out;
+            animation: fadeUp 0.5s var(--ease) both;
         }
-        
-        @keyframes fadeIn {
+
+        @keyframes fadeUp {
             from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        
+
+        /* ====== 文章卡片 ====== */
         .article-card {
-            transition: all 0.3s ease;
             border: 1px solid transparent;
+            transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
         }
-        
+
         .article-card:hover {
             transform: translateY(-2px);
             border-color: var(--accent);
             box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.15);
         }
-        
-        .year-header {
+
+        .article-card__title {
+            transition: color 0.2s var(--ease);
+        }
+
+        .article-card__title:hover {
+            color: var(--accent);
+        }
+
+        /* ====== 年份标题 ====== */
+        .year-heading {
             position: relative;
             padding-left: 20px;
         }
-        
-        .year-header::before {
+
+        .year-heading::before {
             content: '';
             position: absolute;
             left: 0;
@@ -92,30 +120,30 @@
             background: var(--accent);
             border-radius: 2px;
         }
-        
-        .date-badge {
+
+        /* ====== 日期标签 ====== */
+        .date-tag {
             background: rgba(249, 115, 22, 0.1);
             color: var(--accent);
             font-size: 0.75rem;
         }
-        
-        .dark .date-badge {
+
+        .dark .date-tag {
             background: rgba(249, 115, 22, 0.15);
         }
-        
-        * {
-            transition-property: background-color, border-color, color, fill, stroke;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 150ms;
+
+        /* ====== 响应式 ====== */
+        @media (max-width: 768px) {
+            .page-title { font-size: 1.875rem; }
         }
     </style>
 </head>
 <body class="min-h-screen">
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 h-16 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 z-40">
+    <!-- 导航栏 -->
+    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
         <div class="h-full flex items-center justify-between px-6">
             <a href="#" class="text-xl font-bold text-gray-900 dark:text-white">My Blog</a>
-            <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <button id="themeToggle" class="theme-toggle p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                 <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
@@ -126,37 +154,30 @@
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- 主内容 -->
     <main class="pt-16">
         <div class="max-w-2xl mx-auto px-4 py-12 lg:py-16">
-            <!-- Page Title -->
+            <!-- 页面标题 -->
             <div class="text-center mb-12">
-                <h1 class="text-3xl lg:text-4xl font-bold mb-4">
-                    <span class="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">文章目录</span>
-                </h1>
+                <h1 class="page-title text-3xl lg:text-4xl mb-4">文章目录</h1>
                 <p class="text-gray-500 dark:text-gray-400">在隆冬，我终于知道，我身上有一个不可战胜的夏天</p>
             </div>
 
-            <!-- Article List -->
+            <!-- 文章列表 -->
             <div class="article-list space-y-12">
-                <!-- Year 2026 -->
+                <!-- 2026 年 -->
                 <section>
-                    <h2 class="year-header text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6">2026</h2>
+                    <h2 class="year-heading text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6">2026</h2>
                     <div class="space-y-4">
-                        <!-- Article Card -->
                         <article class="article-card p-5 bg-white dark:bg-gray-800 rounded-xl">
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <a href="2026/5.30.html" class="block">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white hover:text-orange-500 transition-colors mb-2">
-                                            心定不着微物起
-                                        </h3>
+                                        <h3 class="article-card__title text-lg font-semibold text-gray-900 dark:text-white mb-2">心定不着微物起</h3>
                                     </a>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                                        不到芒种，不知心焦。数着所剩无几的日子，笑着说“要解放了”，心里空落落的...
-                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">不到芒种，不知心焦。数着所剩无几的日子，笑着说"要解放了"，心里空落落的...</p>
                                 </div>
-                                <span class="date-badge px-3 py-1 rounded-full font-medium">5月30日</span>
+                                <span class="date-tag px-3 py-1 rounded-full font-medium shrink-0">5月30日</span>
                             </div>
                         </article>
 
@@ -164,23 +185,19 @@
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <a href="2026/4.24.html" class="block">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white hover:text-orange-500 transition-colors mb-2">
-                                            无题
-                                        </h3>
+                                        <h3 class="article-card__title text-lg font-semibold text-gray-900 dark:text-white mb-2">无题</h3>
                                     </a>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                                        放学路上，几个初三的学生在准备中考体育，一句句“还剩三天”很响，很清...
-                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">放学路上，几个初三的学生在准备中考体育，一句句"还剩三天"很响，很清...</p>
                                 </div>
-                                <span class="date-badge px-3 py-1 rounded-full font-medium">4月24日</span>
+                                <span class="date-tag px-3 py-1 rounded-full font-medium shrink-0">4月24日</span>
                             </div>
                         </article>
                     </div>
                 </section>
 
-                <!-- Year 2025 -->
+                <!-- 2025 年 -->
                 <section>
-                    <h2 class="year-header text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6">2025</h2>
+                    <h2 class="year-heading text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6">2025</h2>
                     <div class="space-y-4">
                         <article class="article-card p-5 bg-white/50 dark:bg-gray-800/50 rounded-xl opacity-60">
                             <div class="flex items-start justify-between gap-4">
@@ -188,7 +205,7 @@
                                     <h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-2">即将发布</h3>
                                     <p class="text-sm text-gray-400 dark:text-gray-500">更多文章即将到来...</p>
                                 </div>
-                                <span class="date-badge px-3 py-1 rounded-full font-medium">敬请期待</span>
+                                <span class="date-tag px-3 py-1 rounded-full font-medium shrink-0">敬请期待</span>
                             </div>
                         </article>
                     </div>
@@ -198,17 +215,19 @@
     </main>
 
     <script>
-        // Dark Mode Toggle
+        /* ====== 暗色模式切换 ====== */
         const themeToggle = document.getElementById('themeToggle');
-        const html = document.documentElement;
-        
-        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
+        const root = document.documentElement;
+
+        // 初始化主题
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            root.classList.add('dark');
         }
-        
+
         themeToggle.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+            root.classList.toggle('dark');
+            localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
         });
     </script>
 </body>

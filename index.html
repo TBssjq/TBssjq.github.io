@@ -5,89 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="水神崛起的个人主页 - 前端开发者 | 游戏爱好者 | 动态视觉魔法师">
     <meta name="author" content="水神崛起">
-    <title>水神崛起的个人主页</title>
+    <title>水神崛起</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script async src="https://cdn.jsdelivr.net/npm/live2d-widget@3.0.4/lib/L2Dwidget.min.js"></script>
 </head>
 <body>
-    <!-- 载入页面 -->
-    <div class="loading-screen">
+    <!-- 加载画面 -->
+    <div class="loading-screen" aria-hidden="true">
         <div class="loading-text">海内存知己，天涯若比邻</div>
     </div>
+
     <div class="container">
         <header>
-            <div style="max-width: 330px; width: 100%; margin: 1rem 0; padding: 16px; border-radius: 20px; background: #f0f4f8; box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;">
-  <iframe 
-    frameborder="no" 
-    border="0" 
-    marginwidth="0" 
-    marginheight="0" 
-    width="100%" 
-    height="86" 
-    src="https://music.163.com/outchain/player?type=2&id=65546&auto=0&height=66"
-    title="网易云音乐播放器"
-    loading="lazy"
-  ></iframe>
-</div>
+            <div class="music-player">
+                <iframe
+                    frameborder="0"
+                    marginwidth="0"
+                    marginheight="0"
+                    width="100%"
+                    height="86"
+                    src="https://music.163.com/outchain/player?type=2&id=65546&auto=0&height=66"
+                    title="网易云音乐播放器"
+                    loading="lazy"
+                ></iframe>
+            </div>
         </header>
+
         <main>
-            <div class="mainLeft">
-                <h1 class="animate-fade-in-top">
+            <div class="hero">
+                <h1 class="hero-title animate-in" data-delay="0.2">
                     <span class="typewriter-text"></span>
                 </h1>
-                <p class="intro intro-enhanced animate-fade-in-bottom">
-                    前端开发者 | 游戏爱好者 | 动态视觉魔法师
+                <p class="hero-subtitle animate-in" data-delay="0.5">
+                    前端开发者 · 游戏爱好者 · 动态视觉魔法师
                 </p>
-                <p class="love-text animate-fade-in-bottom">
-                    <span class="hert">❤❤❤</span>
+                <p class="hero-hearts animate-in" data-delay="0.8">
+                    <span class="heart-char">❤</span>
+                    <span class="heart-char">❤</span>
+                    <span class="heart-char">❤</span>
                 </p>
             </div>
-            <!-- <h2 class="animate-fade-in-top">我的项目</h2> -->
-            <!-- <div class="projects">
-                <a href="" class="draggable-item">
-                    <button class="project-btn animate-fade-in-left">Button1</button>
-                </a>
-                <a href="" class="draggable-item">
-                    <button class="project-btn animate-fade-in-left">Button2</button>
-                </a>
-            </div> -->
-            <!-- 联系方式部分移到main中 -->
-            <div class="contact-section animate-fade-in-bottom">
-                <h3>联系我</h3>
-                <div class="socialMedia">
-                    <!-- <a href="src/wechatID.jpg"><img src="src/wechat.svg" alt="wechat" /></a> -->
-                    <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer">
-                        <img src="src/github.svg" alt="GitHub" />
+
+            <section class="contact animate-in" data-delay="1.1">
+                <h3 class="contact-heading">联系我</h3>
+                <div class="social-links">
+                    <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <img src="src/github.svg" alt="GitHub" width="32" height="32">
                     </a>
-                    <a href="mailto:653294795@qq.com?subject=你好！&body=你好！" rel="nofollow">
-                        <img src="src/email.svg" alt="Email" />
+                    <a href="mailto:653294795@qq.com?subject=你好！&body=你好！" rel="nofollow" aria-label="Email">
+                        <img src="src/email.svg" alt="Email" width="32" height="32">
                     </a>
-                    <a href="https://space.bilibili.com/439038862" target="_blank" rel="noopener noreferrer">
-                        <img src="src/bilibili.svg" alt="Bilibili" />
+                    <a href="https://space.bilibili.com/439038862" target="_blank" rel="noopener noreferrer" aria-label="Bilibili">
+                        <img src="src/bilibili.svg" alt="Bilibili" width="32" height="32">
                     </a>
                 </div>
-            </div>
+            </section>
         </main>
-        <footer>
-            <!-- 保持footer为空，仅作为布局占位 -->
-        </footer>
+
+        <footer></footer>
     </div>
-    <!-- 自定义右键菜单 -->
-    <div id="customContextMenu" class="context-menu">
+
+    <!-- 右键菜单 -->
+    <nav id="contextMenu" class="context-menu" role="menu" aria-label="快捷操作">
         <ul>
-            <li data-action="refresh">刷新主页</li>
-            <li data-action="bilibili">去我的 B 站</li>
-            <li data-action="email">给我发邮件</li>
-            <li data-action="top">返回顶部</li>
+            <li role="menuitem" data-action="refresh">刷新主页</li>
+            <li role="menuitem" data-action="bilibili">去我的 B 站</li>
+            <li role="menuitem" data-action="email">给我发邮件</li>
+            <li role="menuitem" data-action="top">返回顶部</li>
         </ul>
-    </div>
-    <!-- 樱花飘落效果 -->
-    <canvas id="sakuraCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998;"></canvas>
-    <!-- 博客目录弹窗 -->
-    <div id="blogModal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    </nav>
+
+    <!-- 樱花画布 -->
+    <canvas id="sakuraCanvas" aria-hidden="true"></canvas>
+
+    <!-- 博客弹窗 -->
+    <div id="blogModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="博客导航">
+        <div class="modal-card">
+            <button class="modal-close" aria-label="关闭">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
@@ -95,652 +93,230 @@
                 <h2 class="modal-title">我的博客</h2>
                 <p class="modal-desc">欢迎访问我的个人随笔空间</p>
             </div>
-            <button class="modal-go-btn" onclick="goToBlog()">
+            <button class="modal-go" id="blogGoBtn">
                 <span>Go!</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </button>
         </div>
     </div>
+
     <script>
-        // 弹窗控制
-        function showModal() {
-            document.getElementById('blogModal').classList.add('show');
-        }
-        
-        function closeModal() {
-            document.getElementById('blogModal').classList.remove('show');
-        }
-        
-        function goToBlog() {
-            window.location.href = 'doc/index.html';
-        }
+    document.addEventListener('DOMContentLoaded', () => {
+        initLoadingScreen();
+        initLive2D();
+        initParticles();
+        initDynamicTitle();
+        initContextMenu();
+        initSakura();
+        initModal();
+        initScrollReveal();
+    });
 
-        // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
-            // 显示弹窗
-            setTimeout(showModal, 2000);
-            
-            // 初始化所有功能
-            initLoadingScreen();
-            initLive2D();
-            initParticles();
-            init3DCardEffect();
-            initDynamicTitle();
-            initCustomContextMenu();
-            initParallaxScroll();
-            initPhysicsEngine();
-            initSakura();
-            initTextSelectionEffect();
-        });
-
-        // 控制载入页面
-        function initLoadingScreen() {
-            const loadingScreen = document.querySelector('.loading-screen');
+    /* ── 加载画面 ── */
+    function initLoadingScreen() {
+        const screen = document.querySelector('.loading-screen');
+        setTimeout(() => {
+            screen.classList.add('hidden');
             setTimeout(() => {
-                loadingScreen.classList.add('hidden');
+                screen.remove();
+                startTypewriter();
+            }, 2000);
+        }, 3000);
+    }
+
+    /* ── 打字机 ── */
+    function startTypewriter() {
+        const el = document.querySelector('.typewriter-text');
+        const pairs = [
+            { pin: 'NI',   ch: '你' },
+            { pin: 'HAO',  ch: '好' },
+            { pin: '!',    ch: '！' },
+            { pin: 'WO',   ch: '我' },
+            { pin: 'SHI',  ch: '是' },
+            { pin: 'SHUI', ch: '水' },
+            { pin: 'SHEN', ch: '神' },
+            { pin: 'JUE',  ch: '崛' },
+            { pin: 'QI',   ch: '起' }
+        ];
+        let pi = 0, ci = 0;
+
+        (function tick() {
+            if (pi >= pairs.length) return;
+            const { pin, ch } = pairs[pi];
+            if (ci < pin.length) {
+                el.textContent += pin[ci++];
+                setTimeout(tick, 100);
+            } else {
                 setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                    startTypewriter();
-                }, 2000);
-            }, 3000);
-        }
-
-        // 打字机效果
-        function startTypewriter() {
-            const typewriterElement = document.querySelector('.typewriter-text');
-            // 拼音和中文的对应关系
-            const pinyinChinesePairs = [
-                { pinyin: 'NI', chinese: '你' },
-                { pinyin: 'HAO', chinese: '好' },
-                { pinyin: '!', chinese: '！' },
-                { pinyin: 'WO', chinese: '我' },
-                { pinyin: 'SHI', chinese: '是' },
-                { pinyin: 'SHUI', chinese: '水' },
-                { pinyin: 'SHEN', chinese: '神' },
-                { pinyin: 'JUE', chinese: '崛' },
-                { pinyin: 'QI', chinese: '起' }
-            ];
-            let pairIndex = 0;
-            let charIndex = 0;
-            
-            function typeNext() {
-                if (pairIndex < pinyinChinesePairs.length) {
-                    const currentPair = pinyinChinesePairs[pairIndex];
-                    if (charIndex < currentPair.pinyin.length) {
-                        // 输入拼音字符
-                        typewriterElement.textContent += currentPair.pinyin.charAt(charIndex);
-                        charIndex++;
-                        setTimeout(typeNext, 100);
-                    } else {
-                        // 拼音输入完成，显示对应的中文
-                        setTimeout(() => {
-                            typewriterElement.textContent = typewriterElement.textContent.replace(currentPair.pinyin, currentPair.chinese);
-                            pairIndex++;
-                            charIndex = 0;
-                            setTimeout(typeNext, 500);
-                        }, 300);
-                    }
-                }
+                    el.textContent = el.textContent.replace(pin, ch);
+                    pi++; ci = 0;
+                    setTimeout(tick, 500);
+                }, 300);
             }
-            
-            // 开始打字机效果
-            typeNext();
-        }
+        })();
+    }
 
-        // 初始化live2d
-        function initLive2D() {
-            function initialize() {
-                const windowWidth = window.innerWidth;
-                
-                // 根据屏幕尺寸计算合适的大小
-                let width = 180;
-                let height = 260;
-                let scale = 0.5;
-                
-                // 小屏幕适配
-                if (windowWidth < 768) {
-                    width = 120;
-                    height = 180;
-                    scale = 0.3;
-                }
-                // 中屏幕适配
-                else if (windowWidth < 1024) {
-                    width = 150;
-                    height = 220;
-                    scale = 0.4;
-                }
-                
-                L2Dwidget.init({
-                    model: {
-                        scale: scale
-                    },
-                    display: {
-                        position: 'right',
-                        width: width,
-                        height: height,
-                        hOffset: 0,
-                        vOffset: -20
-                    },
-                    mobile: {
-                        show: true,
-                        scale: scale
-                    },
-                    react: {
-                        opacityDefault: 0.7,
-                        opacityOnHover: 0.2
-                    }
-                });
-            }
-            
-            // 初始初始化
-            setTimeout(initialize, 1000);
-            
-            // 窗口大小变化时重新初始化
-            window.addEventListener('resize', function() {
-                // 先移除旧的live2d元素
-                const oldLive2D = document.querySelector('#live2d-widget');
-                if (oldLive2D) {
-                    oldLive2D.remove();
-                }
-                // 重新初始化
-                initialize();
+    /* ── Live2D ── */
+    function initLive2D() {
+        function boot() {
+            const w = window.innerWidth;
+            const cfg = w < 768
+                ? { width: 120, height: 180, scale: 0.3 }
+                : w < 1024
+                    ? { width: 150, height: 220, scale: 0.4 }
+                    : { width: 180, height: 260, scale: 0.5 };
+
+            L2Dwidget.init({
+                model: { scale: cfg.scale },
+                display: { position: 'right', width: cfg.width, height: cfg.height, hOffset: 0, vOffset: -20 },
+                mobile: { show: true, scale: cfg.scale },
+                react: { opacityDefault: 0.7, opacityOnHover: 0.2 }
             });
         }
 
-        // 彩虹粒子碰撞效果
-        function initParticles() {
-            const canvas = document.createElement('canvas');
-            canvas.style.position = 'fixed';
-            canvas.style.top = '0';
-            canvas.style.left = '0';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.style.pointerEvents = 'none';
-            canvas.style.zIndex = '9999';
-            document.body.appendChild(canvas);
+        setTimeout(boot, 1000);
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                document.querySelector('#live2d-widget')?.remove();
+                boot();
+            }, 300);
+        });
+    }
 
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    /* ── 点击粒子 ── */
+    function initParticles() {
+        const cvs = document.createElement('canvas');
+        Object.assign(cvs.style, { position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 });
+        document.body.appendChild(cvs);
+        const ctx = cvs.getContext('2d');
+        const resize = () => { cvs.width = innerWidth; cvs.height = innerHeight; };
+        resize();
+        window.addEventListener('resize', resize);
 
-            const particles = [];
+        const colors = ['#5b9bd5', '#7ec8e3', '#a8d8ea', '#b8d4e3', '#6ea8d8', '#4a90c4', '#89b8e0'];
+        const particles = [];
 
-            function createParticle(x, y) {
-                const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
-                return {
-                    x,
-                    y,
-                    size: Math.random() * 5 + 2,
-                    speedX: Math.random() * 6 - 3,
-                    speedY: Math.random() * 6 - 3,
-                    color: colors[Math.floor(Math.random() * colors.length)],
+        function spawn(x, y) {
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x, y,
+                    r: Math.random() * 4 + 2,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color: colors[Math.random() * colors.length | 0],
                     life: 1,
                     decay: Math.random() * 0.02 + 0.01
-                };
-            }
-
-            function updateParticles() {
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.x += p.speedX;
-                    p.y += p.speedY;
-                    p.life -= p.decay;
-                    p.size *= 0.98;
-
-                    if (p.life <= 0) {
-                        particles.splice(i, 1);
-                    }
-                }
-            }
-
-            function drawParticles() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fillStyle = p.color;
-                    ctx.globalAlpha = p.life;
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
                 });
             }
-
-            function animate() {
-                updateParticles();
-                drawParticles();
-                requestAnimationFrame(animate);
-            }
-
-            animate();
-
-            document.addEventListener('click', function(e) {
-                for (let i = 0; i < 30; i++) {
-                    particles.push(createParticle(e.clientX, e.clientY));
-                }
-            });
-
-            window.addEventListener('resize', function() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            });
         }
 
-        // 3D卡片倾斜效果
-        function init3DCardEffect() {
-            const projectButtons = document.querySelectorAll('.project-btn');
-            projectButtons.forEach(button => {
-                button.addEventListener('mousemove', function(e) {
-                    const rect = this.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    const rotateX = (y - centerY) / 5;
-                    const rotateY = (centerX - x) / 5;
-                    this.style.setProperty('--rotateX', `${rotateX}deg`);
-                    this.style.setProperty('--rotateY', `${rotateY}deg`);
-                });
-                button.addEventListener('mouseleave', function() {
-                    this.style.setProperty('--rotateX', '0deg');
-                    this.style.setProperty('--rotateY', '0deg');
-                });
-            });
-        }
-
-        // 动态浏览器标题
-        function initDynamicTitle() {
-            const originalTitle = document.title;
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    document.title = '(｡•́ω•̀｡) 你别走啊~';
-                } else {
-                    document.title = '(✧∇✧) 你回来啦！';
-                    setTimeout(() => {
-                        document.title = originalTitle;
-                    }, 1000);
-                }
-            });
-        }
-
-        // 自定义右键菜单
-        function initCustomContextMenu() {
-            const contextMenu = document.getElementById('customContextMenu');
-            
-            // 阻止默认右键菜单
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                contextMenu.style.display = 'block';
-                contextMenu.style.left = `${e.clientX}px`;
-                contextMenu.style.top = `${e.clientY}px`;
-            });
-            
-            // 点击其他地方关闭右键菜单
-            document.addEventListener('click', function() {
-                contextMenu.style.display = 'none';
-            });
-            
-            // 处理菜单项点击
-            contextMenu.addEventListener('click', function(e) {
-                const action = e.target.dataset.action;
-                if (action) {
-                    switch (action) {
-                        case 'refresh':
-                            location.reload();
-                            break;
-                        case 'bilibili':
-                            window.open('https://space.bilibili.com/439038862', '_blank');
-                            break;
-                        case 'email':
-                            window.location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！';
-                            break;
-                        case 'top':
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                            break;
-                    }
-                    contextMenu.style.display = 'none';
-                }
-            });
-        }
-
-        // 视差滚动效果
-        function initParallaxScroll() {
-            window.addEventListener('scroll', function() {
-                const scrollY = window.scrollY;
-                
-                // 背景视差（最慢）
-                document.body.style.backgroundPositionY = `${scrollY * 0.5}px`;
-                
-                // 标题视差（较慢）
-                const mainLeft = document.querySelector('.mainLeft');
-                if (mainLeft) {
-                    mainLeft.style.transform = `translateY(${-10 + scrollY * 0.2}%)`;
-                }
-                
-                // 项目按钮视差（较快）
-                const projectBtns = document.querySelectorAll('.project-btn');
-                projectBtns.forEach((btn, index) => {
-                    btn.style.transform = `translateY(${scrollY * 0.3}px)`;
-                });
-                
-                // 社交图标视差（最快）
-                const socialLinks = document.querySelectorAll('.socialMedia a');
-                socialLinks.forEach((link, index) => {
-                    link.style.transform = `translateY(${scrollY * 0.4}px)`;
-                });
-            });
-        }
-
-        // 重力拖拽物理引擎
-        function initPhysicsEngine() {
-            const draggableItems = document.querySelectorAll('.draggable-item');
-            const physicsObjects = [];
-            const GRAVITY = 0.5;
-            const BOUNCE = 0.6;
-            const FRICTION = 0.98;
-
-            draggableItems.forEach((item, index) => {
-                const rect = item.getBoundingClientRect();
-                const obj = {
-                    element: item,
-                    x: rect.left,
-                    y: rect.top,
-                    width: rect.width,
-                    height: rect.height,
-                    velocityX: 0,
-                    velocityY: 0,
-                    isDragging: false,
-                    offsetX: 0,
-                    offsetY: 0
-                };
-                physicsObjects.push(obj);
-
-                // 鼠标按下事件
-                item.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                    obj.isDragging = true;
-                    obj.offsetX = e.clientX - obj.x;
-                    obj.offsetY = e.clientY - obj.y;
-                    item.classList.add('dragging');
-                });
-
-                // 鼠标移动事件
-                document.addEventListener('mousemove', function(e) {
-                    if (obj.isDragging) {
-                        obj.x = e.clientX - obj.offsetX;
-                        obj.y = e.clientY - obj.offsetY;
-                        obj.velocityX = 0;
-                        obj.velocityY = 0;
-                    }
-                });
-
-                // 鼠标释放事件
-                document.addEventListener('mouseup', function() {
-                    if (obj.isDragging) {
-                        obj.isDragging = false;
-                        item.classList.remove('dragging');
-                    }
-                });
-            });
-
-            // 碰撞检测
-            function checkCollision(obj1, obj2) {
-                return obj1.x < obj2.x + obj2.width &&
-                       obj1.x + obj1.width > obj2.x &&
-                       obj1.y < obj2.y + obj2.height &&
-                       obj1.y + obj1.height > obj2.y;
-            }
-
-            // 物理引擎动画循环
-            function physicsLoop() {
-                physicsObjects.forEach(obj => {
-                    if (!obj.isDragging) {
-                        // 应用重力
-                        obj.velocityY += GRAVITY;
-                        
-                        // 应用摩擦力
-                        obj.velocityX *= FRICTION;
-                        obj.velocityY *= FRICTION;
-                        
-                        // 更新位置
-                        obj.x += obj.velocityX;
-                        obj.y += obj.velocityY;
-                        
-                        // 边界碰撞检测
-                        const windowWidth = window.innerWidth;
-                        const windowHeight = window.innerHeight;
-                        
-                        // 左右边界
-                        if (obj.x < 0) {
-                            obj.x = 0;
-                            obj.velocityX *= -BOUNCE;
-                        } else if (obj.x + obj.width > windowWidth) {
-                            obj.x = windowWidth - obj.width;
-                            obj.velocityX *= -BOUNCE;
-                        }
-                        
-                        // 上下边界
-                        if (obj.y < 0) {
-                            obj.y = 0;
-                            obj.velocityY *= -BOUNCE;
-                        } else if (obj.y + obj.height > windowHeight) {
-                            obj.y = windowHeight - obj.height;
-                            obj.velocityY *= -BOUNCE;
-                        }
-                        
-                        // 物体间碰撞检测
-                        physicsObjects.forEach(otherObj => {
-                            if (obj !== otherObj && checkCollision(obj, otherObj)) {
-                                // 更精确的碰撞响应
-                                const overlapX = Math.min(obj.x + obj.width, otherObj.x + otherObj.width) - Math.max(obj.x, otherObj.x);
-                                const overlapY = Math.min(obj.y + obj.height, otherObj.y + otherObj.height) - Math.max(obj.y, otherObj.y);
-                                
-                                // 确定碰撞方向
-                                if (overlapX < overlapY) {
-                                    // 水平碰撞
-                                    if (obj.x < otherObj.x) {
-                                        obj.x -= overlapX / 2;
-                                        otherObj.x += overlapX / 2;
-                                    } else {
-                                        obj.x += overlapX / 2;
-                                        otherObj.x -= overlapX / 2;
-                                    }
-                                    // 交换水平速度
-                                    const tempVX = obj.velocityX;
-                                    obj.velocityX = otherObj.velocityX * BOUNCE;
-                                    otherObj.velocityX = tempVX * BOUNCE;
-                                } else {
-                                    // 垂直碰撞
-                                    if (obj.y < otherObj.y) {
-                                        obj.y -= overlapY / 2;
-                                        otherObj.y += overlapY / 2;
-                                    } else {
-                                        obj.y += overlapY / 2;
-                                        otherObj.y -= overlapY / 2;
-                                    }
-                                    // 交换垂直速度
-                                    const tempVY = obj.velocityY;
-                                    obj.velocityY = otherObj.velocityY * BOUNCE;
-                                    otherObj.velocityY = tempVY * BOUNCE;
-                                }
-                            }
-                        });
-                    }
-                    
-                    // 更新元素位置
-                    obj.element.style.position = 'fixed';
-                    obj.element.style.left = `${obj.x}px`;
-                    obj.element.style.top = `${obj.y}px`;
-                });
-                
-                requestAnimationFrame(physicsLoop);
-            }
-
-            // 启动物理引擎
-            physicsLoop();
-        }
-
-        // 樱花飘落效果
-        function initSakura() {
-            const canvas = document.getElementById('sakuraCanvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            const sakuras = [];
-            const sakuraCount = 50;
-            
-            // 创建樱花
-            for (let i = 0; i < sakuraCount; i++) {
-                sakuras.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 8 + 4,
-                    speedX: Math.random() * 0.8 - 0.4,
-                    speedY: Math.random() * 1 + 0.3,
-                    opacity: Math.random() * 0.8 + 0.2,
-                    rotation: Math.random() * Math.PI * 2,
-                    rotationSpeed: Math.random() * 0.02 - 0.01
-                });
-            }
-            
-            // 绘制樱花
-            function drawSakura(sakura) {
-                ctx.save();
-                ctx.globalAlpha = sakura.opacity;
-                ctx.translate(sakura.x, sakura.y);
-                ctx.rotate(sakura.rotation);
+        (function loop() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= p.decay; p.r *= 0.98;
+                if (p.life <= 0) { particles.splice(i, 1); continue; }
+                ctx.globalAlpha = p.life;
                 ctx.beginPath();
-                ctx.arc(0, 0, sakura.size, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffb7c5';
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            requestAnimationFrame(loop);
+        })();
+
+        document.addEventListener('click', e => spawn(e.clientX, e.clientY));
+    }
+
+    /* ── 动态标题 ── */
+    function initDynamicTitle() {
+        const title = document.title;
+        document.addEventListener('visibilitychange', () => {
+            document.title = document.hidden ? '(｡•́ω•̀｡) 你别走啊~' : '(✧∇✧) 你回来啦！';
+            if (!document.hidden) setTimeout(() => { document.title = title; }, 1000);
+        });
+    }
+
+    /* ── 右键菜单 ── */
+    function initContextMenu() {
+        const menu = document.getElementById('contextMenu');
+        document.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            menu.style.display = 'block';
+            menu.style.left = `${e.clientX}px`;
+            menu.style.top = `${e.clientY}px`;
+        });
+        document.addEventListener('click', () => { menu.style.display = 'none'; });
+        menu.addEventListener('click', e => {
+            const a = e.target.dataset.action;
+            if (!a) return;
+            ({ refresh: () => location.reload(), bilibili: () => open('https://space.bilibili.com/439038862', '_blank'), email: () => location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！', top: () => scrollTo({ top: 0, behavior: 'smooth' }) })[a]();
+            menu.style.display = 'none';
+        });
+    }
+
+    /* ── 樱花 ── */
+    function initSakura() {
+        const cvs = document.getElementById('sakuraCanvas');
+        const ctx = cvs.getContext('2d');
+        const resize = () => { cvs.width = innerWidth; cvs.height = innerHeight; };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const petals = Array.from({ length: 45 }, () => ({
+            x: Math.random() * cvs.width,
+            y: Math.random() * cvs.height,
+            r: Math.random() * 6 + 3,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: Math.random() * 0.8 + 0.3,
+            o: Math.random() * 0.6 + 0.2,
+            rot: Math.random() * Math.PI * 2,
+            rv: (Math.random() - 0.5) * 0.02
+        }));
+
+        (function loop() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            petals.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+                if (p.y > cvs.height + p.r) { p.y = -p.r; p.x = Math.random() * cvs.width; }
+                if (p.x > cvs.width + p.r) p.x = -p.r;
+                if (p.x < -p.r) p.x = cvs.width + p.r;
+
+                ctx.save();
+                ctx.globalAlpha = p.o;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.beginPath();
+                ctx.ellipse(0, 0, p.r, p.r * 0.6, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#a8d8ea';
                 ctx.fill();
                 ctx.restore();
-            }
-            
-            // 动画循环
-            function animateSakura() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                sakuras.forEach(sakura => {
-                    // 更新位置
-                    sakura.x += sakura.speedX;
-                    sakura.y += sakura.speedY;
-                    
-                    // 更新旋转
-                    sakura.rotation += sakura.rotationSpeed;
-                    
-                    // 边界检测
-                    if (sakura.y > canvas.height) {
-                        sakura.y = -sakura.size;
-                        sakura.x = Math.random() * canvas.width;
-                        sakura.opacity = Math.random() * 0.8 + 0.2;
-                    }
-                    if (sakura.x > canvas.width + sakura.size) {
-                        sakura.x = -sakura.size;
-                    }
-                    if (sakura.x < -sakura.size) {
-                        sakura.x = canvas.width + sakura.size;
-                    }
-                    
-                    // 绘制樱花
-                    drawSakura(sakura);
-                });
-                
-                requestAnimationFrame(animateSakura);
-            }
-            
-            // 窗口大小变化时调整画布
-            window.addEventListener('resize', function() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
             });
-            
-            // 开始动画
-            animateSakura();
-        }
+            requestAnimationFrame(loop);
+        })();
+    }
 
-        // 文本选择效果
-        function initTextSelectionEffect() {
-            // 选中文字的弹跳效果
-            document.addEventListener('mouseup', function() {
-                const selection = window.getSelection();
-                if (selection.toString().length > 0) {
-                    // 创建临时元素来应用动画
-                    const range = selection.getRangeAt(0);
-                    const span = document.createElement('span');
-                    span.className = 'text-bounce';
-                    range.surroundContents(span);
-                    
-                    // 动画结束后移除临时元素
-                    setTimeout(() => {
-                        try {
-                            const parent = span.parentNode;
-                            while (span.firstChild) {
-                                parent.insertBefore(span.firstChild, span);
-                            }
-                            parent.removeChild(span);
-                        } catch (e) {
-                            // 忽略可能的DOM操作错误
-                        }
-                    }, 300);
-                    
-                    // 生成爱心粒子
-                    createHeartParticles(selection.getRangeAt(0));
-                }
-            });
-        }
+    /* ── 弹窗 ── */
+    function initModal() {
+        const modal = document.getElementById('blogModal');
+        setTimeout(() => modal.classList.add('show'), 2000);
+        document.querySelector('.modal-close').addEventListener('click', () => modal.classList.remove('show'));
+        document.getElementById('blogGoBtn').addEventListener('click', () => { location.href = 'doc/index.html'; });
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
+    }
 
-        // 创建爱心粒子
-        function createHeartParticles(range) {
-            const rect = range.getBoundingClientRect();
-            const heartCount = Math.floor(Math.random() * 3) + 3; // 3-5个爱心
-            
-            for (let i = 0; i < heartCount; i++) {
-                const heart = document.createElement('div');
-                heart.style.position = 'fixed';
-                heart.style.left = `${rect.left + Math.random() * rect.width}px`;
-                heart.style.top = `${rect.top + Math.random() * rect.height}px`;
-                heart.style.fontSize = `${Math.random() * 10 + 10}px`;
-                heart.style.color = '#ff69b4';
-                heart.style.zIndex = '9999';
-                heart.style.pointerEvents = 'none';
-                heart.textContent = '❤';
-                heart.style.opacity = '0.8';
-                heart.style.transform = 'scale(0)';
-                
-                document.body.appendChild(heart);
-                
-                // 动画
-                let startTime = null;
-                const duration = 2000;
-                const startX = parseFloat(heart.style.left);
-                const startY = parseFloat(heart.style.top);
-                const endX = startX + (Math.random() * 40 - 20);
-                const endY = startY - (Math.random() * 80 + 40);
-                const startScale = 0;
-                const endScale = 1;
-                
-                function animate(timestamp) {
-                    if (!startTime) startTime = timestamp;
-                    const progress = Math.min((timestamp - startTime) / duration, 1);
-                    const easeProgress = 1 - Math.pow(1 - progress, 3);
-                    
-                    heart.style.left = `${startX + (endX - startX) * easeProgress}px`;
-                    heart.style.top = `${startY + (endY - startY) * easeProgress}px`;
-                    heart.style.transform = `scale(${startScale + (endScale - startScale) * easeProgress})`;
-                    heart.style.opacity = `${1 - progress}`;
-                    
-                    if (progress < 1) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        document.body.removeChild(heart);
-                    }
-                }
-                
-                requestAnimationFrame(animate);
-            }
-        }
+    /* ── 滚动渐入 ── */
+    function initScrollReveal() {
+        document.querySelectorAll('.animate-in').forEach(el => {
+            const delay = parseFloat(el.dataset.delay || 0) * 1000;
+            setTimeout(() => el.classList.add('visible'), delay);
+        });
+    }
     </script>
 </body>
 </html>

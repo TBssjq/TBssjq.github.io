@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Blog</title>
+    <title>心定不着微物起 - My Blog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        sans: ['Noto Serif SC', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        display: ['ZCOOL KuaiLe', 'cursive'],
                     },
                     colors: {
-                        primary: '#ff6b6b',
                         accent: '#f97316',
                     }
                 }
@@ -25,6 +25,7 @@
         }
     </script>
     <style>
+        /* ====== 设计 Token ====== */
         :root {
             --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
@@ -33,13 +34,11 @@
             --text-muted: #94a3b8;
             --border-color: #e2e8f0;
             --accent: #f97316;
-            --accent-hover: #ea580c;
-            --success: #22c55e;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
-        
+
         .dark {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
@@ -48,61 +47,48 @@
             --text-muted: #64748b;
             --border-color: #334155;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        html {
-            scroll-behavior: smooth;
-        }
-        
+
+        /* ====== 基础样式 ====== */
+        html { scroll-behavior: smooth; }
+
         body {
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
             color: var(--text-primary);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             line-height: 1.7;
             min-height: 100vh;
         }
-        
-        /* Header Styles */
-        header {
-            border-bottom: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-        
-        header:hover {
+
+        /* ====== 导航栏 ====== */
+        .site-header {
             backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        /* Article Container */
-        .article-container {
-            animation: fadeIn 0.6s ease-out;
+
+        .theme-toggle {
+            transition: background-color 0.2s var(--ease);
         }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        /* ====== 入场动画 ====== */
+        .article-body {
+            animation: fadeUp 0.6s var(--ease) both;
         }
-        
-        /* Title Styles */
-        article h1 {
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ====== 文章标题 ====== */
+        .article-title {
+            font-family: 'ZCOOL KuaiLe', cursive;
             background: linear-gradient(135deg, var(--accent), #fb923c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             position: relative;
         }
-        
-        article h1::after {
+
+        .article-title::after {
             content: '';
             position: absolute;
             bottom: -8px;
@@ -113,20 +99,21 @@
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
             border-radius: 2px;
         }
-        
-        /* Article Content */
-        .article-content {
+
+        /* ====== 文章正文排版 ====== */
+        .prose {
             line-height: 1.85;
             color: var(--text-secondary);
         }
-        
-        .article-content p {
+
+        .prose p {
             margin-bottom: 1.5rem;
             text-align: justify;
             text-indent: 2em;
         }
-        
-        .article-content p:first-of-type::first-letter {
+
+        /* 首段首字下沉 */
+        .prose p:first-of-type::first-letter {
             font-size: 2.5em;
             font-weight: 700;
             color: var(--accent);
@@ -135,8 +122,13 @@
             margin-right: 0.1em;
             margin-top: 0.1em;
         }
-        
-        .article-content h2 {
+
+        .prose p.no-dropcap::first-letter {
+            all: revert;
+        }
+
+        /* 二级标题 */
+        .prose h2 {
             font-size: 1.6rem;
             font-weight: 700;
             margin: 2.5rem 0 1.25rem;
@@ -144,8 +136,8 @@
             position: relative;
             padding-left: 20px;
         }
-        
-        .article-content h2::before {
+
+        .prose h2::before {
             content: '';
             position: absolute;
             left: 0;
@@ -156,36 +148,28 @@
             background: var(--accent);
             border-radius: 2px;
         }
-        
-        .article-content h3 {
+
+        /* 三级标题 */
+        .prose h3 {
             font-size: 1.3rem;
             font-weight: 600;
             margin: 2rem 0 1rem;
             color: var(--text-primary);
         }
-        
-        .article-content ul, .article-content ol {
+
+        /* 列表 */
+        .prose ul, .prose ol {
             margin: 1.25rem 0;
             padding-left: 2rem;
         }
-        
-        .article-content li {
-            margin-bottom: 0.75rem;
-            position: relative;
-        }
-        
-        .article-content ul li::marker {
-            color: var(--accent);
-            font-size: 1.1em;
-        }
-        
-        .article-content ol li::marker {
-            color: var(--accent);
-            font-weight: 600;
-        }
-        
-        /* Blockquote */
-        .article-content blockquote {
+
+        .prose li { margin-bottom: 0.75rem; }
+
+        .prose ul li::marker { color: var(--accent); font-size: 1.1em; }
+        .prose ol li::marker { color: var(--accent); font-weight: 600; }
+
+        /* 引用块 */
+        .prose blockquote {
             background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(249, 115, 22, 0.03));
             border-left: 4px solid var(--accent);
             padding: 1.5rem 2rem;
@@ -195,9 +179,9 @@
             color: var(--text-secondary);
             position: relative;
         }
-        
-        .article-content blockquote::before {
-            content: '"';
+
+        .prose blockquote::before {
+            content: '\201C';
             position: absolute;
             top: -10px;
             left: 10px;
@@ -205,9 +189,9 @@
             color: rgba(249, 115, 22, 0.15);
             font-family: Georgia, serif;
         }
-        
-        /* Code Blocks */
-        .article-content pre {
+
+        /* 代码块 */
+        .prose pre {
             background: linear-gradient(135deg, #1e1e2e, #1a1a2e);
             color: #cdd6f4;
             padding: 1.5rem;
@@ -216,10 +200,9 @@
             margin: 2rem 0;
             font-size: 0.875rem;
             box-shadow: var(--shadow-lg);
-            position: relative;
         }
-        
-        .article-content code {
+
+        .prose code {
             background: rgba(249, 115, 22, 0.1);
             padding: 0.25rem 0.5rem;
             border-radius: 6px;
@@ -227,79 +210,52 @@
             color: var(--accent);
             font-family: 'Fira Code', 'JetBrains Mono', monospace;
         }
-        
-        .article-content pre code {
+
+        .prose pre code {
             background: transparent;
             padding: 0;
             color: inherit;
         }
-        
-        /* Code Copy Button */
-        .code-block {
-            position: relative;
-        }
-        
+
+        /* ====== 代码复制按钮 ====== */
+        .code-block { position: relative; }
+
         .copy-btn {
-            transition: all 0.2s ease;
+            transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
         }
-        
-        .copy-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        /* Next Article Button */
-        .next-article {
+
+        .copy-btn:hover { transform: scale(1.1); }
+
+        /* ====== 返回目录按钮 ====== */
+        .btn-back {
             background: linear-gradient(135deg, var(--accent), #fb923c);
-            transition: all 0.3s ease;
             box-shadow: var(--shadow-md);
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
         }
-        
-        .next-article:hover {
+
+        .btn-back:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
         }
-        
-        /* Dark Mode Adjustments */
-        .dark .article-content blockquote {
-            background: rgba(249, 115, 22, 0.05);
-        }
-        
-        .dark .article-content code {
-            background: rgba(249, 115, 22, 0.15);
-        }
-        
-        /* Responsive Typography */
+
+        /* ====== 暗色模式微调 ====== */
+        .dark .prose blockquote { background: rgba(249, 115, 22, 0.05); }
+        .dark .prose code { background: rgba(249, 115, 22, 0.15); }
+
+        /* ====== 响应式 ====== */
         @media (max-width: 768px) {
-            article h1 {
-                font-size: 1.8rem;
-            }
-            
-            .article-content h2 {
-                font-size: 1.35rem;
-            }
-            
-            .article-content h3 {
-                font-size: 1.15rem;
-            }
-        }
-        
-        /* Smooth transitions */
-        * {
-            transition-property: background-color, border-color, color, fill, stroke;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 150ms;
+            .article-title { font-size: 1.8rem; }
+            .prose h2 { font-size: 1.35rem; }
+            .prose h3 { font-size: 1.15rem; }
         }
     </style>
 </head>
 <body class="min-h-screen">
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 h-16 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md z-40">
+    <!-- 导航栏 -->
+    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
         <div class="h-full flex items-center justify-between px-6">
-            <!-- Logo -->
             <a href="#" class="text-xl font-bold text-gray-900 dark:text-white">My Blog</a>
-            
-            <!-- Right: Theme Toggle -->
-            <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <button id="themeToggle" class="theme-toggle p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                 <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
@@ -310,15 +266,15 @@
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- 主内容 -->
     <main class="pt-16">
         <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
             <article>
-                <h1 class="text-3xl lg:text-4xl font-bold text-center mb-8">心定不着微物起</h1>
+                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">心定不着微物起</h1>
 
-                <!-- Article Content -->
-                <div class="article-container article-content text-gray-700 dark:text-gray-300">
-                    <p>不到芒种，不知心焦。数着所剩无几的日子，笑着说“要解放了”，心里空落落的。我真能得着解放么？我不知道。这一个芒种过后，还有下一个芒种在等着，日子他啊是在让我转圈。</p>
+                <!-- 文章正文 -->
+                <div class="article-body prose text-gray-700 dark:text-gray-300">
+                    <p>不到芒种，不知心焦。数着所剩无几的日子，笑着说"要解放了"，心里空落落的。我真能得着解放么？我不知道。这一个芒种过后，还有下一个芒种在等着，日子他啊是在让我转圈。</p>
 
                     <p>590，580，570，560…一次十分够不少，止不尽。</p>
 
@@ -341,7 +297,7 @@
                     <p>明年的你又会坐在哪里呢？最好的光景会留在高考吗？我的高考会有最好的光景吗？</p>
 
                     <blockquote>
-                        <p>“我想和他们一样，只穿一条小裤衩，光着上身和脚，晒成黑铁蛋，坐在光溜溜的水牛背上挥舞自制的长鞭，雄赳赳气昂昂向野地里进发。”</p>
+                        <p>"我想和他们一样，只穿一条小裤衩，光着上身和脚，晒成黑铁蛋，坐在光溜溜的水牛背上挥舞自制的长鞭，雄赳赳气昂昂向野地里进发。"</p>
                     </blockquote>
 
                     <p>我也想放上一次牛，当个野孩子，像个盖世英雄，让阳光把我刺透，但别让劲风把我吹倒。</p>
@@ -349,9 +305,9 @@
                     <p>事在人为，心有惶惶有会怎样呢？一次次的选择不过会消逝在换下去的倒计时。</p>
                 </div>
 
-                <!-- Next Article -->
+                <!-- 返回目录 -->
                 <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-                    <a href="../index.html" class="next-article inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium transition-all">
+                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium">
                         <span>目录</span>
                         <span class="font-semibold">Go!</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,21 +320,22 @@
     </main>
 
     <script>
-        // Dark Mode Toggle
+        /* ====== 暗色模式切换 ====== */
         const themeToggle = document.getElementById('themeToggle');
-        const html = document.documentElement;
-        
-        // Check saved theme
-        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
+        const root = document.documentElement;
+
+        // 初始化主题
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            root.classList.add('dark');
         }
-        
+
         themeToggle.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+            root.classList.toggle('dark');
+            localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
         });
 
-        // Copy Code Function
+        /* ====== 代码复制功能 ====== */
         function copyCode(btn) {
             const code = btn.parentElement.querySelector('code').textContent;
             navigator.clipboard.writeText(code).then(() => {
