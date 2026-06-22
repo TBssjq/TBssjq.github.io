@@ -6,33 +6,75 @@
     <meta name="description" content="水神崛起的个人主页 - 前端开发者 | 游戏爱好者 | 动态视觉魔法师">
     <meta name="author" content="水神崛起">
     <title>水神崛起</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script async src="https://cdn.jsdelivr.net/npm/live2d-widget@3.0.4/lib/L2Dwidget.min.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body>
+    <!-- 水面波光效果 -->
+    <div class="water-shimmer"></div>
+
+    <!-- 浮动环境光球 -->
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+
+    <!-- 鼠标跟随光效 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
     <!-- 加载画面 -->
     <div class="loading-screen" aria-hidden="true">
         <div class="loading-text">海内存知己，天涯若比邻</div>
     </div>
 
     <div class="container">
-        <header>
-            <div class="music-player">
-                <iframe
-                    frameborder="0"
-                    marginwidth="0"
-                    marginheight="0"
-                    width="100%"
-                    height="86"
-                    src="https://music.163.com/outchain/player?type=2&id=65546&auto=0&height=66"
-                    title="网易云音乐播放器"
-                    loading="lazy"
-                ></iframe>
-            </div>
-        </header>
+        <!-- 顶部导航 — PillNav -->
+        <div class="pill-nav-container" id="pillNav">
+            <nav class="pill-nav" aria-label="Primary"
+                 style="--base: #00e5c7; --pill-bg: transparent; --pill-text: rgba(232, 244, 248, 0.5); --hover-text: #0a1628;">
+                <div class="pill-logo">
+                    <span class="pill-logo-text">水</span>
+                </div>
+                <div class="pill-nav-items">
+                    <ul class="pill-list" role="menubar">
+                        <li role="none">
+                            <a role="menuitem" href="#about" class="pill is-active" data-target=".about">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">About</span>
+                                    <span class="pill-label-hover" aria-hidden="true">About</span>
+                                </span>
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a role="menuitem" href="#contact" class="pill" data-target=".contact">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">Contact</span>
+                                    <span class="pill-label-hover" aria-hidden="true">Contact</span>
+                                </span>
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a role="menuitem" href="doc/index.html" class="pill">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">Blog</span>
+                                    <span class="pill-label-hover" aria-hidden="true">Blog</span>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
 
         <main>
             <div class="hero">
@@ -49,7 +91,24 @@
                 </p>
             </div>
 
-            <section class="contact animate-in" data-delay="1.1">
+            <section class="about animate-in" data-delay="1.1">
+                <canvas id="ballpitCanvas" aria-hidden="true"></canvas>
+                <div class="about-card card-spotlight" id="spotlightCard">
+                    <h2 class="about-heading">Hi there 👋</h2>
+                    <div class="about-content">
+                        <p>I am an ordinary man.</p>
+                        <p>I have many daydreams — cool, yet unreal.</p>
+                        <p>I spent long years trying to find a comrade, but I found nothing.</p>
+                        <p>I may be a loser, and in the end, I proved to be a loser among losers.</p>
+                        <p>Somewhere out there, I hope a cool friend is waiting for me —</p>
+                        <p>tall, robust, outgoing, and maybe just a little like the me I imagine.</p>
+                        <p>In this wide universe, there are many things worth pursuing.</p>
+                        <p>And one of them is you — the real you, still hoping, still waiting.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="contact animate-in" data-delay="1.4">
                 <h3 class="contact-heading">联系我</h3>
                 <div class="social-links">
                     <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
@@ -63,9 +122,13 @@
                     </a>
                 </div>
             </section>
-        </main>
 
-        <footer></footer>
+            <!-- 滚动提示 -->
+            <div class="scroll-hint">
+                <span>Scroll</span>
+                <div class="scroll-line"></div>
+            </div>
+        </main>
     </div>
 
     <!-- 右键菜单 -->
@@ -105,14 +168,39 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         initLoadingScreen();
-        initLive2D();
+        initCursorGlow();
         initParticles();
         initDynamicTitle();
         initContextMenu();
         initSakura();
         initModal();
         initScrollReveal();
+        initSpotlightCard();
+        initPillNav();
+        initBallpit();
     });
+
+    /* ── 鼠标跟随光效 ── */
+    function initCursorGlow() {
+        const glow = document.getElementById('cursorGlow');
+        if (!glow) return;
+
+        let mouseX = -500, mouseY = -500;
+        let glowX = -500, glowY = -500;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        (function animate() {
+            glowX += (mouseX - glowX) * 0.08;
+            glowY += (mouseY - glowY) * 0.08;
+            glow.style.left = glowX + 'px';
+            glow.style.top = glowY + 'px';
+            requestAnimationFrame(animate);
+        })();
+    }
 
     /* ── 加载画面 ── */
     function initLoadingScreen() {
@@ -132,7 +220,7 @@
         const pairs = [
             { pin: 'NI',   ch: '你' },
             { pin: 'HAO',  ch: '好' },
-            { pin: '!',    ch: '！' },
+            { pin: '!',    ch: '！<br>' },
             { pin: 'WO',   ch: '我' },
             { pin: 'SHI',  ch: '是' },
             { pin: 'SHUI', ch: '水' },
@@ -146,45 +234,16 @@
             if (pi >= pairs.length) return;
             const { pin, ch } = pairs[pi];
             if (ci < pin.length) {
-                el.textContent += pin[ci++];
+                el.innerHTML += pin[ci++];
                 setTimeout(tick, 100);
             } else {
                 setTimeout(() => {
-                    el.textContent = el.textContent.replace(pin, ch);
+                    el.innerHTML = el.innerHTML.replace(pin, ch);
                     pi++; ci = 0;
                     setTimeout(tick, 500);
                 }, 300);
             }
         })();
-    }
-
-    /* ── Live2D ── */
-    function initLive2D() {
-        function boot() {
-            const w = window.innerWidth;
-            const cfg = w < 768
-                ? { width: 120, height: 180, scale: 0.3 }
-                : w < 1024
-                    ? { width: 150, height: 220, scale: 0.4 }
-                    : { width: 180, height: 260, scale: 0.5 };
-
-            L2Dwidget.init({
-                model: { scale: cfg.scale },
-                display: { position: 'right', width: cfg.width, height: cfg.height, hOffset: 0, vOffset: -20 },
-                mobile: { show: true, scale: cfg.scale },
-                react: { opacityDefault: 0.7, opacityOnHover: 0.2 }
-            });
-        }
-
-        setTimeout(boot, 1000);
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                document.querySelector('#live2d-widget')?.remove();
-                boot();
-            }, 300);
-        });
     }
 
     /* ── 点击粒子 ── */
@@ -197,19 +256,21 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const colors = ['#5b9bd5', '#7ec8e3', '#a8d8ea', '#b8d4e3', '#6ea8d8', '#4a90c4', '#89b8e0'];
+        const colors = ['#00e5c7', '#7dffef', '#00b89e', '#6c5ce7', '#a29bfe', '#fd79a8', '#00e5c7'];
         const particles = [];
 
         function spawn(x, y) {
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 30; i++) {
+                const angle = (Math.PI * 2 * i) / 30 + (Math.random() - 0.5) * 0.5;
+                const speed = Math.random() * 5 + 2;
                 particles.push({
                     x, y,
-                    r: Math.random() * 4 + 2,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
+                    r: Math.random() * 3 + 1.5,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
                     color: colors[Math.random() * colors.length | 0],
                     life: 1,
-                    decay: Math.random() * 0.02 + 0.01
+                    decay: Math.random() * 0.015 + 0.008
                 });
             }
         }
@@ -218,15 +279,23 @@
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life -= p.decay; p.r *= 0.98;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.02; // slight gravity
+                p.vx *= 0.99;
+                p.life -= p.decay;
+                p.r *= 0.985;
                 if (p.life <= 0) { particles.splice(i, 1); continue; }
                 ctx.globalAlpha = p.life;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                 ctx.fillStyle = p.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = p.color;
                 ctx.fill();
             }
             ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
             requestAnimationFrame(loop);
         })();
 
@@ -260,7 +329,7 @@
         });
     }
 
-    /* ── 樱花 ── */
+    /* ── 樱花（升级版 — 多彩光点） ── */
     function initSakura() {
         const cvs = document.getElementById('sakuraCanvas');
         const ctx = cvs.getContext('2d');
@@ -268,35 +337,58 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const petals = Array.from({ length: 45 }, () => ({
-            x: Math.random() * cvs.width,
-            y: Math.random() * cvs.height,
-            r: Math.random() * 6 + 3,
-            vx: (Math.random() - 0.5) * 0.8,
-            vy: Math.random() * 0.8 + 0.3,
-            o: Math.random() * 0.6 + 0.2,
-            rot: Math.random() * Math.PI * 2,
-            rv: (Math.random() - 0.5) * 0.02
-        }));
+        const colors = [
+            'rgba(0, 229, 199, ',   // accent
+            'rgba(125, 255, 239, ',  // accent-light
+            'rgba(108, 92, 231, ',   // secondary
+            'rgba(162, 155, 254, ',  // secondary-light
+            'rgba(253, 121, 168, ',  // warm
+        ];
+
+        const petals = Array.from({ length: 55 }, () => {
+            const colorBase = colors[Math.random() * colors.length | 0];
+            return {
+                x: Math.random() * cvs.width,
+                y: Math.random() * cvs.height,
+                r: Math.random() * 4 + 1.5,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: Math.random() * 0.5 + 0.2,
+                o: Math.random() * 0.35 + 0.1,
+                rot: Math.random() * Math.PI * 2,
+                rv: (Math.random() - 0.5) * 0.015,
+                color: colorBase,
+                pulse: Math.random() * Math.PI * 2,
+                pulseSpeed: Math.random() * 0.02 + 0.005
+            };
+        });
 
         (function loop() {
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             petals.forEach(p => {
-                p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+                p.x += p.vx + Math.sin(p.pulse) * 0.3;
+                p.y += p.vy;
+                p.rot += p.rv;
+                p.pulse += p.pulseSpeed;
+
                 if (p.y > cvs.height + p.r) { p.y = -p.r; p.x = Math.random() * cvs.width; }
                 if (p.x > cvs.width + p.r) p.x = -p.r;
                 if (p.x < -p.r) p.x = cvs.width + p.r;
 
+                const currentO = p.o * (0.7 + 0.3 * Math.sin(p.pulse));
+
                 ctx.save();
-                ctx.globalAlpha = p.o;
+                ctx.globalAlpha = currentO;
                 ctx.translate(p.x, p.y);
                 ctx.rotate(p.rot);
                 ctx.beginPath();
-                ctx.ellipse(0, 0, p.r, p.r * 0.6, 0, 0, Math.PI * 2);
-                ctx.fillStyle = '#a8d8ea';
+                ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.color + currentO + ')';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = p.color + '0.5)';
                 ctx.fill();
                 ctx.restore();
             });
+            ctx.shadowBlur = 0;
             requestAnimationFrame(loop);
         })();
     }
@@ -316,6 +408,373 @@
             const delay = parseFloat(el.dataset.delay || 0) * 1000;
             setTimeout(() => el.classList.add('visible'), delay);
         });
+    }
+
+    /* ── SpotlightCard ── */
+    function initSpotlightCard() {
+        const card = document.getElementById('spotlightCard');
+        if (!card) return;
+
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+        });
+    }
+
+    /* ── PillNav ── */
+    function initPillNav() {
+        const container = document.getElementById('pillNav');
+        if (!container) return;
+
+        const pills = container.querySelectorAll('.pill');
+        const logo = container.querySelector('.pill-logo');
+        const logoImg = container.querySelector('.pill-logo-text');
+        if (pills.length === 0) return;
+
+        const ease = 'power3.easeOut';
+        let activeIndex = 0;
+        const tlRefs = [];
+        const activeTweenRefs = [];
+        const circleRefs = [];
+
+        pills.forEach((pill, i) => {
+            const circle = pill.querySelector('.hover-circle');
+            circleRefs[i] = circle;
+            tlRefs[i] = null;
+            activeTweenRefs[i] = null;
+        });
+
+        const layout = () => {
+            circleRefs.forEach((circle, i) => {
+                if (!circle || !circle.parentElement) return;
+                const pill = circle.parentElement;
+                const rect = pill.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                if (w === 0 || h === 0) return;
+
+                const R = ((w * w) / 4 + h * h) / (2 * h);
+                const D = Math.ceil(2 * R) + 2;
+                const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
+                const originY = D - delta;
+
+                circle.style.width = `${D}px`;
+                circle.style.height = `${D}px`;
+                circle.style.bottom = `-${delta}px`;
+
+                gsap.set(circle, {
+                    xPercent: -50,
+                    scale: 0,
+                    transformOrigin: `50% ${originY}px`
+                });
+
+                const label = pill.querySelector('.pill-label');
+                const hoverLabel = pill.querySelector('.pill-label-hover');
+
+                if (label) gsap.set(label, { y: 0 });
+                if (hoverLabel) gsap.set(hoverLabel, { y: h + 12, opacity: 0 });
+
+                if (tlRefs[i]) tlRefs[i].kill();
+                const tl = gsap.timeline({ paused: true });
+
+                tl.to(circle, {
+                    scale: 1.2,
+                    xPercent: -50,
+                    duration: 2,
+                    ease,
+                    overwrite: 'auto'
+                }, 0);
+
+                if (label) {
+                    tl.to(label, {
+                        y: -(h + 8),
+                        duration: 2,
+                        ease,
+                        overwrite: 'auto'
+                    }, 0);
+                }
+
+                if (hoverLabel) {
+                    gsap.set(hoverLabel, { y: Math.ceil(h + 100), opacity: 0 });
+                    tl.to(hoverLabel, {
+                        y: 0,
+                        opacity: 1,
+                        duration: 2,
+                        ease,
+                        overwrite: 'auto'
+                    }, 0);
+                }
+
+                tlRefs[i] = tl;
+            });
+        };
+
+        layout();
+        window.addEventListener('resize', () => layout());
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => layout()).catch(() => {});
+        }
+
+        const handleEnter = (i) => {
+            const tl = tlRefs[i];
+            if (!tl) return;
+            if (activeTweenRefs[i]) activeTweenRefs[i].kill();
+            activeTweenRefs[i] = tl.tweenTo(tl.duration(), {
+                duration: 0.3,
+                ease,
+                overwrite: 'auto'
+            });
+        };
+
+        const handleLeave = (i) => {
+            const tl = tlRefs[i];
+            if (!tl) return;
+            if (activeTweenRefs[i]) activeTweenRefs[i].kill();
+            activeTweenRefs[i] = tl.tweenTo(0, {
+                duration: 0.2,
+                ease,
+                overwrite: 'auto'
+            });
+        };
+
+        let logoTween = null;
+        if (logo) {
+            logo.addEventListener('mouseenter', () => {
+                if (logoTween) logoTween.kill();
+                gsap.set(logoImg, { rotate: 0 });
+                logoTween = gsap.to(logoImg, {
+                    rotate: 360,
+                    duration: 0.2,
+                    ease,
+                    overwrite: 'auto'
+                });
+            });
+        }
+
+        if (logoImg) {
+            gsap.set(logoImg, { scale: 0 });
+            gsap.to(logoImg, {
+                scale: 1,
+                duration: 0.6,
+                ease
+            });
+        }
+
+        const navItemsEl = container.querySelector('.pill-nav-items');
+        if (navItemsEl) {
+            gsap.set(navItemsEl, { width: 0, overflow: 'hidden' });
+            gsap.to(navItemsEl, {
+                width: 'auto',
+                duration: 0.6,
+                ease
+            });
+        }
+
+        pills.forEach((pill, i) => {
+            pill.addEventListener('mouseenter', () => handleEnter(i));
+            pill.addEventListener('mouseleave', () => handleLeave(i));
+
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (activeIndex === i) return;
+
+                pills.forEach(p => p.classList.remove('is-active'));
+                pill.classList.add('is-active');
+                activeIndex = i;
+
+                const target = pill.dataset.target;
+                if (target) {
+                    const el = document.querySelector(target);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    const href = pill.getAttribute('href');
+                    if (href && !href.startsWith('#')) {
+                        setTimeout(() => { window.location.href = href; }, 300);
+                    }
+                }
+            });
+
+            pill.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    pill.click();
+                }
+            });
+        });
+
+        const resizeObserver = new ResizeObserver(() => layout());
+        resizeObserver.observe(container);
+    }
+
+    /* ── Ballpit 3D ── */
+    async function initBallpit() {
+        const canvas = document.getElementById('ballpitCanvas');
+        if (!canvas) return;
+
+        const { Scene, PerspectiveCamera, WebGLRenderer, SphereGeometry, MeshPhysicalMaterial, Mesh, AmbientLight, PointLight, Color, Group, Raycaster, Vector2 } = await import('three');
+        const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+
+        const scene = new Scene();
+        const camera = new PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+        camera.position.set(0, 0, 12);
+
+        const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = 0; // NoToneMapping
+
+        // Lights
+        const ambient = new AmbientLight(0x334455, 1.5);
+        scene.add(ambient);
+
+        const light1 = new PointLight(0x00e5c7, 40, 30);
+        light1.position.set(5, 5, 5);
+        scene.add(light1);
+
+        const light2 = new PointLight(0x6c5ce7, 30, 30);
+        light2.position.set(-5, -3, 3);
+        scene.add(light2);
+
+        const light3 = new PointLight(0xfd79a8, 20, 25);
+        light3.position.set(0, -5, 5);
+        scene.add(light3);
+
+        // Ball colors
+        const palette = [
+            0x00e5c7, 0x7dffef, 0x00b89e,
+            0x6c5ce7, 0xa29bfe,
+            0xfd79a8, 0x00e5c7
+        ];
+
+        // Create balls
+        const group = new Group();
+        const balls = [];
+        const count = 60;
+
+        for (let i = 0; i < count; i++) {
+            const radius = Math.max(0.15, Math.random() * 0.35 + 0.15);
+            const geo = new SphereGeometry(radius, 32, 32);
+            const mat = new MeshPhysicalMaterial({
+                color: palette[Math.floor(Math.random() * palette.length)],
+                metalness: 0.1,
+                roughness: 0.2,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                transparent: true,
+                opacity: 0.85,
+            });
+            const mesh = new Mesh(geo, mat);
+
+            // Random position within a sphere
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = Math.random() * 4 + 1;
+            mesh.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.sin(phi) * Math.sin(theta),
+                r * Math.cos(phi)
+            );
+
+            mesh.userData = {
+                velocity: new Vector2(
+                    (Math.random() - 0.5) * 0.008,
+                    (Math.random() - 0.5) * 0.008
+                ),
+                rotSpeed: new Vector3(
+                    (Math.random() - 0.5) * 0.02,
+                    (Math.random() - 0.5) * 0.02,
+                    (Math.random() - 0.5) * 0.02
+                ),
+                originalPos: mesh.position.clone(),
+                phase: Math.random() * Math.PI * 2
+            };
+
+            group.add(mesh);
+            balls.push(mesh);
+        }
+        scene.add(group);
+
+        // Mouse interaction
+        const raycaster = new Raycaster();
+        const mouse = new Vector2();
+        let mouseX = 0, mouseY = 0;
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            mouseX = mouse.x;
+            mouseY = mouse.y;
+        });
+
+        // Animation
+        const clock = { time: 0 };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            clock.time += 0.016;
+
+            // Rotate group gently
+            group.rotation.y += 0.002;
+            group.rotation.x = Math.sin(clock.time * 0.3) * 0.1;
+
+            // Animate each ball
+            balls.forEach(ball => {
+                const ud = ball.userData;
+                ball.position.x += ud.velocity.x;
+                ball.position.y += ud.velocity.y;
+
+                // Gentle floating
+                ball.position.x += Math.sin(clock.time + ud.phase) * 0.003;
+                ball.position.y += Math.cos(clock.time * 0.7 + ud.phase) * 0.003;
+
+                // Keep within bounds
+                const dist = ball.position.length();
+                if (dist > 5.5) {
+                    const dir = ball.position.clone().normalize().multiplyScalar(-0.01);
+                    ball.position.add(dir);
+                    ud.velocity.x *= -0.8;
+                    ud.velocity.y *= -0.8;
+                }
+
+                // Rotation
+                ball.rotation.x += ud.rotSpeed.x;
+                ball.rotation.y += ud.rotSpeed.y;
+                ball.rotation.z += ud.rotSpeed.z;
+
+                // Mouse repulsion
+                const dx = ball.position.x - mouseX * 5;
+                const dy = ball.position.y - mouseY * 5;
+                const mouseDist = Math.sqrt(dx * dx + dy * dy);
+                if (mouseDist < 2) {
+                    const force = (2 - mouseDist) * 0.005;
+                    ball.position.x += dx / mouseDist * force;
+                    ball.position.y += dy / mouseDist * force;
+                }
+            });
+
+            // Animate lights
+            light1.position.x = Math.sin(clock.time * 0.5) * 6;
+            light1.position.y = Math.cos(clock.time * 0.3) * 5;
+            light2.position.x = Math.cos(clock.time * 0.4) * 5;
+            light2.position.y = Math.sin(clock.time * 0.6) * 4;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize handler
+        const resize = () => {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        };
+        window.addEventListener('resize', resize);
     }
     </script>
 </body>
