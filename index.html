@@ -38,7 +38,7 @@
         <!-- 顶部导航 — PillNav -->
         <div class="pill-nav-container" id="pillNav">
             <nav class="pill-nav" aria-label="Primary"
-                 style="--base: #00e5c7; --pill-bg: transparent; --pill-text: rgba(232, 244, 248, 0.5); --hover-text: #0a1628;">
+                 style="--base: #009e8e; --pill-bg: transparent; --pill-text: rgba(26, 42, 58, 0.55); --hover-text: #ffffff;">
                 <div class="pill-logo">
                     <span class="pill-logo-text">水</span>
                 </div>
@@ -174,6 +174,7 @@
         initContextMenu();
         initSakura();
         initModal();
+        initWebAnimations();  // Web Animations API 动画
         initScrollReveal();
         initSpotlightCard();
         initPillNav();
@@ -256,7 +257,7 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const colors = ['#00e5c7', '#7dffef', '#00b89e', '#6c5ce7', '#a29bfe', '#fd79a8', '#00e5c7'];
+        const colors = ['#009e8e', '#40c9b8', '#007a6d', '#6c5ce7', '#a29bfe', '#fd79a8', '#009e8e'];
         const particles = [];
 
         function spawn(x, y) {
@@ -630,7 +631,7 @@
         const ambient = new AmbientLight(0x334455, 1.5);
         scene.add(ambient);
 
-        const light1 = new PointLight(0x00e5c7, 40, 30);
+        const light1 = new PointLight(0x009e8e, 40, 30);
         light1.position.set(5, 5, 5);
         scene.add(light1);
 
@@ -644,9 +645,9 @@
 
         // Ball colors
         const palette = [
-            0x00e5c7, 0x7dffef, 0x00b89e,
+            0x009e8e, 0x40c9b8, 0x007a6d,
             0x6c5ce7, 0xa29bfe,
-            0xfd79a8, 0x00e5c7
+            0xfd79a8, 0x009e8e
         ];
 
         // Create balls
@@ -775,6 +776,295 @@
             renderer.setSize(w, h);
         };
         window.addEventListener('resize', resize);
+    }
+
+    /* ── Web Animations API — 全局动画系统 ── */
+    function initWebAnimations() {
+        // 等待加载画面结束后启动动画
+        const startAnimations = () => {
+            animateNavigation();
+            animateHero();
+            animateAboutSection();
+            animateSocialLinks();
+            animateScrollHint();
+            animateContactHeading();
+        };
+
+        // 延迟启动，确保页面已完全渲染
+        setTimeout(startAnimations, 3200);
+    }
+
+    /* 导航栏入场动画 */
+    function animateNavigation() {
+        const nav = document.querySelector('.pill-nav');
+        if (!nav) return;
+
+        nav.animate([
+            { opacity: 0, transform: 'translateY(-30px) scale(0.95)' },
+            { opacity: 1, transform: 'translateY(0) scale(1)' }
+        ], {
+            duration: 1000,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            fill: 'forwards',
+            delay: 100
+        });
+
+        // Logo 弹跳动画
+        const logoText = document.querySelector('.pill-logo-text');
+        if (logoText) {
+            logoText.animate([
+                { transform: 'scale(0) rotate(-180deg)', opacity: 0 },
+                { transform: 'scale(1.2) rotate(10deg)', opacity: 1, offset: 0.6 },
+                { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                delay: 400
+            });
+        }
+
+        // 导航项依次入场
+        const pills = document.querySelectorAll('.pill');
+        pills.forEach((pill, index) => {
+            pill.animate([
+                { opacity: 0, transform: 'translateX(-20px)' },
+                { opacity: 1, transform: 'translateX(0)' }
+            ], {
+                duration: 600,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 500 + index * 120
+            });
+        });
+    }
+
+    /* Hero 区域动画 */
+    function animateHero() {
+        // 标题打字机效果增强
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+            heroTitle.animate([
+                { opacity: 0, transform: 'translateY(50px) scale(0.9)', filter: 'blur(10px)' },
+                { opacity: 1, transform: 'translateY(0) scale(1)', filter: 'blur(0px)' }
+            ], {
+                duration: 1200,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 600
+            });
+        }
+
+        // 副标题滑入
+        const subtitle = document.querySelector('.hero-subtitle');
+        if (subtitle) {
+            subtitle.animate([
+                { opacity: 0, transform: 'translateY(30px)', letterSpacing: '0.5em' },
+                { opacity: 1, transform: 'translateY(0)', letterSpacing: '0.35em' }
+            ], {
+                duration: 1000,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 1200
+            });
+        }
+
+        // 心形图标跳动
+        const hearts = document.querySelectorAll('.heart-char');
+        hearts.forEach((heart, index) => {
+            // 入场动画
+            heart.animate([
+                { opacity: 0, transform: 'scale(0) translateY(20px)' },
+                { opacity: 1, transform: 'scale(1.4) translateY(-5px)', offset: 0.6 },
+                { opacity: 1, transform: 'scale(1) translateY(0)' }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                delay: 1600 + index * 150
+            });
+
+            // 持续心跳动画
+            heart.animate([
+                { transform: 'scale(1)', opacity: 0.7 },
+                { transform: 'scale(1.25)', opacity: 1, offset: 0.15 },
+                { transform: 'scale(1)', opacity: 0.8, offset: 0.3 },
+                { transform: 'scale(1.18)', opacity: 0.95, offset: 0.45 },
+                { transform: 'scale(1)', opacity: 0.7 }
+            ], {
+                duration: 1400,
+                iterations: Infinity,
+                easing: 'ease-in-out',
+                delay: index * 150,
+                endDelay: 2400
+            });
+        });
+    }
+
+    /* About 区域动画 */
+    function animateAboutSection() {
+        const aboutSection = document.querySelector('.about');
+        if (!aboutSection) return;
+
+        // 整体卡片入场
+        const card = document.querySelector('.about-card');
+        if (card) {
+            card.animate([
+                { opacity: 0, transform: 'translateY(60px) rotateX(5deg)' },
+                { opacity: 1, transform: 'translateY(0) rotateX(0deg)' }
+            ], {
+                duration: 1000,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 2000
+            });
+        }
+
+        // 标题动画
+        const heading = document.querySelector('.about-heading');
+        if (heading) {
+            heading.animate([
+                { opacity: 0, transform: 'translateX(-30px)', filter: 'blur(5px)' },
+                { opacity: 1, transform: 'translateX(0)', filter: 'blur(0px)' }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 2300
+            });
+        }
+
+        // 内容逐行显示
+        const paragraphs = document.querySelectorAll('.about-content p');
+        paragraphs.forEach((p, index) => {
+            p.animate([
+                { opacity: 0, transform: 'translateY(20px) translateX(-10px)' },
+                { opacity: 0.6, transform: 'translateY(0) translateX(0)' }
+            ], {
+                duration: 700,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 2600 + index * 120
+            });
+
+            // 悬停时的微动效（使用事件监听）
+            p.addEventListener('mouseenter', () => {
+                p.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(6px)' },
+                    { transform: 'translateX(4px)' }
+                ], {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+                });
+            });
+        });
+    }
+
+    /* 社交链接动画 */
+    function animateSocialLinks() {
+        const links = document.querySelectorAll('.social-links a');
+
+        links.forEach((link, index) => {
+            // 入场动画
+            link.animate([
+                { opacity: 0, transform: 'translateY(30px) scale(0.5)' },
+                { opacity: 1, transform: 'translateY(0) scale(1)' }
+            ], {
+                duration: 700,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                delay: 3600 + index * 150
+            });
+
+            // 悬停动画
+            link.addEventListener('mouseenter', () => {
+                link.animate([
+                    { transform: 'translateY(0) scale(1)' },
+                    { transform: 'translateY(-8px) scale(1.15)' }
+                ], {
+                    duration: 350,
+                    easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    fill: 'forwards'
+                });
+            });
+
+            link.addEventListener('mouseleave', () => {
+                link.animate([
+                    { transform: 'translateY(-8px) scale(1.15)' },
+                    { transform: 'translateY(0) scale(1)' }
+                ], {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    fill: 'forwards'
+                });
+            });
+        });
+
+        // 图标持续微旋转
+        const images = document.querySelectorAll('.social-links img');
+        images.forEach(img => {
+            img.animate([
+                { transform: 'rotate(0deg) scale(1)' },
+                { transform: 'rotate(5deg) scale(1.05)', offset: 0.33 },
+                { transform: 'rotate(-5deg) scale(1.02)', offset: 0.66 },
+                { transform: 'rotate(0deg) scale(1)' }
+            ], {
+                duration: 4000,
+                iterations: Infinity,
+                easing: 'ease-in-out'
+            });
+        });
+    }
+
+    /* 滚动提示动画 */
+    function animateScrollHint() {
+        const scrollHint = document.querySelector('.scroll-hint');
+        if (!scrollHint) return;
+
+        // 整体呼吸效果
+        scrollHint.animate([
+            { opacity: 0.2, transform: 'translateY(0)' },
+            { opacity: 0.7, transform: 'translateY(8px)' },
+            { opacity: 0.2, transform: 'translateY(0)' }
+        ], {
+            duration: 2500,
+            iterations: Infinity,
+            easing: 'ease-in-out',
+            delay: 4200
+        });
+
+        // 滚动线条动画
+        const scrollLine = scrollHint.querySelector('.scroll-line');
+        if (scrollLine) {
+            scrollLine.animate([
+                { transform: 'scaleY(0)', transformOrigin: 'top', opacity: 0 },
+                { transform: 'scaleY(1)', transformOrigin: 'top', opacity: 1, offset: 0.2 },
+                { transform: 'scaleY(1)', transformOrigin: 'top', opacity: 1, offset: 0.7 },
+                { transform: 'scaleY(0)', transformOrigin: 'bottom', opacity: 0 }
+            ], {
+                duration: 2500,
+                iterations: Infinity,
+                easing: 'ease-in-out',
+                delay: 4200
+            });
+        }
+    }
+
+    /* 联系标题动画 */
+    function animateContactHeading() {
+        const contactHeading = document.querySelector('.contact-heading');
+        if (!contactHeading) return;
+
+        contactHeading.animate([
+            { opacity: 0, letterSpacing: '0.8em' },
+            { opacity: 1, letterSpacing: '0.5em' }
+        ], {
+            duration: 900,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
+            delay: 3400
+        });
     }
     </script>
 </body>
