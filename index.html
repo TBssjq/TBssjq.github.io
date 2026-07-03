@@ -339,34 +339,37 @@
         window.addEventListener('resize', resize);
 
         const colors = [
-            'rgba(0, 229, 199, ',   // accent
-            'rgba(125, 255, 239, ',  // accent-light
-            'rgba(108, 92, 231, ',   // secondary
-            'rgba(162, 155, 254, ',  // secondary-light
-            'rgba(253, 121, 168, ',  // warm
+            'rgba(255, 183, 197, ',   // 樱花粉
+            'rgba(255, 150, 180, ',   // 深樱粉
+            'rgba(255, 209, 220, ',   // 浅樱粉
+            'rgba(255, 182, 193, ',   // 浅粉红
+            'rgba(248, 187, 208, ',   // 玫瑰粉
+            'rgba(237, 159, 176, ',   // 桃粉
+            'rgba(0, 229, 199, ',    // accent青（少量点缀）
+            'rgba(253, 121, 168, ',  // warm粉
         ];
 
-        const petals = Array.from({ length: 55 }, () => {
+        const petals = Array.from({ length: 95 }, () => {
             const colorBase = colors[Math.random() * colors.length | 0];
             return {
                 x: Math.random() * cvs.width,
                 y: Math.random() * cvs.height,
-                r: Math.random() * 4 + 1.5,
-                vx: (Math.random() - 0.5) * 0.6,
-                vy: Math.random() * 0.5 + 0.2,
-                o: Math.random() * 0.35 + 0.1,
+                r: Math.random() * 5 + 2.5,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: Math.random() * 0.8 + 0.35,
+                o: Math.random() * 0.4 + 0.35,
                 rot: Math.random() * Math.PI * 2,
-                rv: (Math.random() - 0.5) * 0.015,
+                rv: (Math.random() - 0.5) * 0.02,
                 color: colorBase,
                 pulse: Math.random() * Math.PI * 2,
-                pulseSpeed: Math.random() * 0.02 + 0.005
+                pulseSpeed: Math.random() * 0.025 + 0.008
             };
         });
 
         (function loop() {
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             petals.forEach(p => {
-                p.x += p.vx + Math.sin(p.pulse) * 0.3;
+                p.x += p.vx + Math.sin(p.pulse) * 0.4;
                 p.y += p.vy;
                 p.rot += p.rv;
                 p.pulse += p.pulseSpeed;
@@ -375,7 +378,7 @@
                 if (p.x > cvs.width + p.r) p.x = -p.r;
                 if (p.x < -p.r) p.x = cvs.width + p.r;
 
-                const currentO = p.o * (0.7 + 0.3 * Math.sin(p.pulse));
+                const currentO = p.o * (0.65 + 0.35 * Math.sin(p.pulse));
 
                 ctx.save();
                 ctx.globalAlpha = currentO;
@@ -384,8 +387,8 @@
                 ctx.beginPath();
                 ctx.arc(0, 0, p.r, 0, Math.PI * 2);
                 ctx.fillStyle = p.color + currentO + ')';
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = p.color + '0.5)';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = p.color + '0.6)';
                 ctx.fill();
                 ctx.restore();
             });
