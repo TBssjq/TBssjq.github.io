@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.min.js
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.upload/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Generated files
+*.html.bak
+*.css.bak
+*.js.bak
+
+# Live2D cache
+Live2D/
+
+# Video files
+*.mp4
+*.mov
+*.avi
+
+# Large media
+*.zip
+*.rar
+
+# Git hooks
+.git/hooks/
+
+# Production
+CNAME

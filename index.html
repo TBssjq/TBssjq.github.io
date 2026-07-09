@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="水神崛起的个人主页 - 前端开发者 | 游戏爱好者 | 动态视觉魔法师">
+    <meta name="author" content="水神崛起">
+    <title>水神崛起</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+    <!-- 水面波光效果 -->
+    <div class="water-shimmer"></div>
+
+    <!-- 浮动环境光球 -->
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+
+    <!-- 鼠标跟随光效 -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- 加载画面 -->
+    <div class="loading-screen" aria-hidden="true">
+        <div class="loading-text">海内存知己，天涯若比邻</div>
+    </div>
+
+    <div class="container">
+        <!-- 顶部导航 — PillNav -->
+        <div class="pill-nav-container" id="pillNav">
+            <nav class="pill-nav" aria-label="Primary"
+                 style="--base: #009e8e; --pill-bg: transparent; --pill-text: rgba(26, 42, 58, 0.55); --hover-text: #ffffff;">
+                <div class="pill-logo">
+                    <span class="pill-logo-text">水</span>
+                </div>
+                <div class="pill-nav-items">
+                    <ul class="pill-list" role="menubar">
+                        <li role="none">
+                            <a role="menuitem" href="#about" class="pill is-active" data-target=".about">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">About</span>
+                                    <span class="pill-label-hover" aria-hidden="true">About</span>
+                                </span>
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a role="menuitem" href="#contact" class="pill" data-target=".contact">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">Contact</span>
+                                    <span class="pill-label-hover" aria-hidden="true">Contact</span>
+                                </span>
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a role="menuitem" href="doc/index.html" class="pill">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">Blog</span>
+                                    <span class="pill-label-hover" aria-hidden="true">Blog</span>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <main>
+            <div class="hero">
+                <h1 class="hero-title animate-in" data-delay="0.2">
+                    <span class="typewriter-text"></span>
+                </h1>
+                <p class="hero-subtitle animate-in" data-delay="0.5">
+                    前端开发者 · 游戏爱好者 · 动态视觉魔法师
+                </p>
+                <p class="hero-hearts animate-in" data-delay="0.8">
+                    <span class="heart-char">❤</span>
+                    <span class="heart-char">❤</span>
+                    <span class="heart-char">❤</span>
+                </p>
+            </div>
+
+            <section class="about animate-in" data-delay="1.1">
+                <canvas id="ballpitCanvas" aria-hidden="true"></canvas>
+                <div class="about-card card-spotlight" id="spotlightCard">
+                    <h2 class="about-heading">Hi there 👋</h2>
+                    <div class="about-content">
+                        <p>I am an ordinary man.</p>
+                        <p>I have many daydreams — cool, yet unreal.</p>
+                        <p>I spent long years trying to find a comrade, but I found nothing.</p>
+                        <p>I may be a loser, and in the end, I proved to be a loser among losers.</p>
+                        <p>Somewhere out there, I hope a cool friend is waiting for me —</p>
+                        <p>tall, robust, outgoing, and maybe just a little like the me I imagine.</p>
+                        <p>In this wide universe, there are many things worth pursuing.</p>
+                        <p>And one of them is you — the real you, still hoping, still waiting.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="contact animate-in" data-delay="1.4">
+                <h3 class="contact-heading">联系我</h3>
+                <div class="social-links">
+                    <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <img src="src/github.svg" alt="GitHub" width="32" height="32">
+                    </a>
+                    <a href="mailto:653294795@qq.com?subject=你好！&body=你好！" rel="nofollow" aria-label="Email">
+                        <img src="src/email.svg" alt="Email" width="32" height="32">
+                    </a>
+                    <a href="https://space.bilibili.com/439038862" target="_blank" rel="noopener noreferrer" aria-label="Bilibili">
+                        <img src="src/bilibili.svg" alt="Bilibili" width="32" height="32">
+                    </a>
+                </div>
+            </section>
+
+            <!-- 滚动提示 -->
+            <div class="scroll-hint">
+                <span>Scroll</span>
+                <div class="scroll-line"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 右键菜单 -->
+    <nav id="contextMenu" class="context-menu" role="menu" aria-label="快捷操作">
+        <ul>
+            <li role="menuitem" data-action="refresh">刷新主页</li>
+            <li role="menuitem" data-action="bilibili">去我的 B 站</li>
+            <li role="menuitem" data-action="email">给我发邮件</li>
+            <li role="menuitem" data-action="top">返回顶部</li>
+        </ul>
+    </nav>
+
+    <!-- 樱花画布 -->
+    <canvas id="sakuraCanvas" aria-hidden="true"></canvas>
+
+    <!-- 博客弹窗 -->
+    <div id="blogModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="博客导航">
+        <div class="modal-card">
+            <button class="modal-close" aria-label="关闭">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div class="modal-body">
+                <h2 class="modal-title">我的博客</h2>
+                <p class="modal-desc">欢迎访问我的个人随笔空间</p>
+            </div>
+            <button class="modal-go" id="blogGoBtn">
+                <span>Go!</span>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initLoadingScreen();
+        initCursorGlow();
+        initParticles();
+        initDynamicTitle();
+        initContextMenu();
+        initSakura();
+        initModal();
+        initWebAnimations();  // Web Animations API 动画
+        initScrollReveal();
+        initSpotlightCard();
+        initPillNav();
+        initBallpit();
+    });
+
+    /* ── 鼠标跟随光效 ── */
+    function initCursorGlow() {
+        const glow = document.getElementById('cursorGlow');
+        if (!glow) return;
+
+        let mouseX = -500, mouseY = -500;
+        let glowX = -500, glowY = -500;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        (function animate() {
+            glowX += (mouseX - glowX) * 0.08;
+            glowY += (mouseY - glowY) * 0.08;
+            glow.style.left = glowX + 'px';
+            glow.style.top = glowY + 'px';
+            requestAnimationFrame(animate);
+        })();
+    }
+
+    /* ── 加载画面 ── */
+    function initLoadingScreen() {
+        const screen = document.querySelector('.loading-screen');
+        setTimeout(() => {
+            screen.classList.add('hidden');
+            setTimeout(() => {
+                screen.remove();
+                startTypewriter();
+            }, 2000);
+        }, 3000);
+    }
+
+    /* ── 打字机 ── */
+    function startTypewriter() {
+        const el = document.querySelector('.typewriter-text');
+        const pairs = [
+            { pin: 'NI',   ch: '你' },
+            { pin: 'HAO',  ch: '好' },
+            { pin: '!',    ch: '！<br>' },
+            { pin: 'WO',   ch: '我' },
+            { pin: 'SHI',  ch: '是' },
+            { pin: 'SHUI', ch: '水' },
+            { pin: 'SHEN', ch: '神' },
+            { pin: 'JUE',  ch: '崛' },
+            { pin: 'QI',   ch: '起' }
+        ];
+        let pi = 0, ci = 0;
+
+        (function tick() {
+            if (pi >= pairs.length) return;
+            const { pin, ch } = pairs[pi];
+            if (ci < pin.length) {
+                el.innerHTML += pin[ci++];
+                setTimeout(tick, 100);
+            } else {
+                setTimeout(() => {
+                    el.innerHTML = el.innerHTML.replace(pin, ch);
+                    pi++; ci = 0;
+                    setTimeout(tick, 500);
+                }, 300);
+            }
+        })();
+    }
+
+    /* ── 点击粒子 ── */
+    function initParticles() {
+        const cvs = document.createElement('canvas');
+        Object.assign(cvs.style, { position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 });
+        document.body.appendChild(cvs);
+        const ctx = cvs.getContext('2d');
+        const resize = () => { cvs.width = innerWidth; cvs.height = innerHeight; };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const colors = ['#009e8e', '#40c9b8', '#007a6d', '#6c5ce7', '#a29bfe', '#fd79a8', '#009e8e'];
+        const particles = [];
+
+        function spawn(x, y) {
+            for (let i = 0; i < 30; i++) {
+                const angle = (Math.PI * 2 * i) / 30 + (Math.random() - 0.5) * 0.5;
+                const speed = Math.random() * 5 + 2;
+                particles.push({
+                    x, y,
+                    r: Math.random() * 3 + 1.5,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: colors[Math.random() * colors.length | 0],
+                    life: 1,
+                    decay: Math.random() * 0.015 + 0.008
+                });
+            }
+        }
+
+        (function loop() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.02; // slight gravity
+                p.vx *= 0.99;
+                p.life -= p.decay;
+                p.r *= 0.985;
+                if (p.life <= 0) { particles.splice(i, 1); continue; }
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = p.color;
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            requestAnimationFrame(loop);
+        })();
+
+        document.addEventListener('click', e => spawn(e.clientX, e.clientY));
+    }
+
+    /* ── 动态标题 ── */
+    function initDynamicTitle() {
+        const title = document.title;
+        document.addEventListener('visibilitychange', () => {
+            document.title = document.hidden ? '(｡•́ω•̀｡) 你别走啊~' : '(✧∇✧) 你回来啦！';
+            if (!document.hidden) setTimeout(() => { document.title = title; }, 1000);
+        });
+    }
+
+    /* ── 右键菜单 ── */
+    function initContextMenu() {
+        const menu = document.getElementById('contextMenu');
+        document.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            menu.style.display = 'block';
+            menu.style.left = `${e.clientX}px`;
+            menu.style.top = `${e.clientY}px`;
+        });
+        document.addEventListener('click', () => { menu.style.display = 'none'; });
+        menu.addEventListener('click', e => {
+            const a = e.target.dataset.action;
+            if (!a) return;
+            ({ refresh: () => location.reload(), bilibili: () => open('https://space.bilibili.com/439038862', '_blank'), email: () => location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！', top: () => scrollTo({ top: 0, behavior: 'smooth' }) })[a]();
+            menu.style.display = 'none';
+        });
+    }
+
+    /* ── 樱花（升级版 — 多彩光点） ── */
+    function initSakura() {
+        const cvs = document.getElementById('sakuraCanvas');
+        const ctx = cvs.getContext('2d');
+        const resize = () => { cvs.width = innerWidth; cvs.height = innerHeight; };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const colors = [
+            'rgba(255, 183, 197, ',   // 樱花粉
+            'rgba(255, 150, 180, ',   // 深樱粉
+            'rgba(255, 209, 220, ',   // 浅樱粉
+            'rgba(255, 182, 193, ',   // 浅粉红
+            'rgba(248, 187, 208, ',   // 玫瑰粉
+            'rgba(237, 159, 176, ',   // 桃粉
+            'rgba(0, 229, 199, ',    // accent青（少量点缀）
+            'rgba(253, 121, 168, ',  // warm粉
+        ];
+
+        const petals = Array.from({ length: 95 }, () => {
+            const colorBase = colors[Math.random() * colors.length | 0];
+            return {
+                x: Math.random() * cvs.width,
+                y: Math.random() * cvs.height,
+                r: Math.random() * 5 + 2.5,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: Math.random() * 0.8 + 0.35,
+                o: Math.random() * 0.4 + 0.35,
+                rot: Math.random() * Math.PI * 2,
+                rv: (Math.random() - 0.5) * 0.02,
+                color: colorBase,
+                pulse: Math.random() * Math.PI * 2,
+                pulseSpeed: Math.random() * 0.025 + 0.008
+            };
+        });
+
+        (function loop() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            petals.forEach(p => {
+                p.x += p.vx + Math.sin(p.pulse) * 0.4;
+                p.y += p.vy;
+                p.rot += p.rv;
+                p.pulse += p.pulseSpeed;
+
+                if (p.y > cvs.height + p.r) { p.y = -p.r; p.x = Math.random() * cvs.width; }
+                if (p.x > cvs.width + p.r) p.x = -p.r;
+                if (p.x < -p.r) p.x = cvs.width + p.r;
+
+                const currentO = p.o * (0.65 + 0.35 * Math.sin(p.pulse));
+
+                ctx.save();
+                ctx.globalAlpha = currentO;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.beginPath();
+                ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.color + currentO + ')';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = p.color + '0.6)';
+                ctx.fill();
+                ctx.restore();
+            });
+            ctx.shadowBlur = 0;
+            requestAnimationFrame(loop);
+        })();
+    }
+
+    /* ── 弹窗 ── */
+    function initModal() {
+        const modal = document.getElementById('blogModal');
+        setTimeout(() => modal.classList.add('show'), 2000);
+        document.querySelector('.modal-close').addEventListener('click', () => modal.classList.remove('show'));
+        document.getElementById('blogGoBtn').addEventListener('click', () => { location.href = 'doc/index.html'; });
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
+    }
+
+    /* ── 滚动渐入 ── */
+    function initScrollReveal() {
+        document.querySelectorAll('.animate-in').forEach(el => {
+            const delay = parseFloat(el.dataset.delay || 0) * 1000;
+            setTimeout(() => el.classList.add('visible'), delay);
+        });
+    }
+
+    /* ── SpotlightCard ── */
+    function initSpotlightCard() {
+        const card = document.getElementById('spotlightCard');
+        if (!card) return;
+
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+        });
+    }
+
+    /* ── PillNav ── */
+    function initPillNav() {
+        const container = document.getElementById('pillNav');
+        if (!container) return;
+
+        const pills = container.querySelectorAll('.pill');
+        const logo = container.querySelector('.pill-logo');
+        const logoImg = container.querySelector('.pill-logo-text');
+        if (pills.length === 0) return;
+
+        const ease = 'power3.easeOut';
+        let activeIndex = 0;
+        const tlRefs = [];
+        const activeTweenRefs = [];
+        const circleRefs = [];
+
+        pills.forEach((pill, i) => {
+            const circle = pill.querySelector('.hover-circle');
+            circleRefs[i] = circle;
+            tlRefs[i] = null;
+            activeTweenRefs[i] = null;
+        });
+
+        const layout = () => {
+            circleRefs.forEach((circle, i) => {
+                if (!circle || !circle.parentElement) return;
+                const pill = circle.parentElement;
+                const rect = pill.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                if (w === 0 || h === 0) return;
+
+                const R = ((w * w) / 4 + h * h) / (2 * h);
+                const D = Math.ceil(2 * R) + 2;
+                const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
+                const originY = D - delta;
+
+                circle.style.width = `${D}px`;
+                circle.style.height = `${D}px`;
+                circle.style.bottom = `-${delta}px`;
+
+                gsap.set(circle, {
+                    xPercent: -50,
+                    scale: 0,
+                    transformOrigin: `50% ${originY}px`
+                });
+
+                const label = pill.querySelector('.pill-label');
+                const hoverLabel = pill.querySelector('.pill-label-hover');
+
+                if (label) gsap.set(label, { y: 0 });
+                if (hoverLabel) gsap.set(hoverLabel, { y: h + 12, opacity: 0 });
+
+                if (tlRefs[i]) tlRefs[i].kill();
+                const tl = gsap.timeline({ paused: true });
+
+                tl.to(circle, {
+                    scale: 1.2,
+                    xPercent: -50,
+                    duration: 2,
+                    ease,
+                    overwrite: 'auto'
+                }, 0);
+
+                if (label) {
+                    tl.to(label, {
+                        y: -(h + 8),
+                        duration: 2,
+                        ease,
+                        overwrite: 'auto'
+                    }, 0);
+                }
+
+                if (hoverLabel) {
+                    gsap.set(hoverLabel, { y: Math.ceil(h + 100), opacity: 0 });
+                    tl.to(hoverLabel, {
+                        y: 0,
+                        opacity: 1,
+                        duration: 2,
+                        ease,
+                        overwrite: 'auto'
+                    }, 0);
+                }
+
+                tlRefs[i] = tl;
+            });
+        };
+
+        layout();
+        window.addEventListener('resize', () => layout());
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => layout()).catch(() => {});
+        }
+
+        const handleEnter = (i) => {
+            const tl = tlRefs[i];
+            if (!tl) return;
+            if (activeTweenRefs[i]) activeTweenRefs[i].kill();
+            activeTweenRefs[i] = tl.tweenTo(tl.duration(), {
+                duration: 0.3,
+                ease,
+                overwrite: 'auto'
+            });
+        };
+
+        const handleLeave = (i) => {
+            const tl = tlRefs[i];
+            if (!tl) return;
+            if (activeTweenRefs[i]) activeTweenRefs[i].kill();
+            activeTweenRefs[i] = tl.tweenTo(0, {
+                duration: 0.2,
+                ease,
+                overwrite: 'auto'
+            });
+        };
+
+        let logoTween = null;
+        if (logo) {
+            logo.addEventListener('mouseenter', () => {
+                if (logoTween) logoTween.kill();
+                gsap.set(logoImg, { rotate: 0 });
+                logoTween = gsap.to(logoImg, {
+                    rotate: 360,
+                    duration: 0.2,
+                    ease,
+                    overwrite: 'auto'
+                });
+            });
+        }
+
+        if (logoImg) {
+            gsap.set(logoImg, { scale: 0 });
+            gsap.to(logoImg, {
+                scale: 1,
+                duration: 0.6,
+                ease
+            });
+        }
+
+        const navItemsEl = container.querySelector('.pill-nav-items');
+        if (navItemsEl) {
+            gsap.set(navItemsEl, { width: 0, overflow: 'hidden' });
+            gsap.to(navItemsEl, {
+                width: 'auto',
+                duration: 0.6,
+                ease
+            });
+        }
+
+        pills.forEach((pill, i) => {
+            pill.addEventListener('mouseenter', () => handleEnter(i));
+            pill.addEventListener('mouseleave', () => handleLeave(i));
+
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (activeIndex === i) return;
+
+                pills.forEach(p => p.classList.remove('is-active'));
+                pill.classList.add('is-active');
+                activeIndex = i;
+
+                const target = pill.dataset.target;
+                if (target) {
+                    const el = document.querySelector(target);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    const href = pill.getAttribute('href');
+                    if (href && !href.startsWith('#')) {
+                        setTimeout(() => { window.location.href = href; }, 300);
+                    }
+                }
+            });
+
+            pill.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    pill.click();
+                }
+            });
+        });
+
+        const resizeObserver = new ResizeObserver(() => layout());
+        resizeObserver.observe(container);
+    }
+
+    /* ── Ballpit 3D ── */
+    async function initBallpit() {
+        const canvas = document.getElementById('ballpitCanvas');
+        if (!canvas) return;
+
+        const { Scene, PerspectiveCamera, WebGLRenderer, SphereGeometry, MeshPhysicalMaterial, Mesh, AmbientLight, PointLight, Color, Group, Raycaster, Vector2 } = await import('three');
+        const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+
+        const scene = new Scene();
+        const camera = new PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+        camera.position.set(0, 0, 12);
+
+        const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = 0; // NoToneMapping
+
+        // Lights
+        const ambient = new AmbientLight(0x334455, 1.5);
+        scene.add(ambient);
+
+        const light1 = new PointLight(0x009e8e, 40, 30);
+        light1.position.set(5, 5, 5);
+        scene.add(light1);
+
+        const light2 = new PointLight(0x6c5ce7, 30, 30);
+        light2.position.set(-5, -3, 3);
+        scene.add(light2);
+
+        const light3 = new PointLight(0xfd79a8, 20, 25);
+        light3.position.set(0, -5, 5);
+        scene.add(light3);
+
+        // Ball colors
+        const palette = [
+            0x009e8e, 0x40c9b8, 0x007a6d,
+            0x6c5ce7, 0xa29bfe,
+            0xfd79a8, 0x009e8e
+        ];
+
+        // Create balls
+        const group = new Group();
+        const balls = [];
+        const count = 60;
+
+        for (let i = 0; i < count; i++) {
+            const radius = Math.max(0.15, Math.random() * 0.35 + 0.15);
+            const geo = new SphereGeometry(radius, 32, 32);
+            const mat = new MeshPhysicalMaterial({
+                color: palette[Math.floor(Math.random() * palette.length)],
+                metalness: 0.1,
+                roughness: 0.2,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                transparent: true,
+                opacity: 0.85,
+            });
+            const mesh = new Mesh(geo, mat);
+
+            // Random position within a sphere
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = Math.random() * 4 + 1;
+            mesh.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.sin(phi) * Math.sin(theta),
+                r * Math.cos(phi)
+            );
+
+            mesh.userData = {
+                velocity: new Vector2(
+                    (Math.random() - 0.5) * 0.008,
+                    (Math.random() - 0.5) * 0.008
+                ),
+                rotSpeed: new Vector3(
+                    (Math.random() - 0.5) * 0.02,
+                    (Math.random() - 0.5) * 0.02,
+                    (Math.random() - 0.5) * 0.02
+                ),
+                originalPos: mesh.position.clone(),
+                phase: Math.random() * Math.PI * 2
+            };
+
+            group.add(mesh);
+            balls.push(mesh);
+        }
+        scene.add(group);
+
+        // Mouse interaction
+        const raycaster = new Raycaster();
+        const mouse = new Vector2();
+        let mouseX = 0, mouseY = 0;
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            mouseX = mouse.x;
+            mouseY = mouse.y;
+        });
+
+        // Animation
+        const clock = { time: 0 };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            clock.time += 0.016;
+
+            // Rotate group gently
+            group.rotation.y += 0.002;
+            group.rotation.x = Math.sin(clock.time * 0.3) * 0.1;
+
+            // Animate each ball
+            balls.forEach(ball => {
+                const ud = ball.userData;
+                ball.position.x += ud.velocity.x;
+                ball.position.y += ud.velocity.y;
+
+                // Gentle floating
+                ball.position.x += Math.sin(clock.time + ud.phase) * 0.003;
+                ball.position.y += Math.cos(clock.time * 0.7 + ud.phase) * 0.003;
+
+                // Keep within bounds
+                const dist = ball.position.length();
+                if (dist > 5.5) {
+                    const dir = ball.position.clone().normalize().multiplyScalar(-0.01);
+                    ball.position.add(dir);
+                    ud.velocity.x *= -0.8;
+                    ud.velocity.y *= -0.8;
+                }
+
+                // Rotation
+                ball.rotation.x += ud.rotSpeed.x;
+                ball.rotation.y += ud.rotSpeed.y;
+                ball.rotation.z += ud.rotSpeed.z;
+
+                // Mouse repulsion
+                const dx = ball.position.x - mouseX * 5;
+                const dy = ball.position.y - mouseY * 5;
+                const mouseDist = Math.sqrt(dx * dx + dy * dy);
+                if (mouseDist < 2) {
+                    const force = (2 - mouseDist) * 0.005;
+                    ball.position.x += dx / mouseDist * force;
+                    ball.position.y += dy / mouseDist * force;
+                }
+            });
+
+            // Animate lights
+            light1.position.x = Math.sin(clock.time * 0.5) * 6;
+            light1.position.y = Math.cos(clock.time * 0.3) * 5;
+            light2.position.x = Math.cos(clock.time * 0.4) * 5;
+            light2.position.y = Math.sin(clock.time * 0.6) * 4;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize handler
+        const resize = () => {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        };
+        window.addEventListener('resize', resize);
+    }
+
+    /* ── Web Animations API — 全局动画系统 ── */
+    function initWebAnimations() {
+        // 等待加载画面结束后启动动画
+        const startAnimations = () => {
+            animateNavigation();
+            animateHero();
+            animateAboutSection();
+            animateSocialLinks();
+            animateScrollHint();
+            animateContactHeading();
+        };
+
+        // 延迟启动，确保页面已完全渲染
+        setTimeout(startAnimations, 3200);
+    }
+
+    /* 导航栏入场动画 */
+    function animateNavigation() {
+        const nav = document.querySelector('.pill-nav');
+        if (!nav) return;
+
+        nav.animate([
+            { opacity: 0, transform: 'translateY(-30px) scale(0.95)' },
+            { opacity: 1, transform: 'translateY(0) scale(1)' }
+        ], {
+            duration: 1000,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            fill: 'forwards',
+            delay: 100
+        });
+
+        // Logo 弹跳动画
+        const logoText = document.querySelector('.pill-logo-text');
+        if (logoText) {
+            logoText.animate([
+                { transform: 'scale(0) rotate(-180deg)', opacity: 0 },
+                { transform: 'scale(1.2) rotate(10deg)', opacity: 1, offset: 0.6 },
+                { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                delay: 400
+            });
+        }
+
+        // 导航项依次入场
+        const pills = document.querySelectorAll('.pill');
+        pills.forEach((pill, index) => {
+            pill.animate([
+                { opacity: 0, transform: 'translateX(-20px)' },
+                { opacity: 1, transform: 'translateX(0)' }
+            ], {
+                duration: 600,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 500 + index * 120
+            });
+        });
+    }
+
+    /* Hero 区域动画 */
+    function animateHero() {
+        // 标题打字机效果增强
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+            heroTitle.animate([
+                { opacity: 0, transform: 'translateY(50px) scale(0.9)', filter: 'blur(10px)' },
+                { opacity: 1, transform: 'translateY(0) scale(1)', filter: 'blur(0px)' }
+            ], {
+                duration: 1200,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 600
+            });
+        }
+
+        // 副标题滑入
+        const subtitle = document.querySelector('.hero-subtitle');
+        if (subtitle) {
+            subtitle.animate([
+                { opacity: 0, transform: 'translateY(30px)', letterSpacing: '0.5em' },
+                { opacity: 1, transform: 'translateY(0)', letterSpacing: '0.35em' }
+            ], {
+                duration: 1000,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 1200
+            });
+        }
+
+        // 心形图标跳动
+        const hearts = document.querySelectorAll('.heart-char');
+        hearts.forEach((heart, index) => {
+            // 入场动画
+            heart.animate([
+                { opacity: 0, transform: 'scale(0) translateY(20px)' },
+                { opacity: 1, transform: 'scale(1.4) translateY(-5px)', offset: 0.6 },
+                { opacity: 1, transform: 'scale(1) translateY(0)' }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                delay: 1600 + index * 150
+            });
+
+            // 持续心跳动画
+            heart.animate([
+                { transform: 'scale(1)', opacity: 0.7 },
+                { transform: 'scale(1.25)', opacity: 1, offset: 0.15 },
+                { transform: 'scale(1)', opacity: 0.8, offset: 0.3 },
+                { transform: 'scale(1.18)', opacity: 0.95, offset: 0.45 },
+                { transform: 'scale(1)', opacity: 0.7 }
+            ], {
+                duration: 1400,
+                iterations: Infinity,
+                easing: 'ease-in-out',
+                delay: index * 150,
+                endDelay: 2400
+            });
+        });
+    }
+
+    /* About 区域动画 */
+    function animateAboutSection() {
+        const aboutSection = document.querySelector('.about');
+        if (!aboutSection) return;
+
+        // 整体卡片入场
+        const card = document.querySelector('.about-card');
+        if (card) {
+            card.animate([
+                { opacity: 0, transform: 'translateY(60px) rotateX(5deg)' },
+                { opacity: 1, transform: 'translateY(0) rotateX(0deg)' }
+            ], {
+                duration: 1000,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 2000
+            });
+        }
+
+        // 标题动画
+        const heading = document.querySelector('.about-heading');
+        if (heading) {
+            heading.animate([
+                { opacity: 0, transform: 'translateX(-30px)', filter: 'blur(5px)' },
+                { opacity: 1, transform: 'translateX(0)', filter: 'blur(0px)' }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 2300
+            });
+        }
+
+        // 内容逐行显示
+        const paragraphs = document.querySelectorAll('.about-content p');
+        paragraphs.forEach((p, index) => {
+            p.animate([
+                { opacity: 0, transform: 'translateY(20px) translateX(-10px)' },
+                { opacity: 0.6, transform: 'translateY(0) translateX(0)' }
+            ], {
+                duration: 700,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 2600 + index * 120
+            });
+
+            // 悬停时的微动效（使用事件监听）
+            p.addEventListener('mouseenter', () => {
+                p.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(6px)' },
+                    { transform: 'translateX(4px)' }
+                ], {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+                });
+            });
+        });
+    }
+
+    /* 社交链接动画 */
+    function animateSocialLinks() {
+        const links = document.querySelectorAll('.social-links a');
+
+        links.forEach((link, index) => {
+            // 入场动画
+            link.animate([
+                { opacity: 0, transform: 'translateY(30px) scale(0.5)' },
+                { opacity: 1, transform: 'translateY(0) scale(1)' }
+            ], {
+                duration: 700,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                delay: 3600 + index * 150
+            });
+
+            // 悬停动画
+            link.addEventListener('mouseenter', () => {
+                link.animate([
+                    { transform: 'translateY(0) scale(1)' },
+                    { transform: 'translateY(-8px) scale(1.15)' }
+                ], {
+                    duration: 350,
+                    easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    fill: 'forwards'
+                });
+            });
+
+            link.addEventListener('mouseleave', () => {
+                link.animate([
+                    { transform: 'translateY(-8px) scale(1.15)' },
+                    { transform: 'translateY(0) scale(1)' }
+                ], {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    fill: 'forwards'
+                });
+            });
+        });
+
+        // 图标持续微旋转
+        const images = document.querySelectorAll('.social-links img');
+        images.forEach(img => {
+            img.animate([
+                { transform: 'rotate(0deg) scale(1)' },
+                { transform: 'rotate(5deg) scale(1.05)', offset: 0.33 },
+                { transform: 'rotate(-5deg) scale(1.02)', offset: 0.66 },
+                { transform: 'rotate(0deg) scale(1)' }
+            ], {
+                duration: 4000,
+                iterations: Infinity,
+                easing: 'ease-in-out'
+            });
+        });
+    }
+
+    /* 滚动提示动画 */
+    function animateScrollHint() {
+        const scrollHint = document.querySelector('.scroll-hint');
+        if (!scrollHint) return;
+
+        // 整体呼吸效果
+        scrollHint.animate([
+            { opacity: 0.2, transform: 'translateY(0)' },
+            { opacity: 0.7, transform: 'translateY(8px)' },
+            { opacity: 0.2, transform: 'translateY(0)' }
+        ], {
+            duration: 2500,
+            iterations: Infinity,
+            easing: 'ease-in-out',
+            delay: 4200
+        });
+
+        // 滚动线条动画
+        const scrollLine = scrollHint.querySelector('.scroll-line');
+        if (scrollLine) {
+            scrollLine.animate([
+                { transform: 'scaleY(0)', transformOrigin: 'top', opacity: 0 },
+                { transform: 'scaleY(1)', transformOrigin: 'top', opacity: 1, offset: 0.2 },
+                { transform: 'scaleY(1)', transformOrigin: 'top', opacity: 1, offset: 0.7 },
+                { transform: 'scaleY(0)', transformOrigin: 'bottom', opacity: 0 }
+            ], {
+                duration: 2500,
+                iterations: Infinity,
+                easing: 'ease-in-out',
+                delay: 4200
+            });
+        }
+    }
+
+    /* 联系标题动画 */
+    function animateContactHeading() {
+        const contactHeading = document.querySelector('.contact-heading');
+        if (!contactHeading) return;
+
+        contactHeading.animate([
+            { opacity: 0, letterSpacing: '0.8em' },
+            { opacity: 1, letterSpacing: '0.5em' }
+        ], {
+            duration: 900,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
+            delay: 3400
+        });
+    }
+    </script>
+</body>
+</html>
