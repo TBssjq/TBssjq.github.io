@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最佳损友2026年7月21日</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Serif SC', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        display: ['ZCOOL KuaiLe', 'cursive'],
+                    },
+                    colors: { accent: '#f97316' }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --accent: #f97316;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #334155;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .site-header {
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .article-body {
+            animation: fadeUp 0.6s var(--ease) both;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .article-title {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            background: linear-gradient(135deg, var(--accent), #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+        .article-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            border-radius: 2px;
+        }
+        .prose {
+            line-height: 1.85;
+            color: var(--text-secondary);
+        }
+        .prose p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+            text-indent: 2em;
+        }
+        /* 整篇文章只有第一个字下沉 */
+        .article-content::first-letter {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--accent);
+            float: left;
+            line-height: 1;
+            margin-right: 0.1em;
+            margin-top: 0.1em;
+        }
+        /* 段落间距（div 模拟 p） */
+        .article-content > div {
+            margin: 1.5em 0;
+        }
+        .prose h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 2.5rem 0 1.25rem;
+            color: var(--text-primary);
+            position: relative;
+            padding-left: 20px;
+        }
+        .prose h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 1.2em;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        .prose h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+        .prose ul, .prose ol {
+            margin: 1.25rem 0;
+            padding-left: 2rem;
+        }
+        .prose li { margin-bottom: 0.75rem; }
+        .prose ul li::marker { color: var(--accent); font-size: 1.1em; }
+        .prose ol li::marker { color: var(--accent); font-weight: 600; }
+        .prose blockquote {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(249, 115, 22, 0.03));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+            font-style: italic;
+            color: var(--text-secondary);
+            position: relative;
+        }
+        .prose blockquote::before {
+            content: '\201C';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            font-size: 4rem;
+            color: rgba(249, 115, 22, 0.15);
+            font-family: Georgia, serif;
+        }
+        .prose pre {
+            background: linear-gradient(135deg, #1e1e2e, #1a1a2e);
+            color: #cdd6f4;
+            padding: 2rem 1.5rem 1.25rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 2rem 0;
+            font-size: 0.875rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            position: relative;
+        }
+        /* 代码块语言标签 */
+        .prose pre[data-lang]::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 8px;
+            right: 14px;
+            font-size: 0.7rem;
+            color: rgba(205,214,244,0.45);
+            padding: 2px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.12);
+            text-transform: lowercase;
+            letter-spacing: 0.05em;
+        }
+        .prose code {
+            background: rgba(249, 115, 22, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: var(--accent);
+            font-family: 'Fira Code', monospace;
+        }
+        .prose pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        .code-block { position: relative; }
+        .copy-btn { transition: transform 0.2s, opacity 0.2s; }
+        .copy-btn:hover { transform: scale(1.1); }
+        .btn-back {
+            background: linear-gradient(135deg, var(--accent), #fb923c);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        .dark .prose blockquote { background: rgba(249, 115, 22, 0.05); }
+        .dark .prose code { background: rgba(249, 115, 22, 0.15); }
+        @media (max-width: 768px) {
+            .article-title { font-size: 1.8rem; }
+            .prose h2 { font-size: 1.35rem; }
+            .prose h3 { font-size: 1.15rem; }
+        }
+
+        /* ═══════════════════════════════════════════
+           Claymorphism · 粘土态博客风格
+           ═══════════════════════════════════════════ */
+
+        body {
+            background: #d8dde6 !important;
+        }
+
+        .dark body {
+            background: #121a2a !important;
+        }
+
+        /* ── 导航栏 — 陶土凸起 ── */
+        .site-header {
+            background: #e0e5ec !important;
+            border-bottom: none !important;
+            box-shadow:
+                6px 6px 16px rgba(163, 177, 198, 0.45),
+                -4px -4px 12px rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .dark .site-header {
+            background: #1a2030 !important;
+            box-shadow:
+                6px 6px 16px rgba(0, 0, 0, 0.35),
+                -4px -4px 12px rgba(50, 60, 80, 0.2) !important;
+        }
+
+        /* 返回链接 — 陶土凸起 */
+        header a[href*="index.html"] {
+            background: #e0e5ec !important;
+            color: #5a6a7a !important;
+            border-radius: 14px !important;
+            padding: 8px 16px !important;
+            box-shadow:
+                4px 4px 10px rgba(163, 177, 198, 0.5),
+                -3px -3px 10px rgba(255, 255, 255, 0.65) !important;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .dark header a[href*="index.html"] {
+            background: #242e42 !important;
+            color: #94a3b8 !important;
+            box-shadow:
+                4px 4px 10px rgba(0, 0, 0, 0.3),
+                -3px -3px 10px rgba(50, 62, 85, 0.25) !important;
+        }
+
+        header a[href*="index.html"]:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                6px 6px 14px rgba(163, 177, 198, 0.45),
+                -4px -4px 14px rgba(255, 255, 255, 0.55) !important;
+        }
+
+        /* 主题切换 — 陶土圆形 */
+        #themeToggle {
+            background: #e0e5ec !important;
+            border-radius: 50% !important;
+            box-shadow:
+                4px 4px 10px rgba(163, 177, 198, 0.5),
+                -3px -3px 10px rgba(255, 255, 255, 0.65);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .dark #themeToggle {
+            background: #242e42 !important;
+            box-shadow:
+                4px 4px 10px rgba(0, 0, 0, 0.3),
+                -3px -3px 10px rgba(50, 62, 85, 0.25);
+        }
+
+        #themeToggle:hover {
+            transform: scale(1.08);
+            box-shadow:
+                inset 3px 3px 8px rgba(163, 177, 198, 0.4),
+                inset -3px -3px 8px rgba(255, 255, 255, 0.6) !important;
+        }
+
+        /* ── 文章内容区 — 陶土卡片 ── */
+        .article-body {
+            background: #e0e5ec;
+            border-radius: 28px;
+            padding: clamp(28px, 4vw, 48px) !important;
+            box-shadow:
+                12px 12px 30px rgba(163, 177, 198, 0.48),
+                -12px -12px 30px rgba(255, 255, 255, 0.72),
+                inset 0 0 0 rgba(163, 177, 198, 0);
+        }
+
+        .dark .article-body {
+            background: #1a2030;
+            box-shadow:
+                12px 12px 30px rgba(0, 0, 0, 0.32),
+                -12px -12px 30px rgba(40, 52, 76, 0.18);
+        }
+
+        /* ── 引用块 — 陶土凹陷 ── */
+        .prose blockquote {
+            background: transparent !important;
+            border-left: none !important;
+            padding: 1.5rem 1.8rem !important;
+            margin: 2rem 0;
+            border-radius: 18px !important;
+            box-shadow:
+                inset 5px 5px 14px rgba(163, 177, 198, 0.42),
+                inset -5px -5px 14px rgba(255, 255, 255, 0.65);
+            color: var(--text-secondary);
+        }
+
+        .dark .prose blockquote {
+            box-shadow:
+                inset 5px 5px 14px rgba(0, 0, 0, 0.28),
+                inset -5px -5px 14px rgba(40, 52, 76, 0.22);
+        }
+
+        .prose blockquote::before {
+            color: rgba(249, 115, 22, 0.2) !important;
+        }
+
+        /* ── 代码块 — 陶土凹陷 ── */
+        .prose pre {
+            background: #d8dde6 !important;
+            color: #334155 !important;
+            padding: 1.5rem 1.5rem 1.25rem !important;
+            border-radius: 16px !important;
+            border: none !important;
+            box-shadow:
+                inset 5px 5px 14px rgba(163, 177, 198, 0.45),
+                inset -5px -5px 14px rgba(255, 255, 255, 0.65);
+            font-size: 0.9rem !important;
+        }
+
+        .dark .prose pre {
+            background: #141c2c !important;
+            color: #e2e8f0 !important;
+            box-shadow:
+                inset 5px 5px 14px rgba(0, 0, 0, 0.3),
+                inset -5px -5px 14px rgba(30, 40, 58, 0.25);
+        }
+
+        /* 代码语言标签 — 陶土微凹 */
+        .prose pre[data-lang]::before {
+            background: #c8cdd8 !important;
+            border: none !important;
+            border-radius: 9999px !important;
+            box-shadow:
+                inset 2px 2px 5px rgba(140, 150, 170, 0.35),
+                inset -2px -2px 5px rgba(220, 228, 240, 0.5);
+            color: #5a6a7a !important;
+        }
+
+        .dark .prose pre[data-lang]::before {
+            background: #242e42 !important;
+            box-shadow:
+                inset 2px 2px 5px rgba(0, 0, 0, 0.25),
+                inset -2px -2px 5px rgba(40, 52, 76, 0.18);
+            color: #94a3b8 !important;
+        }
+
+        /* ── 行内代码 — 陶土微凹 ── */
+        .prose code:not(pre code) {
+            background: #e0e5ec !important;
+            color: #c75000 !important;
+            border-radius: 8px !important;
+            box-shadow:
+                inset 2px 2px 5px rgba(163, 177, 198, 0.35),
+                inset -2px -2px 5px rgba(255, 255, 255, 0.55);
+        }
+
+        .dark .prose code:not(pre code) {
+            background: #242e42 !important;
+            color: #fb923c !important;
+            box-shadow:
+                inset 2px 2px 5px rgba(0, 0, 0, 0.22),
+                inset -2px -2px 5px rgba(40, 52, 76, 0.18);
+        }
+
+        /* ── 复制按钮 — 陶土圆钮 ── */
+        .copy-btn {
+            background: #e0e5ec !important;
+            border-radius: 10px !important;
+            box-shadow:
+                3px 3px 8px rgba(163, 177, 198, 0.45),
+                -2px -2px 6px rgba(255, 255, 255, 0.6) !important;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s !important;
+        }
+
+        .dark .copy-btn {
+            background: #242e42 !important;
+            box-shadow:
+                3px 3px 8px rgba(0, 0, 0, 0.25),
+                -2px -2px 6px rgba(40, 52, 76, 0.18) !important;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.12) !important;
+        }
+
+        /* ── 返回按钮 — 陶土凸起 ── */
+        .btn-back {
+            background: linear-gradient(145deg, #f97316, #ea580c) !important;
+            box-shadow:
+                6px 6px 18px rgba(249, 115, 22, 0.38),
+                -3px -3px 12px rgba(255, 255, 255, 0.45) !important;
+            border-radius: 20px !important;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-4px) scale(1.03) !important;
+            box-shadow:
+                10px 10px 26px rgba(249, 115, 22, 0.42),
+                -4px -4px 16px rgba(255, 255, 255, 0.5) !important;
+        }
+
+        /* ── 二级标题装饰线 ── */
+        .prose h2::before {
+            width: 5px !important;
+            border-radius: 3px !important;
+            box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+        }
+
+        /* 图片 — 陶土阴影 */
+        .prose img {
+            border-radius: 16px;
+            box-shadow:
+                8px 8px 20px rgba(163, 177, 198, 0.45),
+                -5px -5px 15px rgba(255, 255, 255, 0.6);
+        }
+
+        /* 分割线 */
+        .border-t.border-gray-200 {
+            border-color: rgba(163, 177, 198, 0.3) !important;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .border-t.border-gray-700 {
+            border-color: rgba(50, 60, 80, 0.4) !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
+        <div class="h-full flex items-center justify-between px-6">
+            <a href="doc/index.html" class="text-xl font-bold text-gray-900 dark:text-white">My Blog</a>
+            <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="pt-16">
+        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
+            <article>
+                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">最佳损友2026年7月21日</h1>
+                <div class="article-body prose text-gray-700 dark:text-gray-300">
+                    <div class="article-content"><div>这个吧(指百度贴吧 最佳损友吧)是我在高中时微机课上刷到的，当时也比较感慨，现在也是。</div><p style="text-indent: 0px;"><br></div><p style="text-indent: 0px;">在我的生活中我认识了好多好多好多人，好多好多好多人，我之所以说两遍，是因为，我感觉有些后悔认识这么多人，又后悔认识的那么多人没能一直保持联系。我的朋友是以损友居多的，我能称得上是好兄弟的没几个，他们也许能够成为为好兄弟吧哈哈﻿﻿我是个很内向的男生，so这很难交到朋友（等等，这和上文冲突了，不过能用相对这个概念解释吧﻿﻿﻿﻿）最后算下来，当初的那些好朋友，亦或说是“最佳损友”都已经和我越来越远了，只能靠一根线连着，说不定那天断了（笑）。毕竟人不能总是活在过去啊，总会有新的人，新的朋友，我成为的，可能也是别人最佳损友的新朋友﻿﻿但是还是有点遗憾的，我非常恋旧，要是有人能够一直陪在我身边就好了﻿﻿﻿﻿﻿﻿我总是觉得之前不够主动，所以现在逼着自己更主动，主动找朋友聊天﻿﻿可是我也好怕别人的拒绝，所以我还是很少主动邀请别人一块活动，还有聊天的时候如果别人没有秒回我也会感觉难受﻿﻿</div><p style="text-indent: 0px;"><br></div><p style="text-indent: 0px;">顺便分享初三的一件事，一个玩的挺好的朋友找我说可能考不上一中了，我也不记得我说什么，现在想想应该是比较敷衍的了，真是好后悔没有好好和他说话，最后他差了一分。</div><p style="text-indent: 0px;"><br></div><p style="text-indent: 0px;">再分享一件事，高中阶段和一个曾经玩的很好的朋友闹掰了﻿﻿</div><p style="text-indent: 0px;"><br></div><p style="text-indent: 0px;">我有时候在想，我是不是孤独，明明我有这么多朋友，可每一次的邀请和见面都是未知数</div><p style="text-indent: 0px;"><br></div><p style="text-indent: 0px;">最后的最后我想说“来年陌生的，是昨日最亲的某某”</div></div>
+                </div>
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <div class="giscus"></div>
+                </div>
+                <div class="mt-8">
+                    <a href="doc/index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium">
+                        <span>目录</span>
+                        <span class="font-semibold">Go!</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            root.classList.add('dark');
+        }
+        themeToggle.addEventListener('click', () => {
+            root.classList.toggle('dark');
+            localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        function copyCode(btn) {
+            const code = btn.parentElement.querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                btn.style.opacity = '1';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+                }, 2000);
+            });
+        }
+    </script>
+
+    <script src="https://giscus.app/client.js"
+        data-repo="TBssjq/TBssjq.github.io"
+        data-repo-id="R_kgDOPdTWEg"
+        data-category="General"
+        data-category-id="DIC_kwDOPdTWEs4DAcaC"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+    </script>
+</body>
+</html>
