@@ -1164,7 +1164,7 @@
                 }
             );
             // 所有内容包裹在单个 .article-content 容器内，确保 ::first-letter 只作用于第一个字
-            let content = rawContent.replace(/<p>/gi, '<div>').replace(/<\/p>/gi, '</div>');
+            let content = rawContent.replace(/<p(\s[^>]*)?>/gi, '<div>').replace(/<\/p>/gi, '</div>');
             content = `<div class="article-content">${content}</div>`;
             
             if (!rawContent || /^<(p|div)><br><\/(p|div)>$/.test(rawContent.trim())) {
