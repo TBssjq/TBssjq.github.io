@@ -402,7 +402,7 @@
         const modal = document.getElementById('blogModal');
         setTimeout(() => modal.classList.add('show'), 2000);
         document.querySelector('.modal-close').addEventListener('click', () => modal.classList.remove('show'));
-        document.getElementById('blogGoBtn').addEventListener('click', () => { location.href = 'doc/index.html'; });
+        document.getElementById('blogGoBtn').addEventListener('click', () => { window.open('doc/index.html', '_blank', 'noopener'); });
         modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
     }
 
