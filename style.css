@@ -435,6 +435,19 @@ main {
     display: inline-block;
 }
 
+/* 副标题逐字悬停：每个字独立 hover，鼠标移上去变 #00acee，不改变大小 */
+.hero-subtitle .letter {
+    display: inline-block;
+    transition: transform 0.28s cubic-bezier(.2, .9, .3, 1), color 0.28s ease, text-shadow 0.28s ease;
+    transform-origin: center;
+}
+
+.hero-subtitle .letter:hover {
+    transform: translateY(-8px);
+    color: #00acee;
+    text-shadow: 0 6px 14px rgba(0, 172, 238, 0.45);
+}
+
 /* 副标题装饰线 */
 .hero-subtitle::before,
 .hero-subtitle::after {
