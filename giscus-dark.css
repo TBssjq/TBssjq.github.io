@@ -1,0 +1,125 @@
+/* Giscus 深色主题 —— 对齐站点 Claymorphism 陶土风（深色板） */
+main {
+    /* 语法高亮（GitHub Dark，保留可读性） */
+    --color-prettylights-syntax-comment: #8b949e;
+    --color-prettylights-syntax-constant: #79c0ff;
+    --color-prettylights-syntax-entity: #d2a8ff;
+    --color-prettylights-syntax-storage-modifier-import: #c9d1d9;
+    --color-prettylights-syntax-entity-tag: #7ee787;
+    --color-prettylights-syntax-keyword: #ff7b72;
+    --color-prettylights-syntax-string: #a5d6ff;
+    --color-prettylights-syntax-variable: #ffa657;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #ffa657;
+    --color-prettylights-syntax-invalid-illegal-text: #c9d1d9;
+    --color-prettylights-syntax-invalid-illegal-bg: #ff7b72;
+    --color-prettylights-syntax-carriage-return-text: #c9d1d9;
+    --color-prettylights-syntax-carriage-return-bg: #ff7b72;
+    --color-prettylights-syntax-string-regexp: #7ee787;
+    --color-prettylights-syntax-markup-list: #f2cc60;
+    --color-prettylights-syntax-markup-heading: #1f6feb;
+    --color-prettylights-syntax-markup-italic: #c9d1d9;
+    --color-prettylights-syntax-markup-bold: #c9d1d9;
+    --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+    --color-prettylights-syntax-markup-deleted-bg: #67060c;
+    --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+    --color-prettylights-syntax-markup-inserted-bg: #033a16;
+    --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+    --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+    --color-prettylights-syntax-markup-ignored-text: #c9d1d9;
+    --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+    --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+    --color-prettylights-syntax-brackethighlighter-angle: #8b949e;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #484f58;
+    --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+
+    /* 按钮 —— 陶土凸起（深色板） */
+    --color-btn-text: #cbd5e1;
+    --color-btn-bg: #1a2030;
+    --color-btn-border: #2a3650;
+    --color-btn-shadow: 3px 3px 8px rgba(0,0,0,0.3), -2px -2px 6px rgba(40,52,76,0.2);
+    --color-btn-inset-shadow: inset 2px 2px 5px rgba(0,0,0,0.25), inset -2px -2px 5px rgba(40,52,76,0.18);
+    --color-btn-hover-bg: #242e42;
+    --color-btn-hover-border: #34425e;
+    --color-btn-active-bg: #141c2c;
+    --color-btn-active-border: #3a4866;
+    --color-btn-selected-bg: #242e42;
+    --color-btn-primary-text: #1f1200;
+    --color-btn-primary-bg: #f97316;
+    --color-btn-primary-border: #ea580c55;
+    --color-btn-primary-shadow: 4px 4px 12px rgba(249,115,22,0.3), -2px -2px 8px rgba(40,52,76,0.2);
+    --color-btn-primary-inset-shadow: 0 0 #0000;
+    --color-btn-primary-hover-bg: #fb923c;
+    --color-btn-primary-hover-border: #ea580c55;
+    --color-btn-primary-selected-bg: #ea580c;
+    --color-btn-primary-selected-shadow: 0 0 #0000;
+    --color-btn-primary-disabled-text: #f9731680;
+    --color-btn-primary-disabled-bg: #f9731633;
+    --color-btn-primary-disabled-border: #ea580c55;
+
+    /* 画布 / 文本（陶土深板 + 暖灰文字） */
+    --color-fg-default: #cbd5e1;
+    --color-fg-muted: #94a3b8;
+    --color-fg-subtle: #64748b;
+    --color-canvas-default: #1a2030;
+    --color-canvas-overlay: #242e42;
+    --color-canvas-inset: #141c2c;
+    --color-canvas-subtle: #141c2c;
+    --color-border-default: #2a3650;
+    --color-border-muted: #28344c;
+    --color-neutral-muted: rgba(148,163,184,0.2);
+
+    /* 陶土橙强调（深色更亮） */
+    --color-accent-fg: #fb923c;
+    --color-accent-emphasis: #f97316;
+    --color-accent-muted: rgba(251,146,60,0.25);
+    --color-accent-subtle: rgba(251,146,60,0.1);
+    --color-success-fg: #3fb950;
+    --color-attention-fg: #d29922;
+    --color-attention-muted: rgba(210,153,34,0.2);
+    --color-attention-subtle: rgba(210,153,34,0.1);
+    --color-danger-fg: #f85149;
+    --color-danger-muted: rgba(248,81,73,0.2);
+    --color-danger-subtle: rgba(248,81,73,0.1);
+    --color-primer-shadow-inset: inset 2px 2px 5px rgba(0,0,0,0.25), inset -2px -2px 5px rgba(40,52,76,0.18);
+    --color-scale-gray-7: #2a3650;
+    --color-scale-blue-8: #7c2d12;
+
+    /* giscus 扩展 */
+    --color-social-reaction-bg-hover: #242e42;
+    --color-social-reaction-bg-reacted-hover: rgba(249,115,22,0.18);
+    --color-action-list-item-default-hover-bg: rgba(40,52,76,0.4);
+    --color-segmented-control-bg: rgba(40,52,76,0.4);
+    --color-segmented-control-button-bg: #1a2030;
+    --color-segmented-control-button-selected-border: #34425e;
+    --color-input-bg: #141c2c;
+    --color-input-border: #2a3650;
+    --color-input-fg: #cbd5e1;
+    --color-input-focus-bg: #141c2c;
+    --color-input-focus-border: #fb923c;
+}
+
+/* 陶土凸起质感，贴站点 Claymorphism（深色板） */
+.gsc-comment-box,
+.gsc-comment,
+.gsc-reply-box {
+    border: none;
+    border-radius: 16px;
+    box-shadow:
+        6px 6px 16px rgba(0,0,0,0.35),
+        -4px -4px 12px rgba(40,52,76,0.2);
+}
+
+/* 评论输入框 —— 陶土凹陷 */
+.gsc-comment-box .gsc-textarea,
+.gsc-comment-box textarea {
+    border-radius: 12px;
+    box-shadow:
+        inset 4px 4px 10px rgba(0,0,0,0.3),
+        inset -4px -4px 10px rgba(30,40,58,0.25);
+}
+
+/* 反应按钮（点赞等）—— 陶土圆形 */
+.gsc-reaction,
+.reaction-button {
+    border-radius: 9999px;
+}
