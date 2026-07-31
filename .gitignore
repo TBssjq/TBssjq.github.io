@@ -40,6 +40,12 @@ yarn-error.log*
 *.css.bak
 *.js.bak
 
+# Blog generator (tools/)
+tools/.preview/          # 本地预览构建输出（不入库）
+tools/.verify-preview/   # verify 脚本的临时比对目录（不入库）
+tools/.d*.txt            # 临时差异对比文件
+tools/.tmp*              # 临时测试产物
+
 # Live2D cache
 Live2D/
 

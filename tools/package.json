@@ -1,0 +1,33 @@
+{
+  "name": "blog-generator",
+  "version": "1.0.0",
+  "description": "零依赖静态博客生成器，风格继承自 doc/ 的粘土态（Claymorphism）博客",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/build.js",
+  "bin": {
+    "blog-new": "src/new-post.js",
+    "blog-remove": "src/remove-post.js"
+  },
+  "scripts": {
+    "build": "node src/build.js",
+    "dev": "node src/build.js --watch",
+    "new": "node src/new-post.js",
+    "remove": "node src/remove-post.js",
+    "preview": "node src/build.js",
+    "verify": "node src/verify.js"
+  },
+  "keywords": [
+    "blog",
+    "static-site-generator",
+    "markdown",
+    "zero-dependency"
+  ],
+  "author": "TBssjq",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
