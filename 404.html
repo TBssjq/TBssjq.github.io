@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 · 页面走失了 — 水镜</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Caveat:wght@500;600&family=Noto+Serif+SC:wght@400;600;900&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .notfound-code {
+            font-family: var(--font-display);
+            font-size: clamp(5rem, 20vw, 13rem);
+            font-weight: 900;
+            line-height: 1;
+            color: var(--color-text);
+            text-shadow:
+                0 0 80px rgba(0, 158, 142, 0.4),
+                0 0 160px rgba(0, 158, 142, 0.15);
+            position: relative;
+            display: inline-block;
+        }
+        .notfound-code::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 130%;
+            height: 230%;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(0, 158, 142, 0.12) 0%,
+                rgba(108, 92, 231, 0.05) 40%,
+                transparent 65%
+            );
+            pointer-events: none;
+            z-index: -1;
+            animation: heroGlow 8s ease-in-out infinite alternate;
+        }
+        .notfound-sub {
+            font-family: var(--font-en);
+            font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            color: var(--color-text-muted);
+            margin-top: 28px;
+        }
+        .notfound-tip {
+            font-family: var(--font-cn);
+            font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+            color: var(--color-text-muted);
+            margin-top: 18px;
+            line-height: 1.8;
+        }
+        .notfound-btn {
+            margin-top: 36px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 999px;
+            font-family: var(--font-cn);
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(135deg, #009e8e 0%, #00b8a0 100%);
+            box-shadow: 0 10px 30px rgba(0, 158, 142, 0.35);
+            text-decoration: none;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .notfound-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 40px rgba(0, 158, 142, 0.45);
+        }
+        .notfound-home {
+            position: absolute;
+            top: 1.2em;
+            right: 1.4em;
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载屏 -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-water">
+            <div class="loading-ripple"></div>
+            <div class="loading-ripple"></div>
+            <div class="loading-ripple"></div>
+        </div>
+        <p class="loading-text">寻找页面中…</p>
+    </div>
+
+    <!-- 顶部音乐播放器 -->
+    <div class="music-player music-player--top">
+        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"></iframe>
+    </div>
+
+    <!-- 返回主页 -->
+    <div class="notfound-home">
+        <a href="index.html" class="notfound-btn" style="margin-top:0; padding:10px 22px; font-size:.9rem;">返回主页</a>
+    </div>
+
+    <div class="container">
+        <section class="hero">
+            <h1 class="notfound-code">404</h1>
+            <p class="notfound-sub">PAGE NOT FOUND</p>
+            <p class="notfound-tip">
+                这一页，像水一样流走了。<br>
+                也许是链接拼写有误，也许是它从未存在过。
+            </p>
+            <a href="index.html" class="notfound-btn">回到水镜主页</a>
+        </section>
+    </div>
+
+    <script>
+        // 主题切换
+        (function () {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            const meta = document.querySelector('meta[name="theme-color"]');
+            const setMeta = () => {
+                if (meta) meta.setAttribute('content', document.documentElement.getAttribute('data-theme') === 'dark' ? '#0b1120' : '#f0f4f8');
+            };
+            setMeta();
+        })();
+
+        // 加载屏淡出
+        window.addEventListener('load', function () {
+            const screen = document.getElementById('loadingScreen');
+            if (!screen) return;
+            setTimeout(function () {
+                screen.classList.add('hidden');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
