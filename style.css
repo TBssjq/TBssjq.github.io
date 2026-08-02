@@ -1524,6 +1524,8 @@ main {
     margin-top: 0;
     margin-bottom: 28px;
     order: -1;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .music-player:hover {
