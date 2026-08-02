@@ -80,6 +80,28 @@
             right: 1.4em;
             z-index: 99;
         }
+        /* 404 整页内容垂直水平居中 */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        body > .container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 120px;
+            padding-bottom: 60px;
+        }
+        body > .container .hero {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -111,7 +133,7 @@
                 这一页，像水一样流走了。<br>
                 也许是链接拼写有误，也许是它从未存在过。
             </p>
-            <a href="index.html" class="notfound-btn">回到水镜主页</a>
+            <a href="index.html" class="notfound-btn">回到主页</a>
         </section>
     </div>
 
