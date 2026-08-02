@@ -1509,3 +1509,39 @@ main {
         2px 2px 6px rgba(163, 177, 198, 0.4),
         -1px -1px 4px rgba(255, 255, 255, 0.5);
 }
+
+/* ── Music Player ── */
+.music-player {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 顶部嵌入时（导航上方）去掉上边距，与导航形成统一模块 */
+.music-player--top {
+    margin-top: 0;
+    margin-bottom: 28px;
+    order: -1;
+}
+
+.music-player:hover {
+    transform: scale(1.03);
+}
+
+.music-player iframe {
+    border-radius: 12px;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(4px);
+    transition: box-shadow 0.3s ease;
+}
+
+.music-player iframe:hover {
+    box-shadow:
+        0 8px 40px rgba(0, 158, 142, 0.15),
+        0 2px 8px rgba(0, 158, 142, 0.08);
+}
