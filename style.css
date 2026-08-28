@@ -506,30 +506,6 @@ main {
     position: relative;
 }
 
-.about-card {
-    position: relative;
-    z-index: 1;
-    padding: clamp(32px, 5vw, 52px);
-    border-radius: 28px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(0, 0, 0, 0.03);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    box-shadow:
-        0 4px 30px rgba(0, 0, 0, 0.08),
-        0 12px 60px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(0, 0, 0, 0.05);
-    /* 不用 transition: all —— transform 由 GSAP 逐帧接管，若被 CSS 过渡二次插值会变迟滞 */
-    transition: background-color 0.5s var(--ease-smooth),
-                box-shadow 0.5s var(--ease-smooth);
-    overflow: hidden;
-    isolation: isolate;
-}
-
-.about-card:hover {
-    background: rgba(0, 0, 0, 0.04);
-}
-
 .about-heading {
     font-family: var(--font-serif-en);
     font-size: clamp(1.4rem, 3vw, 1.8rem);
@@ -1643,6 +1619,16 @@ main {
 }
 
 /* 光标跟随环：常态缩小半透明，移到可交互元素上放大吸附 */
+.cursor-trail {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10000;            /* 在跟随环之下、内容之上，叠加发光 */
+    mix-blend-mode: screen;
+}
+
 .cursor-ring {
     position: fixed;
     top: 0;

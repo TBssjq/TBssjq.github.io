@@ -38,6 +38,9 @@
     <!-- 光标跟随环（磁吸目标上会放大吸附） -->
     <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
 
+    <!-- 光标粒子拖尾（canvas 渐隐叠加，减少动效时由 JS 直接跳过） -->
+    <canvas id="cursorTrail" class="cursor-trail" aria-hidden="true"></canvas>
+
     <!-- 加载画面 -->
     <div class="loading-screen" aria-hidden="true">
         <div class="loading-text">海内存知己，天涯若比邻</div>
@@ -248,7 +251,8 @@
             initEntranceAnimations, initScrollReveal, initHeadingReveal,
             initTypewriterCaret, initAboutCard, initPillNav, initNavEntrance,
             initSocialLinks, initScrollProgress, initBackToTop,
-            initParallax, initMagnetic, initNavScramble, initLetterWave
+            initParallax, initMagnetic, initNavScramble, initLetterWave,
+            initCursorTrail, initAboutContentReveal
         ].forEach(init => {
             try {
                 const result = init();
@@ -811,6 +815,30 @@
         });
     }
 
+    /* ── 关于段落逐行揭示（跟随卡片入场，增加层次）── */
+    function initAboutContentReveal() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
+        const paras = gsap.utils.toArray('.about-content p');
+        if (!paras.length) return;
+
+        // p 自带 transition: all（hover 上浮用），会二次插值 GSAP 逐帧写入；
+        // 揭示期间关掉，结束用 clearProps 把 hover 还回 CSS。
+        gsap.set(paras, { transition: 'none' });
+        gsap.from(paras, {
+            opacity: 0,
+            y: 18,
+            duration: 0.7,
+            ease: 'power3.out',
+            stagger: 0.07,
+            clearProps: 'transition',
+            scrollTrigger: window.ScrollTrigger ? {
+                trigger: '.about',
+                start: 'top 78%',
+                toggleActions: 'play none none reverse'
+            } : undefined
+        });
+    }
+
     /* ── PillNav ── */
     function initPillNav() {
         const container = document.getElementById('pillNav');
@@ -1285,6 +1313,66 @@
         });
     }
 
+    /* ── 光标粒子拖尾（canvas：渐隐 + lighter 叠加发光）── */
+    function initCursorTrail() {
+        if (prefersReducedMotion()) return;            // 减少动效：不建 canvas，零开销
+        const canvas = document.getElementById('cursorTrail');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let w = 0, h = 0;
+
+        const resize = () => {
+            w = window.innerWidth; h = window.innerHeight;
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const MAX = 22, LIFE = 1;        // 上限粒子数 / 存活秒数
+        const particles = [];
+        let last = { x: -1, y: -1 };
+        let rafId = null, prevT = 0;
+
+        const tick = (t) => {
+            const dt = Math.min((t - prevT) / 1000, 0.05);
+            prevT = t;
+            ctx.clearRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.age += dt;
+                const k = p.age / LIFE;
+                if (k >= 1) { particles.splice(i, 1); continue; }
+                const r = 9 * (1 - k) + 2;
+                const a = (1 - k) * 0.5;
+                const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+                g.addColorStop(0, `rgba(0, 200, 180, ${a})`);
+                g.addColorStop(1, 'rgba(0, 200, 180, 0)');
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalCompositeOperation = 'source-over';
+            rafId = particles.length ? requestAnimationFrame(tick) : null;
+        };
+
+        const ensureLoop = () => { if (!rafId) { prevT = performance.now(); rafId = requestAnimationFrame(tick); } };
+
+        document.addEventListener('mousemove', e => {
+            const x = e.clientX, y = e.clientY;
+            if (last.x === x && last.y === y) return;   // 静止不重复生成
+            last = { x, y };
+            particles.push({ x, y, age: 0 });
+            if (particles.length > MAX) particles.shift();
+            ensureLoop();
+        }, { passive: true });
+    }
+
     /* ── 背景视差：环境光球随鼠标与滚动轻微位移 ── */
     function initParallax() {
         const layer = document.getElementById('ambientLayer');
@@ -1308,6 +1396,8 @@
         const apply = () => {
             xTo(mx * 26);
             yTo(my * 18 + progress * 60);
+            // 滚动进度同时驱动环境光色相，整页配色随阅读深度缓慢流转
+            layer.style.filter = `hue-rotate(${(progress * 60 - 30).toFixed(1)}deg)`;
         };
 
         window.addEventListener('mousemove', e => {
