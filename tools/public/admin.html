@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>博客后台</title>
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<div class="login-view" id="loginView" hidden>
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <h1 class="login-title">博客后台</h1>
+    <p class="login-hint" id="loginHint">请输入管理口令</p>
+    <input class="field" type="password" id="tokenInput" name="token" placeholder="管理口令" autocomplete="current-password" required>
+    <button class="btn btn-primary btn-block" type="submit" id="loginBtn">登录</button>
+    <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+  </form>
+</div>
+
+<div class="app" id="appView" hidden>
+  <header class="topbar">
+    <div class="brand">博客后台</div>
+    <div class="spacer"></div>
+    <button class="btn" type="button" id="btnNew">新建</button>
+    <button class="btn btn-primary" type="button" id="btnBuild">构建站点</button>
+    <a class="btn" id="btnPreview" href="/" target="_blank" rel="noopener">预览</a>
+    <button class="btn btn-ghost" type="button" id="btnLogout">退出</button>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span>文章</span>
+        <span class="count" id="postCount">0</span>
+      </div>
+      <div class="post-list" id="postList"></div>
+    </aside>
+
+    <section class="editor-pane">
+      <div class="empty" id="emptyState">从左侧选择一篇文章，或点「新建」</div>
+
+      <form class="editor" id="editorForm" hidden>
+        <div class="editor-head">
+          <span class="loc" id="postLoc"></span>
+          <div class="tabs" role="tablist">
+            <button class="tab is-active" type="button" role="tab" data-tab="write">编辑</button>
+            <button class="tab" type="button" role="tab" data-tab="preview">预览</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <label class="field-row">
+            <span class="label">标题</span>
+            <input class="field" type="text" id="fTitle" required>
+          </label>
+          <label class="field-row">
+            <span class="label">日期</span>
+            <input class="field" type="date" id="fDate" required>
+          </label>
+          <label class="field-row">
+            <span class="label">文件名 slug</span>
+            <input class="field" type="text" id="fSlug" required>
+          </label>
+          <label class="field-row">
+            <span class="label">日期标签</span>
+            <input class="field" type="text" id="fDateTag" placeholder="留空自动生成，如 8月4日">
+          </label>
+          <label class="field-row field-row--wide">
+            <span class="label">摘要</span>
+            <input class="field" type="text" id="fExcerpt" placeholder="留空则自动取正文前 15 字">
+          </label>
+        </div>
+
+        <div class="editor-bar">
+          <button class="btn btn-sm" type="button" id="btnImage">插入图片</button>
+          <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          <span class="hint">Ctrl / ⌘ + S 保存</span>
+          <div class="spacer"></div>
+          <button class="btn btn-sm btn-danger" type="button" id="btnDelete">删除</button>
+          <button class="btn btn-sm btn-primary" type="button" id="btnSave">保存</button>
+        </div>
+
+        <div class="panes">
+          <textarea class="body-input" id="fBody" spellcheck="false" placeholder="正文 Markdown…"></textarea>
+          <article class="preview" id="previewPane" hidden></article>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="logbar">
+    <div class="logbar-head">
+      <span>输出</span>
+      <button class="btn btn-ghost btn-sm" type="button" id="btnClearLog">清空</button>
+    </div>
+    <pre class="log" id="log" aria-live="polite"></pre>
+  </footer>
+</div>
+
+<script src="/admin/admin.js" defer></script>
+</body>
+</html>

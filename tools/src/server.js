@@ -1,0 +1,439 @@
+'use strict';
+
+// 零依赖 Node 后台服务。
+//
+//   /            静态预览：直接托管 cfg.outputDir（默认仓库 doc/）
+//   /admin/      后台 UI（登录后可管理文章、上传图片、一键构建）
+//   /api/*       REST 接口，全部为 JSON
+//
+// 用法：
+//   node src/server.js
+//   ADMIN_PORT=8080 node src/server.js
+//   ADMIN_HOST=0.0.0.0 ADMIN_SECURE_COOKIE=1 node src/server.js   # 对外暴露（务必套 HTTPS）
+//   ADMIN_TOKEN=xxx node src/server.js                            # 显式指定口令
+//
+// 安全默认值：
+//   · 只监听 127.0.0.1，要对外必须显式设置 ADMIN_HOST
+//   · 口令首次启动随机生成，存 tools/.admin-token（权限 0600），不在代码里留后门口令
+//   · 会话 cookie: HttpOnly + SameSite=Strict；写接口只接受 application/json（天然挡住跨站表单 CSRF）
+//   · 登录失败超过阈值即限速；所有文件路径都过 store.js 的穿越校验
+
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { execFile } = require('child_process');
+const cfg = require('./config');
+const store = require('./store');
+const auth = require('./auth');
+const { render } = require('./markdown');
+
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.bmp': 'image/bmp',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+  '.txt': 'text/plain; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
+};
+
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
+/* ── 响应工具 ── */
+
+function applySecurity(res, extra) {
+  Object.keys(SECURITY_HEADERS).forEach(k => res.setHeader(k, SECURITY_HEADERS[k]));
+  if (extra) Object.keys(extra).forEach(k => res.setHeader(k, extra[k]));
+}
+
+function isHead(res) {
+  return !!(res.locals && res.locals.isHead);
+}
+
+function sendJson(res, status, data, extraHeaders) {
+  const body = Buffer.from(JSON.stringify(data), 'utf8');
+  res.writeHead(status, Object.assign({
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': body.length,
+    'Cache-Control': 'no-store',
+  }, extraHeaders || {}));
+  res.end(isHead(res) ? undefined : body);
+}
+
+function sendText(res, status, text, type) {
+  const body = Buffer.from(text, 'utf8');
+  res.writeHead(status, {
+    'Content-Type': type || 'text/plain; charset=utf-8',
+    'Content-Length': body.length,
+    'Cache-Control': 'no-store',
+  });
+  res.end(isHead(res) ? undefined : body);
+}
+
+function sendFile(req, res, file, extraHeaders) {
+  const ext = path.extname(file).toLowerCase();
+  const stat = fs.statSync(file);
+  const headers = Object.assign({
+    'Content-Type': MIME[ext] || 'application/octet-stream',
+    'Content-Length': stat.size,
+  }, extraHeaders || {});
+
+  // 后台资源与静态站点用不同缓存策略：后台不缓存，站点允许短缓存便于刷新预览
+  if (!headers['Cache-Control']) headers['Cache-Control'] = 'no-cache';
+
+  res.writeHead(200, headers);
+  if (req.method === 'HEAD') { res.end(); return; }
+  fs.createReadStream(file)
+    .on('error', () => res.end())
+    .pipe(res);
+}
+
+/* ── 请求体 ── */
+
+function readBody(req, limit) {
+  return new Promise(function (resolve, reject) {
+    let size = 0;
+    const chunks = [];
+    req.on('data', function (chunk) {
+      size += chunk.length;
+      if (size > limit) {
+        const err = new Error('请求体超过上限');
+        err.status = 413;
+        reject(err);
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+function isJsonRequest(req) {
+  const ct = String(req.headers['content-type'] || '').split(';')[0].trim();
+  return /^application\/json$/i.test(ct);
+}
+
+async function readJson(req) {
+  if (!isJsonRequest(req)) {
+    const err = new Error('需要 Content-Type: application/json');
+    err.status = 415;
+    throw err;
+  }
+  const buf = await readBody(req, cfg.admin.maxBodyBytes);
+  if (!buf.length) return {};
+  try {
+    return JSON.parse(buf.toString('utf8'));
+  } catch (e) {
+    const err = new Error('JSON 解析失败');
+    err.status = 400;
+    throw err;
+  }
+}
+
+/* ── 会话 ── */
+
+function currentSession(req) {
+  const cookies = auth.parseCookies(req.headers.cookie);
+  return auth.getSession(cookies[auth.COOKIE_NAME]);
+}
+
+/* ── 静态资源 ── */
+
+// 把 URL 路径映射到 baseDir 内的文件；越界一律返回 null
+function resolveInside(baseDir, urlPath) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath);
+  } catch (e) {
+    return null;
+  }
+  const root = path.resolve(baseDir);
+  const full = path.resolve(root, '.' + (decoded.startsWith('/') ? decoded : '/' + decoded));
+  if (full !== root && !full.startsWith(root + path.sep)) return null;
+  return full;
+}
+
+function firstExisting(file) {
+  if (!file) return null;
+  if (fs.existsSync(file) && fs.statSync(file).isFile()) return file;
+  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
+    const index = path.join(file, 'index.html');
+    if (fs.existsSync(index)) return index;
+  }
+  return null;
+}
+
+function serveAdminAsset(req, res, name) {
+  // 只允许单层、白名单字符的资源名，杜绝任何 ../ 可能
+  if (!/^[A-Za-z0-9._-]+$/.test(name)) return sendText(res, 400, '非法资源名');
+  const file = firstExisting(path.join(PUBLIC_DIR, name));
+  if (!file) return sendText(res, 404, '资源不存在: ' + name);
+  sendFile(req, res, file, {
+    'Cache-Control': 'no-cache',
+    // 后台页面启用严格 CSP：所有脚本/样式都来自同域文件，无内联代码
+    'Content-Security-Policy': "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  });
+}
+
+function serveSite(req, res, pathname) {
+  const file = firstExisting(resolveInside(cfg.outputDir, pathname));
+  if (!file) {
+    return sendText(res, 404, '404 Not Found: ' + pathname);
+  }
+  sendFile(req, res, file, { 'Cache-Control': 'no-cache' });
+}
+
+/* ── API ── */
+
+async function apiLogin(req, res) {
+  const ip = req.socket.remoteAddress || 'unknown';
+  if (auth.lockedOut(ip)) {
+    return sendJson(res, 429, { error: '尝试次数过多，请稍后再试' });
+  }
+
+  let payload;
+  try {
+    payload = await readJson(req);
+  } catch (e) {
+    return sendJson(res, e.status || 400, { error: e.message });
+  }
+
+  if (!auth.verifyToken(payload.token)) {
+    auth.recordFailure(ip);
+    return sendJson(res, 401, { error: '口令不正确' });
+  }
+
+  auth.clearAttempts(ip);
+  const sid = auth.createSession(ip, req.headers['user-agent']);
+  return sendJson(res, 200, { ok: true }, { 'Set-Cookie': auth.sessionCookie(sid) });
+}
+
+function apiLogout(req, res) {
+  const cookies = auth.parseCookies(req.headers.cookie);
+  auth.destroySession(cookies[auth.COOKIE_NAME]);
+  return sendJson(res, 200, { ok: true }, { 'Set-Cookie': auth.CLEAR_COOKIE });
+}
+
+async function apiCreatePost(req, res) {
+  const data = await readJson(req);
+  const result = store.create(data);
+  return sendJson(res, 201, { ok: true, post: result });
+}
+
+async function apiSavePost(req, res, year, slug) {
+  const data = await readJson(req);
+  const result = store.save(year, slug, data);
+  return sendJson(res, 200, { ok: true, post: result });
+}
+
+async function apiPreview(req, res) {
+  const data = await readJson(req);
+  return sendJson(res, 200, { html: render(String(data.body || '')) });
+}
+
+function apiBuild(req, res) {
+  try {
+    const result = store.build();
+    return sendJson(res, 200, { ok: true, ms: result.ms, log: result.log });
+  } catch (e) {
+    return sendJson(res, 500, { error: '构建失败: ' + e.message, stack: String(e.stack || '').split('\n').slice(0, 5) });
+  }
+}
+
+async function apiUploadImage(req, res) {
+  const data = await readJson(req);
+  if (!data.name || !data.data) {
+    const err = new Error('缺少 name 或 data(base64)');
+    err.status = 400;
+    throw err;
+  }
+  const buf = Buffer.from(String(data.data), 'base64');
+  const saved = store.saveImage(data.year || String(new Date().getFullYear()), data.name, buf);
+  return sendJson(res, 201, { ok: true, image: saved });
+}
+
+const POST_ROUTE = /^\/api\/posts\/(\d{4})\/([^/]+)$/;
+const IMAGE_ROUTE = /^\/api\/images\/(\d{4})$/;
+
+async function handleApi(req, res, pathname) {
+  const method = req.method;
+
+  if (pathname === '/api/login') {
+    if (method !== 'POST') return sendJson(res, 405, { error: '方法不允许' });
+    return apiLogin(req, res);
+  }
+  if (pathname === '/api/logout') {
+    if (method !== 'POST') return sendJson(res, 405, { error: '方法不允许' });
+    return apiLogout(req, res);
+  }
+  if (pathname === '/api/session') {
+    const session = currentSession(req);
+    return sendJson(res, 200, {
+      ok: !!session,
+      // 首次进入后台时提示口令文件的来源
+      tokenSource: auth.token.source,
+      tokenGenerated: auth.token.generated,
+      outputDir: path.resolve(cfg.outputDir),
+      postsDir: path.resolve(cfg.postsDir),
+    });
+  }
+
+  // 以下接口全部要求已登录
+  if (!currentSession(req)) {
+    return sendJson(res, 401, { error: '未登录或会话已过期' });
+  }
+
+  // 写操作必须是 JSON —— 配合 SameSite=Strict 的 cookie，可挡住跨站表单 CSRF
+  if (method !== 'GET' && !isJsonRequest(req)) {
+    return sendJson(res, 415, { error: '需要 Content-Type: application/json' });
+  }
+
+  try {
+    if (pathname === '/api/posts' && method === 'GET') {
+      return sendJson(res, 200, { posts: store.list() });
+    }
+    if (pathname === '/api/posts' && method === 'POST') {
+      return await apiCreatePost(req, res);
+    }
+
+    const m = POST_ROUTE.exec(pathname);
+    if (m) {
+      const year = m[1];
+      const slug = decodeURIComponent(m[2]);
+      if (method === 'GET') return sendJson(res, 200, { post: store.read(year, slug) });
+      if (method === 'PUT') return await apiSavePost(req, res, year, slug);
+      if (method === 'DELETE') {
+        const removed = store.remove(year, slug);
+        return sendJson(res, 200, { ok: true, post: removed });
+      }
+      return sendJson(res, 405, { error: '方法不允许' });
+    }
+
+    if (pathname === '/api/preview' && method === 'POST') return await apiPreview(req, res);
+    if (pathname === '/api/build' && method === 'POST') return apiBuild(req, res);
+
+    if (pathname === '/api/images' && method === 'POST') return await apiUploadImage(req, res);
+
+    const im = IMAGE_ROUTE.exec(pathname);
+    if (im && method === 'GET') {
+      return sendJson(res, 200, { images: store.listImages(im[1]) });
+    }
+
+    return sendJson(res, 404, { error: '接口不存在: ' + pathname });
+  } catch (e) {
+    if (e instanceof store.StoreError) {
+      return sendJson(res, e.status, { error: e.message });
+    }
+    return sendJson(res, e.status || 500, { error: e.message || '服务器内部错误' });
+  }
+}
+
+/* ── 路由 ── */
+
+function handle(req, res) {
+  res.locals = { isHead: req.method === 'HEAD' };
+
+  let url;
+  try {
+    url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
+  } catch (e) {
+    return sendText(res, 400, '非法 URL');
+  }
+
+  const pathname = url.pathname;
+
+  if (pathname.startsWith('/api/')) {
+    applySecurity(res);
+    handleApi(req, res, pathname).catch(function (err) {
+      sendJson(res, err.status || 500, { error: err.message || '服务器内部错误' });
+    });
+    return;
+  }
+
+  if (pathname === '/admin' || pathname === '/admin/') {
+    applySecurity(res);
+    return serveAdminAsset(req, res, 'admin.html');
+  }
+  if (pathname.startsWith('/admin/')) {
+    applySecurity(res);
+    return serveAdminAsset(req, res, pathname.slice('/admin/'.length));
+  }
+
+  applySecurity(res);
+  serveSite(req, res, pathname);
+}
+
+/* ── 启动 ── */
+
+function start() {
+  auth.startGc();
+
+  const server = http.createServer(handle);
+
+  server.on('error', function (err) {
+    if (err.code === 'EADDRINUSE') {
+      console.error('端口 ' + cfg.admin.port + ' 已被占用，换一个：ADMIN_PORT=8080 npm run serve');
+      process.exit(1);
+    }
+    throw err;
+  });
+
+  server.listen(cfg.admin.port, cfg.admin.host, function () {
+    const shown = cfg.admin.host === '0.0.0.0' || cfg.admin.host === '::'
+      ? '本机所有网卡'
+      : cfg.admin.host;
+    console.log('');
+    console.log('  博客后台已启动');
+    console.log('    后台地址 : http://' + (cfg.admin.host === '0.0.0.0' ? '127.0.0.1' : cfg.admin.host) + ':' + cfg.admin.port + '/admin/');
+    console.log('    站点预览 : http://' + (cfg.admin.host === '0.0.0.0' ? '127.0.0.1' : cfg.admin.host) + ':' + cfg.admin.port + '/');
+    console.log('    监听地址 : ' + cfg.admin.host + ' (' + shown + ')');
+    console.log('    输出目录 : ' + path.resolve(cfg.outputDir));
+    console.log('');
+
+    if (auth.token.generated) {
+      console.log('  首次运行，已生成管理口令（仅此一次显示）：');
+      console.log('');
+      console.log('    ' + auth.token.token);
+      console.log('');
+      console.log('  口令已保存到 tools/.admin-token，之后可用 ADMIN_TOKEN 环境变量覆盖。');
+      console.log('');
+    } else {
+      console.log('  管理口令来源: ' + (auth.token.source === 'env' ? '环境变量 ADMIN_TOKEN' : 'tools/.admin-token'));
+      console.log('  忘记口令？删除 tools/.admin-token 重启即会重新生成。');
+      console.log('');
+    }
+  });
+
+  return server;
+}
+
+if (require.main === module) {
+  start();
+
+  if (process.argv.includes('--open')) {
+    const url = 'http://127.0.0.1:' + cfg.admin.port + '/admin/';
+    const cmd = process.platform === 'win32' ? 'cmd' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
+    const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url];
+    execFile(cmd, args, function () {});
+  }
+}
+
+module.exports = { start: start };

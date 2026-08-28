@@ -131,10 +131,42 @@ function build() {
   console.log('  已同步主题资源 -> ' + cfg.outputDir);
 }
 
+// 监听 posts/ 增量重建；package.json 的 `npm run dev` 依赖这个能力
+function watch() {
+  let timer = null;
+  const rebuild = () => {
+    clearTimeout(timer);
+    // 编辑器保存往往会连续触发多次事件，合并成一次构建
+    timer = setTimeout(() => {
+      console.log('检测到变更，重新构建...');
+      try {
+        build();
+      } catch (err) {
+        console.error('构建失败: ' + err.message);
+      }
+    }, 150);
+  };
+
+  try {
+    // Node 20+ 支持 recursive；Node 16/18 会抛错，走下面的兜底
+    fs.watch(cfg.postsDir, { recursive: true }, rebuild);
+  } catch (err) {
+    if (!fs.existsSync(cfg.postsDir)) return;
+    fs.readdirSync(cfg.postsDir).forEach(function (name) {
+      const dir = path.join(cfg.postsDir, name);
+      if (fs.statSync(dir).isDirectory()) fs.watch(dir, rebuild);
+    });
+  }
+}
+
 if (require.main === module) {
   console.log('构建博客...');
   build();
   console.log('完成。');
+  if (process.argv.includes('--watch')) {
+    console.log('监听 posts/ 变化（Ctrl+C 退出）...');
+    watch();
+  }
 }
 
-module.exports = { build: build, parsePost: parsePost };
+module.exports = { build: build, watch: watch, parsePost: parsePost };

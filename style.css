@@ -110,6 +110,15 @@ body::after {
     animation: shimmer 12s ease-in-out infinite alternate;
 }
 
+/* 视差层：由 GSAP 位移；光球自身仍走 CSS 漂浮动画，分层避免抢同一个 transform */
+.ambient-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+
 /* 浮动光球 */
 .ambient-orb {
     position: fixed;
@@ -435,15 +444,15 @@ main {
     display: inline-block;
 }
 
-/* 副标题逐字悬停：每个字独立 hover，鼠标移上去变 #00acee，不改变大小 */
+/* 副标题逐字悬停：颜色交给 CSS，位移交给 GSAP 的波纹效果，
+   两边同时写 transform 会互相覆盖，也会让 CSS transition 对 GSAP 的逐帧写入二次插值 */
 .hero-subtitle .letter {
     display: inline-block;
-    transition: transform 0.28s cubic-bezier(.2, .9, .3, 1), color 0.28s ease, text-shadow 0.28s ease;
+    transition: color 0.28s ease, text-shadow 0.28s ease;
     transform-origin: center;
 }
 
 .hero-subtitle .letter:hover {
-    transform: translateY(-8px);
     color: #00acee;
     text-shadow: 0 6px 14px rgba(0, 172, 238, 0.45);
 }
@@ -481,21 +490,12 @@ main {
     gap: 16px;
 }
 
+/* 心跳由 WAAPI（animateHeroHearts）驱动：CSS 动画与脚本动画同处 animation 层叠源，
+   后者优先级更高，这里的 CSS animation 会被完全压掉，只留一份即可 */
 .heart-char {
     display: inline-block;
-    animation: heartbeat 1.4s ease-in-out infinite;
     filter: drop-shadow(0 0 16px rgba(231, 76, 60, 0.6));
     color: #e74c3c;
-}
-
-.heart-char:nth-child(2) { animation-delay: 0.15s; }
-.heart-char:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes heartbeat {
-    0%, 100% { transform: scale(1); opacity: 0.7; }
-    15%      { transform: scale(1.35); opacity: 1; }
-    30%      { transform: scale(1); opacity: 0.8; }
-    45%      { transform: scale(1.25); opacity: 0.95; }
 }
 
 /* ── About Section ── */
@@ -504,18 +504,6 @@ main {
     max-width: 680px;
     margin-top: clamp(56px, 8vh, 90px);
     position: relative;
-}
-
-#ballpitCanvas {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    pointer-events: auto;
-    z-index: 0;
-    border-radius: var(--border-radius, 28px);
 }
 
 .about-card {
@@ -531,7 +519,9 @@ main {
         0 4px 30px rgba(0, 0, 0, 0.08),
         0 12px 60px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(0, 0, 0, 0.05);
-    transition: all 0.5s var(--ease-smooth);
+    /* 不用 transition: all —— transform 由 GSAP 逐帧接管，若被 CSS 过渡二次插值会变迟滞 */
+    transition: background-color 0.5s var(--ease-smooth),
+                box-shadow 0.5s var(--ease-smooth);
     overflow: hidden;
     isolation: isolate;
 }
@@ -696,7 +686,10 @@ main {
     border: 1px solid rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    transition: all 0.5s var(--ease-spring);
+    /* 不用 transition: all —— 位移与缩放由 GSAP 磁吸接管 */
+    transition: background-color 0.5s var(--ease-spring),
+                border-color 0.5s var(--ease-spring),
+                box-shadow 0.5s var(--ease-spring);
     position: relative;
     overflow: hidden;
 }
@@ -722,7 +715,7 @@ main {
 .social-links a:hover {
     background: rgba(0, 0, 0, 0.06);
     border-color: var(--color-accent);
-    transform: translateY(-6px) scale(1.12);
+    /* 位移与缩放由 GSAP 磁吸负责 */
     box-shadow:
         0 16px 48px rgba(0, 158, 142, 0.2),
         0 4px 16px rgba(0, 0, 0, 0.3);
@@ -1104,6 +1097,12 @@ main {
     transform: translateY(0) rotateX(0);
 }
 
+/* GSAP 接管后逐帧写入 inline style，需关闭 CSS transition，否则两套插值互相打架 */
+.animate-in.gsap-driven {
+    transition: none;
+    opacity: 1;
+}
+
 /* 增强滚动动画层次感 */
 .hero.animate-in { transition-delay: 0s; }
 .about.animate-in { transition-delay: 0.15s; }
@@ -1144,7 +1143,7 @@ main {
     z-index: 0;
     transform: translate(-50%, -50%);
     transition: opacity 0.3s ease;
-    will-change: left, top, transform;
+    will-change: transform;
     contain: layout style paint;
 }
 
@@ -1253,7 +1252,9 @@ main {
         10px 10px 26px rgba(163, 177, 198, 0.5),
         -10px -10px 26px rgba(255, 255, 255, 0.72),
         inset 0 0 0 rgba(163, 177, 198, 0);
-    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* 不用 transition: all —— transform 由 GSAP 逐帧接管，若被 CSS 过渡二次插值会变迟滞 */
+    transition: background-color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow: hidden;
     isolation: isolate;
 }
@@ -1263,7 +1264,7 @@ main {
         6px 6px 18px rgba(163, 177, 198, 0.55),
         -6px -6px 18px rgba(255, 255, 255, 0.78),
         inset 3px 3px 8px rgba(163, 177, 198, 0.12);
-    transform: translateY(-3px);
+    /* 悬浮位移交给 GSAP 的 scale + 倾斜，避免与 inline transform 打架 */
 }
 
 .about-card:hover .about-content p:first-child {
@@ -1290,7 +1291,8 @@ main {
     border-radius: 50%;
     background: #e0e5ec;
     border: none;
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* 不用 transition: all —— 位移与缩放由 GSAP 磁吸接管 */
+    transition: box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
     box-shadow:
@@ -1316,7 +1318,7 @@ main {
 }
 
 .social-links a:hover {
-    transform: translateY(-6px) scale(1.1);
+    /* 位移与缩放由 GSAP 磁吸负责 */
     box-shadow:
         8px 8px 22px rgba(163, 177, 198, 0.4),
         -8px -8px 22px rgba(255, 255, 255, 0.65);
@@ -1546,4 +1548,127 @@ main {
     box-shadow:
         0 8px 40px rgba(0, 158, 142, 0.15),
         0 2px 8px rgba(0, 158, 142, 0.08);
+}
+
+/* ═══════════════════════════════════════════
+   新增动效所需样式
+   ═══════════════════════════════════════════ */
+
+/* 滚动进度条 —— 由 GSAP 写 scaleX，只用 transform 不触发布局 */
+.scroll-progress {
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-secondary), var(--color-warm));
+    z-index: 10000;
+    pointer-events: none;
+    will-change: transform;
+}
+
+/* 打字机光标 */
+.typewriter-caret {
+    display: inline-block;
+    width: 0.06em;
+    height: 0.82em;
+    margin-left: 0.06em;
+    vertical-align: baseline;
+    background: var(--color-accent);
+    box-shadow: 0 0 12px var(--color-accent-glow);
+    border-radius: 1px;
+    will-change: opacity, transform;
+}
+
+/* 返回顶部 */
+.back-to-top {
+    position: fixed;
+    right: clamp(16px, 3vw, 32px);
+    bottom: clamp(16px, 3vw, 32px);
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-accent);
+    border-radius: 50%;
+    background: var(--bg-surface);
+    color: var(--color-accent);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+    z-index: 9000;
+    will-change: transform, opacity;
+}
+
+.back-to-top:hover {
+    color: var(--color-accent-deep);
+    box-shadow: 0 8px 30px var(--color-accent-glow);
+}
+
+.back-to-top[hidden] {
+    display: none;
+}
+
+/* 环形滚动进度：转 -90° 让起点落在 12 点方向；
+   dasharray/dashoffset 取 2πr = 2π×21 ≈ 131.947 */
+.back-to-top .ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+.back-to-top .ring circle {
+    fill: none;
+    stroke-width: 2;
+}
+.back-to-top .ring-track {
+    stroke: var(--color-border-accent);
+}
+.back-to-top .ring-bar {
+    stroke: var(--color-accent);
+    stroke-linecap: round;
+    stroke-dasharray: 131.947;
+    stroke-dashoffset: 131.947;
+    filter: drop-shadow(0 0 4px var(--color-accent-glow));
+}
+.back-to-top .arrow {
+    position: relative;
+    z-index: 1;
+}
+
+/* 光标跟随环：常态缩小半透明，移到可交互元素上放大吸附 */
+.cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 34px;
+    height: 34px;
+    margin: -17px 0 0 -17px;
+    border: 1.5px solid var(--color-accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10001;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+/* SplitText 行遮罩：mask 选项已加 overflow: clip，这里只补行块级化 */
+.split-line {
+    display: block;
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-progress,
+    .typewriter-caret,
+    .hero-subtitle .letter,
+    .split-line {
+        will-change: auto;
+    }
 }

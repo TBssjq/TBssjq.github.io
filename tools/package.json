@@ -15,7 +15,9 @@
     "new": "node src/new-post.js",
     "remove": "node src/remove-post.js",
     "preview": "node src/build.js",
-    "verify": "node src/verify.js"
+    "verify": "node src/verify.js",
+    "serve": "node src/server.js",
+    "admin": "node src/server.js --open"
   },
   "keywords": [
     "blog",

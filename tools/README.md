@@ -15,7 +15,14 @@ tools/
 │   ├── templates.js      # 文章页 / 目录页 HTML 模板（复用 doc 风格类名）
 │   ├── new-post.js       # 新建文章：交互式问答 / 命令行参数，支持导入图片
 │   ├── remove-post.js    # 删除文章：删除源与产物，并重新生成目录页
-│   └── build.js          # 主构建：扫描 posts → 渲染 → 复制主题 → 输出 doc/
+│   ├── build.js          # 主构建：扫描 posts → 渲染 → 复制主题 → 输出 doc/
+│   ├── store.js          # 存储层：后台唯一接触 posts/ 的模块（含路径穿越校验）
+│   ├── auth.js           # 后台鉴权：口令校验 / 会话 / 登录限速
+│   └── server.js         # 在线后台：零依赖 HTTP 服务（站点预览 + 后台 UI + REST API）
+├── public/               # 后台前端（无构建、无框架、无内联代码）
+│   ├── admin.html
+│   ├── admin.css
+│   └── admin.js
 ├── theme/                # 静态主题资源（构建时复制到 doc/）
 │   ├── article.css        # 文章页样式（粘土态，来自 doc/article.css）
 │   ├── index.css          # 目录页样式（来自 doc/index.css）
@@ -37,8 +44,10 @@ tools/
 cd tools
 npm run new        # 交互式新建一篇文章（可顺带插入图片）
 npm run build      # 生成 doc/index.html + doc/<year>/*.html，并同步主题资源
-npm run dev        # 等同 build（如需监听可在此扩展 --watch）
+npm run dev        # 构建一次（带 --watch 时监听 posts/ 增量重建）
 npm run verify     # 构建到临时预览并与 doc/ 逐字节比对，验证风格/结构一致
+npm run admin      # 启动在线后台（浏览器打开，可在线写文章 / 传图 / 一键构建）
+npm run serve      # 同上，但不自动打开浏览器
 ```
 
 > 需要 Node.js 16+。无需 `npm install`，没有任何第三方依赖。
@@ -177,6 +186,91 @@ npm run remove -- --slug 8.1 --purge-year # 该年再无其它文章时，一并
 ```
 
 省略双引号里的图注则只输出图片、不生成说明文字。
+
+## 在线后台（Node 驱动）
+
+不想在本地改 Markdown 再敲命令？可以起一个本地服务，直接在浏览器里写文章、传图片、点一下重新构建。
+
+```bash
+cd tools
+npm run admin
+# 后台地址 : http://127.0.0.1:4321/admin/
+# 站点预览 : http://127.0.0.1:4321/
+```
+
+首次启动会**随机生成管理口令**并打印到终端，同时存入 `tools/.admin-token`（已被 `.gitignore` 排除）。
+忘了口令，删掉这个文件重启就会重新生成；也可以用环境变量指定：
+
+```bash
+ADMIN_TOKEN=my-secret npm run serve
+```
+
+> ⚠️ **GitHub Pages 只能托管静态文件，跑不了 Node。**
+> 所以后台服务要跑在你自己的机器上（或 VPS / Render / Railway 等支持 Node 的主机），
+> 生成的 `doc/` 仍然照旧推到 GitHub，由 Pages 发布。两者职责是分开的。
+
+### 能做什么
+
+|功能|说明|
+|---|---|
+|文章列表|按年份分组，显示标题 / 日期 / slug|
+|在线编辑|标题、日期、slug、日期标签、摘要、Markdown 正文|
+|实时预览|服务端用同一套 `markdown.js` 渲染，所见即所得|
+|图片上传|存到 `posts/<年份>/images/`，自动插入 Markdown 语法|
+|一键构建|直接调用 `build()`，把构建日志回显到页面底部|
+|改名 / 改期|改 slug 或日期后自动搬运文件，并清理旧产物避免死链|
+
+快捷键：`Ctrl / ⌘ + S` 保存。
+
+### 环境变量
+
+|变量|默认值|说明|
+|---|---|---|
+|`ADMIN_TOKEN`|首次运行随机生成|管理口令|
+|`ADMIN_PORT`|`4321`|监听端口|
+|`ADMIN_HOST`|`127.0.0.1`|**要对外访问必须显式设为 `0.0.0.0`**|
+|`ADMIN_SECURE_COOKIE`|关闭|设为 `1` 给会话 cookie 加 `Secure`（走 HTTPS 时必须开）|
+|`ADMIN_SESSION_TTL`|`28800`（8 小时）|会话有效期（秒），滑动续期|
+|`ADMIN_MAX_BODY`|`12582912`（12 MB）|请求体上限|
+|`ADMIN_MAX_IMAGE`|`5242880`（5 MB）|单张图片上限|
+|`ADMIN_MAX_LOGIN`|`8`|登录失败次数上限（超出限速 10 分钟）|
+
+### HTTP 接口
+
+全部为 JSON，未登录一律 `401`。
+
+|方法|路径|说明|
+|---|---|---|
+|POST|`/api/login`|登录，成功下发会话 cookie|
+|POST|`/api/logout`|登出|
+|GET|`/api/session`|查询登录态|
+|GET|`/api/posts`|文章列表|
+|POST|`/api/posts`|新建|
+|GET|`/api/posts/<year>/<slug>`|读取|
+|PUT|`/api/posts/<year>/<slug>`|保存（可改 slug / 日期）|
+|DELETE|`/api/posts/<year>/<slug>`|删除源文件与产物|
+|POST|`/api/preview`|Markdown 渲染预览|
+|POST|`/api/images`|上传图片（base64）|
+|GET|`/api/images/<year>`|该年图片列表|
+|POST|`/api/build`|触发构建，返回耗时与日志|
+
+### 安全设计
+
+- **默认只监听 `127.0.0.1`**，对外暴露需要显式 `ADMIN_HOST=0.0.0.0`，且务必套 HTTPS 反向代理
+- 口令不在代码里硬编码；首次运行随机生成，用 `crypto.timingSafeEqual` 做定长防时序比较
+- 会话 cookie：`HttpOnly` + `SameSite=Strict`；服务端只存随机 sid，重启即失效
+- **CSRF**：所有写接口强制 `Content-Type: application/json`，配合 `SameSite=Strict` 的 cookie，
+  跨站表单既发不出 JSON 也带不上 cookie，因此不再额外发 token
+- **路径穿越**：所有文件路径都经 `store.js` 的 `safeJoin()` 校验，解析后必须仍在 `posts/` 之内；
+  年份限 `\d{4}`、slug 限 `[A-Za-z0-9._-]` 且不能以点开头
+- 登录失败超过阈值即限速；后台页面下发严格 CSP（`default-src 'self'`，无内联代码）
+- 上传文件校验扩展名白名单与大小上限
+
+### 想让内容直接落到 GitHub？
+
+当前后台写的是本地 `posts/`，构建产物在本地 `doc/`，发布仍需手动 `git commit && git push`。
+若希望保存后自动提交，把 `store.save()` 之后的 `git add / commit / push` 补上即可
+（`child_process.execFileSync('git', [...])`），改动集中在一处。
 
 ## 构建验证
 

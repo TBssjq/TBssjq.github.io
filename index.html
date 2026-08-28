@@ -7,31 +7,36 @@
     <meta name="author" content="水神崛起">
     <title>水神崛起</title>
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- GSAP 3.13+：SplitText 等原 Club 插件已全部免费，直接走公共 CDN 即可 -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollToPlugin.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrambleTextPlugin.min.js"></script>
     <noscript>
         <style>.animate-in{opacity:1 !important;transform:none !important;}</style>
     </noscript>
 </head>
 <body>
+    <!-- 滚动进度条 -->
+    <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
     <!-- 水面波光效果 -->
     <div class="water-shimmer"></div>
 
-    <!-- 浮动环境光球 -->
-    <div class="ambient-orb"></div>
-    <div class="ambient-orb"></div>
-    <div class="ambient-orb"></div>
+    <!-- 浮动环境光球：外层容器负责视差，光球自身保留 CSS 漂浮动画，
+         两者分层避免 CSS animation 与 GSAP 争抢同一个 transform -->
+    <div class="ambient-layer" id="ambientLayer" aria-hidden="true">
+        <div class="ambient-orb"></div>
+        <div class="ambient-orb"></div>
+        <div class="ambient-orb"></div>
+    </div>
 
     <!-- 鼠标跟随光效 -->
     <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- 光标跟随环（磁吸目标上会放大吸附） -->
+    <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
 
     <!-- 加载画面 -->
     <div class="loading-screen" aria-hidden="true">
@@ -87,23 +92,22 @@
 
         <main>
             <div class="hero">
-                <h1 class="hero-title animate-in" data-delay="0.2">
-                    <span class="typewriter-text"></span>
+                <h1 class="hero-title animate-in">
+                    <span class="typewriter-text"></span><span class="typewriter-caret" id="typewriterCaret" aria-hidden="true"></span>
                 </h1>
-                <p class="hero-subtitle animate-in" data-delay="0.5">
+                <p class="hero-subtitle animate-in">
                     <span class="letter">前</span><span class="letter">端</span><span class="letter">开</span><span class="letter">发</span><span class="letter">者</span> <span class="letter">·</span> <span class="letter">游</span><span class="letter">戏</span><span class="letter">爱</span><span class="letter">好</span><span class="letter">者</span> <span class="letter">·</span> <span class="letter">动</span><span class="letter">态</span><span class="letter">视</span><span class="letter">觉</span><span class="letter">魔</span><span class="letter">法</span><span class="letter">师</span>
                 </p>
-                <p class="hero-hearts animate-in" data-delay="0.8">
+                <p class="hero-hearts animate-in">
                     <span class="heart-char">❤</span>
                     <span class="heart-char">❤</span>
                     <span class="heart-char">❤</span>
                 </p>
             </div>
 
-            <section class="about animate-in" data-delay="1.1">
-                <canvas id="ballpitCanvas" aria-hidden="true"></canvas>
+            <section class="about animate-in">
                 <div class="about-card card-spotlight" id="spotlightCard">
-                    <h2 class="about-heading">Hi there 👋</h2>
+                    <h2 class="about-heading" data-split>Hi there 👋</h2>
                     <div class="about-content">
                         <p>I am an ordinary man.</p>
                         <p>I have many daydreams — cool, yet unreal.</p>
@@ -117,8 +121,8 @@
                 </div>
             </section>
 
-            <section class="contact animate-in" data-delay="1.4">
-                <h3 class="contact-heading">联系我</h3>
+            <section class="contact animate-in">
+                <h3 class="contact-heading" data-split>联系我</h3>
                 <div class="social-links">
                     <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                         <img src="src/github.svg" alt="GitHub" width="32" height="32">
@@ -175,20 +179,87 @@
         </div>
     </div>
 
+    <!-- 返回顶部 -->
+    <button id="backToTop" class="back-to-top" type="button" aria-label="返回顶部" hidden>
+        <svg class="ring" viewBox="0 0 48 48" aria-hidden="true">
+            <circle class="ring-track" cx="24" cy="24" r="21"/>
+            <circle class="ring-bar" id="ringBar" cx="24" cy="24" r="21"/>
+        </svg>
+        <svg class="arrow" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+    </button>
+
     <script>
+    /* ── 全局时序配置：集中管理，避免魔法数字散落各处 ── */
+    const TIMING = Object.freeze({
+        loadingHold: 3000,   // 加载画面停留时长
+        loadingFade: 2000,   // 加载画面淡出时长
+        modalDelay: 2000     // 博客弹窗弹出延时
+    });
+
+    /* 与 CSS 的 prefers-reduced-motion 媒体查询保持一致，供 JS 动画降级使用 */
+    const prefersReducedMotion = () =>
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* rAF 循环统一封装：页面切到后台时挂起，回到前台再恢复，避免后台空转 */
+    function createLoop(render) {
+        let rafId = null;
+        let running = false;
+
+        const frame = now => {
+            render(now);
+            // render 内部可以调用 stop() 主动停机（例如粒子全部消散）。
+            // 不判 running 的话，这行会把刚停掉的循环立刻重新拉起来。
+            rafId = running ? requestAnimationFrame(frame) : null;
+        };
+        const start = () => {
+            if (running) return;
+            running = true;
+            rafId = requestAnimationFrame(frame);
+        };
+        const stop = () => {
+            running = false;
+            if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+        };
+
+        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+        start();
+        return { start, stop };
+    }
+
+    /* 插件集中注册一次：gsap.registerPlugin 是幂等的，重复调用无副作用 */
+    function registerGsapPlugins() {
+        if (typeof gsap === 'undefined') return;
+        const plugins = [
+            window.ScrollTrigger, window.ScrollToPlugin,
+            window.SplitText, window.ScrambleTextPlugin
+        ].filter(Boolean);
+        if (plugins.length) gsap.registerPlugin(...plugins);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        initLoadingScreen();
-        initCursorGlow();
-        initParticles();
-        initDynamicTitle();
-        initContextMenu();
-        initSakura();
-        initModal();
-        initWebAnimations();  // Web Animations API 动画
-        initScrollReveal();
-        initSpotlightCard();
-        initPillNav();
-        initBallpit();
+        registerGsapPlugins();
+
+        // 逐个隔离：任一模块初始化抛错不应阻断其余模块
+        [
+            initLoadingScreen, initCursorGlow, initCursorRing, initParticles,
+            initDynamicTitle, initContextMenu, initSakura, initModal,
+            initEntranceAnimations, initScrollReveal, initHeadingReveal,
+            initTypewriterCaret, initAboutCard, initPillNav, initNavEntrance,
+            initSocialLinks, initScrollProgress, initBackToTop,
+            initParallax, initMagnetic, initNavScramble, initLetterWave
+        ].forEach(init => {
+            try {
+                const result = init();
+                // 异步 init 的 rejection 不会被 try/catch 捕获，单独兜一层
+                if (result && typeof result.catch === 'function') {
+                    result.catch(err => console.error(`[init] ${init.name} 失败:`, err));
+                }
+            } catch (err) {
+                console.error(`[init] ${init.name} 失败:`, err);
+            }
+        });
     });
 
     /* ── 鼠标跟随光效 ── */
@@ -196,42 +267,54 @@
         const glow = document.getElementById('cursorGlow');
         if (!glow) return;
 
-        let mouseX = -500, mouseY = -500;
-        let glowX = -500, glowY = -500;
+        // GSAP 不可用时退回 CSS 过渡（left/top），保证效果不整体失效
+        if (typeof gsap === 'undefined') {
+            document.addEventListener('mousemove', e => {
+                glow.style.left = `${e.clientX}px`;
+                glow.style.top = `${e.clientY}px`;
+            });
+            return;
+        }
+
+        // 用 transform 代替 left/top 位移，避免每帧触发布局；
+        // quickTo 复用同一个 tween，比每帧新建 tween 开销低得多
+        gsap.set(glow, { left: 0, top: 0, xPercent: -50, yPercent: -50, x: -500, y: -500 });
+        const moveX = gsap.quickTo(glow, 'x', { duration: 0.45, ease: 'power3' });
+        const moveY = gsap.quickTo(glow, 'y', { duration: 0.45, ease: 'power3' });
 
         document.addEventListener('mousemove', e => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            moveX(e.clientX);
+            moveY(e.clientY);
         });
-
-        (function animate() {
-            glowX += (mouseX - glowX) * 0.08;
-            glowY += (mouseY - glowY) * 0.08;
-            glow.style.left = glowX + 'px';
-            glow.style.top = glowY + 'px';
-            requestAnimationFrame(animate);
-        })();
     }
 
     /* ── 加载画面 ── */
     function initLoadingScreen() {
         const screen = document.querySelector('.loading-screen');
+        if (!screen) return;
+
         setTimeout(() => {
             screen.classList.add('hidden');
             setTimeout(() => {
                 screen.remove();
                 startTypewriter();
-            }, 2000);
-        }, 3000);
+            }, TIMING.loadingFade);
+        }, TIMING.loadingHold);
     }
 
     /* ── 打字机 ── */
     function startTypewriter() {
         const el = document.querySelector('.typewriter-text');
+        if (!el) return;
+
+        const STEP = 100;   // 敲入一个拼音字母的间隔
+        const HOLD = 300;   // 拼音补全后的停留
+        const GAP = 500;    // 替换为汉字后的停顿
+
         const pairs = [
             { pin: 'NI',   ch: '你' },
             { pin: 'HAO',  ch: '好' },
-            { pin: '!',    ch: '！<br>' },
+            { pin: '!',    ch: '！', br: true },
             { pin: 'WO',   ch: '我' },
             { pin: 'SHI',  ch: '是' },
             { pin: 'SHUI', ch: '水' },
@@ -239,20 +322,46 @@
             { pin: 'JUE',  ch: '崛' },
             { pin: 'QI',   ch: '起' }
         ];
+
+        // 已确定的片段：{ text } 或 { br: true }
+        const segments = [];
         let pi = 0, ci = 0;
+
+        // 用「已确定片段 + 正在输入的拼音」渲染成节点，替代反复改写 innerHTML：
+        // 旧实现用 innerHTML.replace(pin, ch) 定位待替换文本，一旦拼音片段在已有内容中
+        // 重复出现就会替换错位，且每次 += 都会重新解析整棵子树。
+        const render = typing => {
+            const nodes = segments.map(seg =>
+                seg.br ? document.createElement('br') : document.createTextNode(seg.text));
+            nodes.push(document.createTextNode(typing));
+            el.replaceChildren(...nodes);
+        };
+
+        if (prefersReducedMotion()) {
+            pairs.forEach(({ ch, br }) => {
+                segments.push({ text: ch });
+                if (br) segments.push({ br: true });
+            });
+            render('');
+            return;
+        }
 
         (function tick() {
             if (pi >= pairs.length) return;
-            const { pin, ch } = pairs[pi];
+            const { pin, ch, br } = pairs[pi];
             if (ci < pin.length) {
-                el.innerHTML += pin[ci++];
-                setTimeout(tick, 100);
+                ci += 1;
+                render(pin.slice(0, ci));
+                setTimeout(tick, STEP);
             } else {
                 setTimeout(() => {
-                    el.innerHTML = el.innerHTML.replace(pin, ch);
-                    pi++; ci = 0;
-                    setTimeout(tick, 500);
-                }, 300);
+                    segments.push({ text: ch });
+                    if (br) segments.push({ br: true });
+                    pi += 1;
+                    ci = 0;
+                    render('');
+                    setTimeout(tick, GAP);
+                }, HOLD);
             }
         })();
     }
@@ -263,7 +372,7 @@
         Object.assign(cvs.style, { position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 });
         document.body.appendChild(cvs);
         const ctx = cvs.getContext('2d');
-        const resize = () => { cvs.width = innerWidth; cvs.height = innerHeight; };
+        const resize = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; };
         resize();
         window.addEventListener('resize', resize);
 
@@ -284,9 +393,13 @@
                     decay: Math.random() * 0.015 + 0.008
                 });
             }
+            loop.start();
         }
 
-        (function loop() {
+        // 粒子只在点击后短暂存在，闲时空转 rAF 没有意义：
+        // 队列清空后主动停掉循环，下次点击再唤醒
+        const loop = createLoop(() => {
+            if (!particles.length) { loop.stop(); return; }
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
@@ -307,8 +420,8 @@
             }
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
-            requestAnimationFrame(loop);
-        })();
+        });
+        loop.stop();
 
         document.addEventListener('click', e => spawn(e.clientX, e.clientY));
     }
@@ -323,28 +436,46 @@
     }
 
     /* ── 右键菜单 ── */
+    const CONTEXT_ACTIONS = Object.freeze({
+        refresh: () => location.reload(),
+        bilibili: () => window.open('https://space.bilibili.com/439038862', '_blank', 'noopener'),
+        email: () => { location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！'; },
+        top: () => window.scrollTo({ top: 0, behavior: 'smooth' })
+    });
+
     function initContextMenu() {
         const menu = document.getElementById('contextMenu');
+        if (!menu) return;
+
+        const hide = () => { menu.style.display = 'none'; };
+
         document.addEventListener('contextmenu', e => {
             e.preventDefault();
             menu.style.display = 'block';
-            menu.style.left = `${e.clientX}px`;
-            menu.style.top = `${e.clientY}px`;
+            // 贴边时把菜单收回视口内，否则靠右/靠下触发会溢出屏幕导致选项点不到
+            menu.style.left = `${Math.min(e.clientX, window.innerWidth - menu.offsetWidth)}px`;
+            menu.style.top = `${Math.min(e.clientY, window.innerHeight - menu.offsetHeight)}px`;
         });
-        document.addEventListener('click', () => { menu.style.display = 'none'; });
+
+        document.addEventListener('click', hide);
+        window.addEventListener('blur', hide);
+
         menu.addEventListener('click', e => {
-            const a = e.target.dataset.action;
-            if (!a) return;
-            ({ refresh: () => location.reload(), bilibili: () => open('https://space.bilibili.com/439038862', '_blank'), email: () => location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！', top: () => scrollTo({ top: 0, behavior: 'smooth' }) })[a]();
-            menu.style.display = 'none';
+            CONTEXT_ACTIONS[e.target.dataset.action]?.();
+            hide();
         });
     }
 
     /* ── 樱花（升级版 — 多彩光点） ── */
     function initSakura() {
         const cvs = document.getElementById('sakuraCanvas');
+        if (!cvs) return;
+
+        // 樱花是纯装饰层，用户要求减少动效时直接不绘制
+        if (prefersReducedMotion()) return;
+
         const ctx = cvs.getContext('2d');
-        const resize = () => { cvs.width = innerWidth; cvs.height = innerHeight; };
+        const resize = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; };
         resize();
         window.addEventListener('resize', resize);
 
@@ -376,7 +507,7 @@
             };
         });
 
-        (function loop() {
+        createLoop(() => {
             ctx.clearRect(0, 0, cvs.width, cvs.height);
             petals.forEach(p => {
                 p.x += p.vx + Math.sin(p.pulse) * 0.4;
@@ -403,80 +534,287 @@
                 ctx.restore();
             });
             ctx.shadowBlur = 0;
-            requestAnimationFrame(loop);
-        })();
+        });
     }
 
     /* ── 弹窗 ── */
     function initModal() {
         const modal = document.getElementById('blogModal');
-        setTimeout(() => modal.classList.add('show'), 2000);
-        document.querySelector('.modal-close').addEventListener('click', () => modal.classList.remove('show'));
-        document.getElementById('blogGoBtn').addEventListener('click', () => { window.open('doc/index.html', '_blank', 'noopener'); });
-        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
+        if (!modal) return;
+
+        const close = () => modal.classList.remove('show');
+
+        setTimeout(() => modal.classList.add('show'), TIMING.modalDelay);
+        modal.querySelector('.modal-close')?.addEventListener('click', close);
+        document.getElementById('blogGoBtn')?.addEventListener('click', () => {
+            window.open('doc/index.html', '_blank', 'noopener');
+        });
+        modal.addEventListener('click', e => { if (e.target === modal) close(); });
+        // 既然标注了 role="dialog" aria-modal="true"，就必须能用键盘关闭
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     }
 
     /* ── 滚动渐入（GSAP + ScrollTrigger）── */
     function initScrollReveal() {
-        // Fallback：若 GSAP 未加载或脚本异常，确保内容可见
-        if (typeof gsap === 'undefined') {
-            document.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
-            return;
-        }
-        if (window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
+        const items = Array.from(document.querySelectorAll('.animate-in'));
 
-        // Hero 入场：用 timeline 编排，替代脆弱的 setTimeout 链
-        const heroEls = gsap.utils.toArray('.hero .animate-in');
-        if (heroEls.length) {
-            gsap.set(heroEls, { opacity: 0, y: 40 });
-            gsap.timeline({ delay: 0.2 })
-                .to(heroEls, {
-                    opacity: 1,
-                    y: 0,
-                    duration: 1,
-                    ease: 'expo.out',
-                    stagger: 0.3
+        // Fallback：GSAP 未加载或用户要求减少动效时，退回 CSS 过渡直接显示
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) {
+            items.forEach(el => el.classList.add('visible'));
+            return null;
+        }
+
+        // 交由 GSAP 逐帧写 inline style。CSS 上的 opacity/transform 过渡必须关掉，
+        // 否则 CSS transition 会对 GSAP 的每一帧再做一次插值，动画变得迟滞。
+        items.forEach(el => el.classList.add('gsap-driven'));
+
+        // 用 context 收拢本模块的全部动画与 ScrollTrigger，便于统一 revert；
+        // self.selector 是作用域选择器，保证只命中 <main> 内的元素
+        const ctx = gsap.context(self => {
+            const q = self.selector;
+
+            // Hero 入场：一条 timeline 统一编排，替代脆弱的 setTimeout 链。
+            // 延迟到加载画面开始淡出时才播放，否则整套入场动画会在遮罩后面白跑一遍。
+            const heroEls = q('.hero .animate-in');
+            if (heroEls.length) {
+                const tl = gsap.timeline({
+                    delay: TIMING.loadingHold / 1000,
+                    defaults: { ease: 'expo.out' }
                 });
-            heroEls.forEach(el => el.classList.add('visible'));
-        }
 
-        // 其余 section：ScrollTrigger 驱动，进入视口时渐入（可回放）
-        const sections = gsap.utils.toArray('.animate-in:not(.hero .animate-in)');
-        sections.forEach(el => {
-            gsap.fromTo(el,
-                { opacity: 0, y: 40 },
-                {
-                    opacity: 1, y: 0, duration: 1, ease: 'expo.out',
+                tl.fromTo(heroEls,
+                    { opacity: 0, y: 40 },
+                    { opacity: 1, y: 0, duration: 1, stagger: 0.3 }
+                );
+
+                // 副标题逐字上浮。"<" 表示与上一段同时开始，"<0.35" 即再延后 0.35s，
+                // 正好落在副标题块自身入场的时点之后。
+                const letters = q('.hero-subtitle .letter');
+                if (letters.length) {
+                    // .hero-subtitle .letter 自带 transform 过渡（用于 hover 上浮），
+                    // 不关掉的话 GSAP 的逐帧写入会被 CSS 再插值一次，动画变迟滞。
+                    tl.set(letters, { transition: 'none' }, 0)
+                        .fromTo(letters,
+                            { opacity: 0, yPercent: 120 },
+                            {
+                                opacity: 1,
+                                yPercent: 0,
+                                duration: 0.6,
+                                stagger: { each: 0.025, from: 'start' },
+                                ease: 'back.out(2)'
+                            },
+                            // 副标题块在 stagger 0.3 时入场，逐字动画晚 0.05s 起
+                            0.35
+                        )
+                        // 动画结束后清掉 inline transition，把 hover 上浮还回 CSS
+                        .set(letters, { clearProps: 'transition' });
+                }
+            }
+
+            // 其余 section：ScrollTrigger 驱动，进入视口时渐入（离开可回放）
+            q('.animate-in:not(.hero .animate-in)').forEach(el => {
+                gsap.fromTo(el,
+                    { opacity: 0, y: 40 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1,
+                        ease: 'expo.out',
+                        scrollTrigger: window.ScrollTrigger ? {
+                            trigger: el,
+                            start: 'top 85%',
+                            toggleActions: 'play none none reverse'
+                        } : undefined
+                    }
+                );
+            });
+        }, document.querySelector('main'));
+
+        // 字体加载完成后行高/高度可能变化，触发点需要重新测量
+        document.fonts?.ready.then(() => window.ScrollTrigger?.refresh()).catch(() => {});
+
+        return ctx;
+    }
+
+    /* ── 标题逐行遮罩揭示（SplitText + ScrollTrigger）── */
+    function initHeadingReveal() {
+        if (typeof gsap === 'undefined' || !window.SplitText || prefersReducedMotion()) return;
+
+        gsap.utils.toArray('[data-split]').forEach(el => {
+            SplitText.create(el, {
+                type: 'lines',
+                mask: 'lines',
+                linesClass: 'split-line',
+                // autoSplit：字体加载完或容器宽度变化后自动重新分行，避免错行。
+                // 动画必须建在 onSplit 里，重分后才能重新绑定并同步进度。
+                autoSplit: true,
+                onSplit: self => gsap.from(self.lines, {
+                    yPercent: 110,
+                    duration: 0.9,
+                    ease: 'expo.out',
+                    stagger: 0.08,
                     scrollTrigger: window.ScrollTrigger ? {
                         trigger: el,
                         start: 'top 85%',
                         toggleActions: 'play none none reverse'
-                    } : undefined,
-                    onStart: () => el.classList.add('visible'),
-                    onReverseComplete: () => el.classList.remove('visible')
-                }
-            );
+                    } : undefined
+                })
+            });
         });
     }
 
-    /* ── SpotlightCard ── */
-    function initSpotlightCard() {
+    /* ── 打字机光标 ── */
+    function initTypewriterCaret() {
+        const caret = document.getElementById('typewriterCaret');
+        if (!caret || typeof gsap === 'undefined') return;
+
+        if (prefersReducedMotion()) {
+            gsap.set(caret, { opacity: 0 });
+            return;
+        }
+        gsap.to(caret, {
+            opacity: 0,
+            duration: 0.55,
+            ease: 'power1.inOut',
+            repeat: -1,
+            yoyo: true
+        });
+    }
+
+    /* ── 滚动进度条 ── */
+    function initScrollProgress() {
+        const bar = document.getElementById('scrollProgress');
+        const ring = document.getElementById('ringBar');
+        if (!bar) return;
+
+        const RING_LEN = 131.947;   // 2π·21，与 CSS 里 stroke-dasharray 对应
+
+        if (typeof gsap === 'undefined' || !window.ScrollTrigger) {
+            bar.remove();
+            if (ring) ring.style.strokeDashoffset = String(RING_LEN);
+            return;
+        }
+
+        // quickSetter 直接写属性，比每帧 gsap.set() 少一层开销；
+        // clamp 兜住惯性滚动 / overscroll 导致的越界进度。
+        // 环形进度直接写 style（SVG 比 GSAP quickSetter 更稳），同样每帧只一次赋值。
+        const setScale = gsap.quickSetter(bar, 'scaleX');
+        const setRing = ring ? (v) => { ring.style.strokeDashoffset = String(v); } : null;
+        const clamp01 = gsap.utils.clamp(0, 1);
+
+        ScrollTrigger.create({
+            trigger: document.documentElement,
+            start: 'top top',
+            end: 'bottom bottom',
+            onUpdate: self => {
+                const p = clamp01(self.progress);
+                setScale(p);
+                if (setRing) setRing(RING_LEN * (1 - p));
+            }
+        });
+    }
+
+    /* ── 返回顶部 ── */
+    function initBackToTop() {
+        const btn = document.getElementById('backToTop');
+        if (!btn) return;
+
+        const hasGsap = typeof gsap !== 'undefined' && !prefersReducedMotion();
+        const threshold = () => window.innerHeight * 0.8;
+
+        const show = () => {
+            if (!btn.hidden) return;
+            btn.hidden = false;   // hidden 同时移除可聚焦性，避免 Tab 到看不见的按钮
+            if (!hasGsap) return;
+            gsap.fromTo(btn,
+                { opacity: 0, y: 12, scale: 0.8 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(2)', overwrite: 'auto' }
+            );
+        };
+
+        const hide = () => {
+            if (btn.hidden) return;
+            if (!hasGsap) { btn.hidden = true; return; }
+            gsap.to(btn, {
+                opacity: 0, y: 12, scale: 0.8, duration: 0.25, ease: 'power2.in',
+                overwrite: 'auto',
+                onComplete: () => { btn.hidden = true; }
+            });
+        };
+
+        if (window.ScrollTrigger) {
+            ScrollTrigger.create({
+                start: threshold,
+                end: 'max',
+                onToggle: self => (self.isActive ? show() : hide())
+            });
+        } else {
+            const onScroll = () => (window.scrollY > threshold() ? show() : hide());
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        }
+
+        btn.addEventListener('click', () => {
+            if (hasGsap && window.ScrollToPlugin) {
+                gsap.to(window, { duration: 0.8, ease: 'power2.inOut', scrollTo: { y: 0 } });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+
+    /* ── About 卡片：光斑跟随 + 3D 倾斜 ── */
+    function initAboutCard() {
         const card = document.getElementById('spotlightCard');
         if (!card) return;
 
+        // mousemove 是高频事件，逐次 getBoundingClientRect() 会强制同步布局。
+        // 进入时量一次，滚动 / 缩放 / 离开时作废缓存。
+        let rect = null;
+        const invalidate = () => { rect = null; };
+        window.addEventListener('scroll', invalidate, { passive: true });
+        window.addEventListener('resize', invalidate);
+
+        const canTilt = typeof gsap !== 'undefined' && !prefersReducedMotion();
+        let tiltX = null, tiltY = null;
+        if (canTilt) {
+            gsap.set(card, { transformPerspective: 900 });
+            // quickTo 复用同一个 tween，比每次移动新建 tween 便宜得多
+            tiltX = gsap.quickTo(card, 'rotationX', { duration: 0.5, ease: 'power3' });
+            tiltY = gsap.quickTo(card, 'rotationY', { duration: 0.5, ease: 'power3' });
+        }
+
+        card.addEventListener('mouseenter', () => {
+            rect = card.getBoundingClientRect();
+            if (canTilt) gsap.to(card, { scale: 1.015, duration: 0.4, ease: 'power3.out' });
+        });
+
         card.addEventListener('mousemove', e => {
-            const rect = card.getBoundingClientRect();
+            if (!rect) rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             card.style.setProperty('--mouse-x', `${x}px`);
             card.style.setProperty('--mouse-y', `${y}px`);
+
+            if (!canTilt) return;
+            // 卡片中心为 0、边缘为 ±1，映射到 ±8°
+            tiltY(((x / rect.width) - 0.5) * 16);
+            tiltX((0.5 - (y / rect.height)) * 16);
+        });
+
+        card.addEventListener('mouseleave', () => {
+            rect = null;
+            if (!canTilt) return;
+            gsap.to(card, { scale: 1, duration: 0.4, ease: 'power3.out' });
+            tiltX(0);
+            tiltY(0);
         });
     }
 
     /* ── PillNav ── */
     function initPillNav() {
         const container = document.getElementById('pillNav');
-        if (!container) return;
+        if (!container || typeof gsap === 'undefined') return;
 
         const pills = container.querySelectorAll('.pill');
         const logo = container.querySelector('.pill-logo');
@@ -561,10 +899,18 @@
             });
         };
 
+        // layout() 内部既读 getBoundingClientRect 又写 style，必须合并到同一帧执行，
+        // 否则 resize / 字体加载期间会连续读写导致布局抖动
+        let layoutQueued = false;
+        const scheduleLayout = () => {
+            if (layoutQueued) return;
+            layoutQueued = true;
+            requestAnimationFrame(() => { layoutQueued = false; layout(); });
+        };
+
         layout();
-        window.addEventListener('resize', () => layout());
-        if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(() => layout()).catch(() => {});
+        if (document.fonts?.ready) {
+            document.fonts.ready.then(scheduleLayout).catch(() => {});
         }
 
         const handleEnter = (i) => {
@@ -590,7 +936,7 @@
         };
 
         let logoTween = null;
-        if (logo) {
+        if (logo && logoImg) {
             logo.addEventListener('mouseenter', () => {
                 if (logoTween) logoTween.kill();
                 gsap.set(logoImg, { rotate: 0 });
@@ -603,30 +949,16 @@
             });
         }
 
-        if (logoImg) {
-            gsap.set(logoImg, { scale: 0 });
-            gsap.to(logoImg, {
-                scale: 1,
-                duration: 0.6,
-                ease
-            });
-        }
-
-        const navItemsEl = container.querySelector('.pill-nav-items');
-        if (navItemsEl) {
-            gsap.set(navItemsEl, { width: 0, overflow: 'hidden' });
-            gsap.to(navItemsEl, {
-                width: 'auto',
-                duration: 0.6,
-                ease
-            });
-        }
+        // 导航栏入场（logo 缩放 / 导航项展开 / 各项淡入）已统一交给 initNavEntrance，
+        // 避免 WAAPI fill:'forwards' 锁死 transform 导致磁吸失效；此处不再处理。
 
         pills.forEach((pill, i) => {
             pill.addEventListener('mouseenter', () => handleEnter(i));
             pill.addEventListener('mouseleave', () => handleLeave(i));
 
             pill.addEventListener('click', (e) => {
+                // Ctrl / Cmd / Shift 点击交给浏览器处理，保留「在新标签页打开」
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                 e.preventDefault();
                 if (activeIndex === i) return;
 
@@ -654,270 +986,25 @@
             });
         });
 
-        const resizeObserver = new ResizeObserver(() => layout());
-        resizeObserver.observe(container);
+        // 只保留 ResizeObserver：容器尺寸变化已隐含 window resize，无需重复监听
+        new ResizeObserver(scheduleLayout).observe(container);
     }
 
-    /* ── Ballpit 3D ── */
-    async function initBallpit() {
-        const canvas = document.getElementById('ballpitCanvas');
-        if (!canvas) return;
+    /* ── Web Animations API — 入场动画编排 ──
+       Hero 的标题/副标题由 initScrollReveal 的 GSAP timeline 负责，
+       这里不再重复处理，避免两套动画系统争抢同一元素的 opacity / transform。 */
+    function initEntranceAnimations() {
+        if (prefersReducedMotion()) return;
 
-        const { Scene, PerspectiveCamera, WebGLRenderer, SphereGeometry, MeshPhysicalMaterial, Mesh, AmbientLight, PointLight, Color, Group, Raycaster, Vector2 } = await import('three');
-        const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
-
-        const scene = new Scene();
-        const camera = new PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-        camera.position.set(0, 0, 12);
-
-        const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.toneMapping = 0; // NoToneMapping
-
-        // Lights
-        const ambient = new AmbientLight(0x334455, 1.5);
-        scene.add(ambient);
-
-        const light1 = new PointLight(0x009e8e, 40, 30);
-        light1.position.set(5, 5, 5);
-        scene.add(light1);
-
-        const light2 = new PointLight(0x6c5ce7, 30, 30);
-        light2.position.set(-5, -3, 3);
-        scene.add(light2);
-
-        const light3 = new PointLight(0xfd79a8, 20, 25);
-        light3.position.set(0, -5, 5);
-        scene.add(light3);
-
-        // Ball colors
-        const palette = [
-            0x009e8e, 0x40c9b8, 0x007a6d,
-            0x6c5ce7, 0xa29bfe,
-            0xfd79a8, 0x009e8e
-        ];
-
-        // Create balls
-        const group = new Group();
-        const balls = [];
-        const count = 60;
-
-        for (let i = 0; i < count; i++) {
-            const radius = Math.max(0.15, Math.random() * 0.35 + 0.15);
-            const geo = new SphereGeometry(radius, 32, 32);
-            const mat = new MeshPhysicalMaterial({
-                color: palette[Math.floor(Math.random() * palette.length)],
-                metalness: 0.1,
-                roughness: 0.2,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.1,
-                transparent: true,
-                opacity: 0.85,
-            });
-            const mesh = new Mesh(geo, mat);
-
-            // Random position within a sphere
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(2 * Math.random() - 1);
-            const r = Math.random() * 4 + 1;
-            mesh.position.set(
-                r * Math.sin(phi) * Math.cos(theta),
-                r * Math.sin(phi) * Math.sin(theta),
-                r * Math.cos(phi)
-            );
-
-            mesh.userData = {
-                velocity: new Vector2(
-                    (Math.random() - 0.5) * 0.008,
-                    (Math.random() - 0.5) * 0.008
-                ),
-                rotSpeed: new Vector3(
-                    (Math.random() - 0.5) * 0.02,
-                    (Math.random() - 0.5) * 0.02,
-                    (Math.random() - 0.5) * 0.02
-                ),
-                originalPos: mesh.position.clone(),
-                phase: Math.random() * Math.PI * 2
-            };
-
-            group.add(mesh);
-            balls.push(mesh);
-        }
-        scene.add(group);
-
-        // Mouse interaction
-        const raycaster = new Raycaster();
-        const mouse = new Vector2();
-        let mouseX = 0, mouseY = 0;
-
-        canvas.addEventListener('mousemove', e => {
-            const rect = canvas.getBoundingClientRect();
-            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-            mouseX = mouse.x;
-            mouseY = mouse.y;
-        });
-
-        // Animation
-        const clock = { time: 0 };
-
-        function animate() {
-            requestAnimationFrame(animate);
-            clock.time += 0.016;
-
-            // Rotate group gently
-            group.rotation.y += 0.002;
-            group.rotation.x = Math.sin(clock.time * 0.3) * 0.1;
-
-            // Animate each ball
-            balls.forEach(ball => {
-                const ud = ball.userData;
-                ball.position.x += ud.velocity.x;
-                ball.position.y += ud.velocity.y;
-
-                // Gentle floating
-                ball.position.x += Math.sin(clock.time + ud.phase) * 0.003;
-                ball.position.y += Math.cos(clock.time * 0.7 + ud.phase) * 0.003;
-
-                // Keep within bounds
-                const dist = ball.position.length();
-                if (dist > 5.5) {
-                    const dir = ball.position.clone().normalize().multiplyScalar(-0.01);
-                    ball.position.add(dir);
-                    ud.velocity.x *= -0.8;
-                    ud.velocity.y *= -0.8;
-                }
-
-                // Rotation
-                ball.rotation.x += ud.rotSpeed.x;
-                ball.rotation.y += ud.rotSpeed.y;
-                ball.rotation.z += ud.rotSpeed.z;
-
-                // Mouse repulsion
-                const dx = ball.position.x - mouseX * 5;
-                const dy = ball.position.y - mouseY * 5;
-                const mouseDist = Math.sqrt(dx * dx + dy * dy);
-                if (mouseDist < 2) {
-                    const force = (2 - mouseDist) * 0.005;
-                    ball.position.x += dx / mouseDist * force;
-                    ball.position.y += dy / mouseDist * force;
-                }
-            });
-
-            // Animate lights
-            light1.position.x = Math.sin(clock.time * 0.5) * 6;
-            light1.position.y = Math.cos(clock.time * 0.3) * 5;
-            light2.position.x = Math.cos(clock.time * 0.4) * 5;
-            light2.position.y = Math.sin(clock.time * 0.6) * 4;
-
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // Resize handler
-        const resize = () => {
-            const w = canvas.clientWidth;
-            const h = canvas.clientHeight;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
-        };
-        window.addEventListener('resize', resize);
-    }
-
-    /* ── Web Animations API — 全局动画系统 ── */
-    function initWebAnimations() {
-        // 等待加载画面结束后启动动画
-        const startAnimations = () => {
-            animateNavigation();
-            animateHero();
+        setTimeout(() => {
+            animateHeroHearts();
             animateAboutSection();
-            animateSocialLinks();
-            animateScrollHint();
             animateContactHeading();
-        };
-
-        // 延迟启动，确保页面已完全渲染
-        setTimeout(startAnimations, 3200);
+        }, TIMING.loadingHold);
     }
 
-    /* 导航栏入场动画 */
-    function animateNavigation() {
-        const nav = document.querySelector('.pill-nav');
-        if (!nav) return;
-
-        nav.animate([
-            { opacity: 0, transform: 'translateY(-30px) scale(0.95)' },
-            { opacity: 1, transform: 'translateY(0) scale(1)' }
-        ], {
-            duration: 1000,
-            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-            fill: 'forwards',
-            delay: 100
-        });
-
-        // Logo 弹跳动画
-        const logoText = document.querySelector('.pill-logo-text');
-        if (logoText) {
-            logoText.animate([
-                { transform: 'scale(0) rotate(-180deg)', opacity: 0 },
-                { transform: 'scale(1.2) rotate(10deg)', opacity: 1, offset: 0.6 },
-                { transform: 'scale(1) rotate(0deg)', opacity: 1 }
-            ], {
-                duration: 800,
-                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-                fill: 'forwards',
-                delay: 400
-            });
-        }
-
-        // 导航项依次入场
-        const pills = document.querySelectorAll('.pill');
-        pills.forEach((pill, index) => {
-            pill.animate([
-                { opacity: 0, transform: 'translateX(-20px)' },
-                { opacity: 1, transform: 'translateX(0)' }
-            ], {
-                duration: 600,
-                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                fill: 'forwards',
-                delay: 500 + index * 120
-            });
-        });
-    }
-
-    /* Hero 区域动画 */
-    function animateHero() {
-        // 标题打字机效果增强
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle) {
-            heroTitle.animate([
-                { opacity: 0, transform: 'translateY(50px) scale(0.9)', filter: 'blur(10px)' },
-                { opacity: 1, transform: 'translateY(0) scale(1)', filter: 'blur(0px)' }
-            ], {
-                duration: 1200,
-                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                fill: 'forwards',
-                delay: 600
-            });
-        }
-
-        // 副标题滑入
-        const subtitle = document.querySelector('.hero-subtitle');
-        if (subtitle) {
-            subtitle.animate([
-                { opacity: 0, transform: 'translateY(30px)', letterSpacing: '0.5em' },
-                { opacity: 1, transform: 'translateY(0)', letterSpacing: '0.35em' }
-            ], {
-                duration: 1000,
-                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                fill: 'forwards',
-                delay: 1200
-            });
-        }
-
-        // 心形图标跳动
+    /* Hero 心跳动画 —— 标题/副标题的入场由 GSAP timeline 负责，此处不重复处理 */
+    function animateHeroHearts() {
         const hearts = document.querySelectorAll('.heart-char');
         hearts.forEach((heart, index) => {
             // 入场动画
@@ -954,19 +1041,9 @@
         const aboutSection = document.querySelector('.about');
         if (!aboutSection) return;
 
-        // 整体卡片入场
-        const card = document.querySelector('.about-card');
-        if (card) {
-            card.animate([
-                { opacity: 0, transform: 'translateY(60px) rotateX(5deg)' },
-                { opacity: 1, transform: 'translateY(0) rotateX(0deg)' }
-            ], {
-                duration: 1000,
-                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                fill: 'forwards',
-                delay: 2000
-            });
-        }
+        // 卡片本身不做 WAAPI 入场：fill: 'forwards' 的 transform 会常驻在动画层叠源，
+        // 永久压过 GSAP 倾斜写进 inline style 的 transform，导致 3D 倾斜失效。
+        // 卡片的入场已由父级 .about 的 ScrollTrigger 渐入负责。
 
         // 标题动画
         const heading = document.querySelector('.about-heading');
@@ -1009,92 +1086,241 @@
         });
     }
 
-    /* 社交链接动画 */
-    function animateSocialLinks() {
-        const links = document.querySelectorAll('.social-links a');
+    /* ── 社交链接：ScrollTrigger 入场 + GSAP 悬停 ──
+       原来的 WAAPI 版本用 fill:'forwards' 把 transform 常驻在动画层叠源，
+       会永久压过磁吸写进 inline style 的位移，所以统一改成 GSAP。
+       （.scroll-hint / .scroll-line 的呼吸与线条动画 CSS 里已经有一份，
+         WAAPI 那份只是把 CSS 版本盖掉，直接删掉不留重复实现。） */
+    function initSocialLinks() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
 
-        links.forEach((link, index) => {
-            // 入场动画
-            link.animate([
-                { opacity: 0, transform: 'translateY(30px) scale(0.5)' },
-                { opacity: 1, transform: 'translateY(0) scale(1)' }
-            ], {
-                duration: 700,
-                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-                fill: 'forwards',
-                delay: 3600 + index * 150
-            });
+        const links = gsap.utils.toArray('.social-links a');
+        if (!links.length) return;
 
-            // 悬停动画
-            link.addEventListener('mouseenter', () => {
-                link.animate([
-                    { transform: 'translateY(0) scale(1)' },
-                    { transform: 'translateY(-8px) scale(1.15)' }
-                ], {
-                    duration: 350,
-                    easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    fill: 'forwards'
-                });
-            });
-
-            link.addEventListener('mouseleave', () => {
-                link.animate([
-                    { transform: 'translateY(-8px) scale(1.15)' },
-                    { transform: 'translateY(0) scale(1)' }
-                ], {
-                    duration: 300,
-                    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                    fill: 'forwards'
-                });
-            });
+        // 入场走 yPercent / scale，磁吸走 x / y —— 不同 transform 分量，互不覆盖
+        gsap.set(links, { opacity: 0, yPercent: 60, scale: 0.6 });
+        gsap.to(links, {
+            opacity: 1,
+            yPercent: 0,
+            scale: 1,
+            duration: 0.7,
+            ease: 'back.out(1.8)',
+            stagger: 0.12,
+            scrollTrigger: window.ScrollTrigger ? {
+                trigger: '.contact',
+                start: 'top 80%',
+                toggleActions: 'play none none reverse'
+            } : undefined
         });
 
-        // 图标持续微旋转
-        const images = document.querySelectorAll('.social-links img');
-        images.forEach(img => {
-            img.animate([
-                { transform: 'rotate(0deg) scale(1)' },
-                { transform: 'rotate(5deg) scale(1.05)', offset: 0.33 },
-                { transform: 'rotate(-5deg) scale(1.02)', offset: 0.66 },
-                { transform: 'rotate(0deg) scale(1)' }
-            ], {
-                duration: 4000,
-                iterations: Infinity,
-                easing: 'ease-in-out'
+        links.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                gsap.to(link, { scale: 1.15, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+            });
+            link.addEventListener('mouseleave', () => {
+                gsap.to(link, { scale: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
             });
         });
     }
 
-    /* 滚动提示动画 */
-    function animateScrollHint() {
-        const scrollHint = document.querySelector('.scroll-hint');
-        if (!scrollHint) return;
+    /* ── 导航栏入场（GSAP）──
+       原 WAAPI 版本同样会被 fill:'forwards' 锁死 transform 使磁吸失效；
+       改成 GSAP 后顺便把时点对齐到加载画面开始淡出的那一刻。 */
+    function initNavEntrance() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
 
-        // 整体呼吸效果
-        scrollHint.animate([
-            { opacity: 0.2, transform: 'translateY(0)' },
-            { opacity: 0.7, transform: 'translateY(8px)' },
-            { opacity: 0.2, transform: 'translateY(0)' }
-        ], {
-            duration: 2500,
-            iterations: Infinity,
-            easing: 'ease-in-out',
-            delay: 4200
+        const nav = document.querySelector('.pill-nav');
+        const navItems = document.querySelector('.pill-nav-items');
+        const logoText = document.querySelector('.pill-logo-text');
+        const pills = gsap.utils.toArray('.pill');
+        if (!nav) return;
+
+        // 先立刻钉住初始态，再由 timeline 统一放到终态。
+        // 不用 from() 是因为 timeline 带 3s 延迟，混用 set / to 行为更可控。
+        gsap.set(nav, { opacity: 0, y: -30, scale: 0.95 });
+        if (navItems) gsap.set(navItems, { width: 0, overflow: 'hidden' });
+        if (logoText) gsap.set(logoText, { scale: 0, rotate: -120 });
+        if (pills.length) gsap.set(pills, { opacity: 0, xPercent: -60 });
+
+        const tl = gsap.timeline({
+            delay: TIMING.loadingHold / 1000,
+            defaults: { ease: 'power3.out' }
         });
 
-        // 滚动线条动画
-        const scrollLine = scrollHint.querySelector('.scroll-line');
-        if (scrollLine) {
-            scrollLine.animate([
-                { transform: 'scaleY(0)', transformOrigin: 'top', opacity: 0 },
-                { transform: 'scaleY(1)', transformOrigin: 'top', opacity: 1, offset: 0.2 },
-                { transform: 'scaleY(1)', transformOrigin: 'top', opacity: 1, offset: 0.7 },
-                { transform: 'scaleY(0)', transformOrigin: 'bottom', opacity: 0 }
-            ], {
-                duration: 2500,
-                iterations: Infinity,
-                easing: 'ease-in-out',
-                delay: 4200
+        tl.to(nav, { opacity: 1, y: 0, scale: 1, duration: 0.9 }, 0);
+        if (navItems) tl.to(navItems, { width: 'auto', duration: 0.6 }, 0.15);
+        if (logoText) tl.to(logoText, { scale: 1, rotate: 0, duration: 0.7, ease: 'back.out(2)' }, 0.2);
+        if (pills.length) tl.to(pills, { opacity: 1, xPercent: 0, duration: 0.6, stagger: 0.1 }, 0.3);
+
+        // overflow 必须清掉，否则会一直裁掉 pill 的悬浮圆
+        if (navItems) tl.set(navItems, { clearProps: 'width,overflow' });
+    }
+
+    /* ── 磁吸：可交互元素被鼠标吸引产生位移 ── */
+    function initMagnetic() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const targets = gsap.utils.toArray('.social-links a, .pill');
+        if (!targets.length) return;
+
+        const RADIUS = 110;   // 吸附半径（px）
+        const PULL = 0.32;    // 最大位移系数
+
+        const items = targets.map(el => ({
+            el: el,
+            xTo: gsap.quickTo(el, 'x', { duration: 0.4, ease: 'power3' }),
+            yTo: gsap.quickTo(el, 'y', { duration: 0.4, ease: 'power3' }),
+            rect: null
+        }));
+
+        // getBoundingClientRect 是布局读取，塞进高频 mousemove 会反复触发同步布局。
+        // 缓存一份，只在滚动 / 缩放 / 尺寸变化时作废。
+        const invalidate = () => items.forEach(it => { it.rect = null; });
+        window.addEventListener('scroll', invalidate, { passive: true });
+        window.addEventListener('resize', invalidate);
+        new ResizeObserver(invalidate).observe(document.body);
+
+        // 距离越近吸力越强：dist=0 → 1，dist=RADIUS → 0
+        const falloff = gsap.utils.pipe(
+            gsap.utils.mapRange(0, RADIUS, 1, 0),
+            gsap.utils.clamp(0, 1)
+        );
+
+        window.addEventListener('mousemove', e => {
+            items.forEach(it => {
+                if (!it.rect) it.rect = it.el.getBoundingClientRect();
+                const r = it.rect;
+                const dx = e.clientX - (r.left + r.width / 2);
+                const dy = e.clientY - (r.top + r.height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > RADIUS) { it.xTo(0); it.yTo(0); return; }
+                const k = falloff(dist) * PULL;
+                it.xTo(dx * k);
+                it.yTo(dy * k);
+            });
+        }, { passive: true });
+    }
+
+    /* ── 导航文字乱码重组（ScrambleTextPlugin）──
+       只改 .pill-label-hover 的文本内容，不动它正在被 PillNav 动画驱动的 transform。 */
+    function initNavScramble() {
+        if (typeof gsap === 'undefined' || !window.ScrambleTextPlugin || prefersReducedMotion()) return;
+
+        gsap.utils.toArray('.pill').forEach(pill => {
+            const label = pill.querySelector('.pill-label-hover');
+            if (!label) return;
+            const text = label.textContent.trim();
+            if (!text) return;
+
+            pill.addEventListener('mouseenter', () => {
+                gsap.to(label, {
+                    duration: 0.6,
+                    scrambleText: {
+                        text: text,
+                        chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                        speed: 0.6,
+                        revealDelay: 0.1
+                    },
+                    overwrite: 'auto'
+                });
+            });
+        });
+    }
+
+    /* ── 副标题逐字波纹：悬停某个字时，邻居按距离依次抬升 ── */
+    function initLetterWave() {
+        const letters = Array.from(document.querySelectorAll('.hero-subtitle .letter'));
+        if (!letters.length || typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const LIFT = -12;    // 峰值抬升（px）
+        const SPREAD = 4;    // 影响半径（字数）
+
+        // 入场 timeline 用的是 yPercent，这里用 y —— 两个分量可叠加
+        const toY = letters.map(l => gsap.quickTo(l, 'y', { duration: 0.4, ease: 'power3' }));
+
+        letters.forEach((letter, i) => {
+            letter.addEventListener('mouseenter', () => {
+                toY.forEach((fn, j) => {
+                    const dist = Math.abs(i - j);
+                    if (dist > SPREAD) return;
+                    fn(LIFT * (1 - dist / (SPREAD + 1)));
+                });
+            });
+        });
+
+        document.querySelector('.hero-subtitle')?.addEventListener('mouseleave', () => {
+            toY.forEach(fn => fn(0));
+        });
+    }
+
+    /* ── 光标跟随环：常态小圆，移到可交互元素上放大吸附 ── */
+    function initCursorRing() {
+        const ring = document.getElementById('cursorRing');
+        if (!ring || typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const xTo = gsap.quickTo(ring, 'x', { duration: 0.35, ease: 'power3' });
+        const yTo = gsap.quickTo(ring, 'y', { duration: 0.35, ease: 'power3' });
+        const HOVERABLE = 'a, button, .pill, .about-card, .heart-char';
+
+        let shown = false;
+        window.addEventListener('mousemove', e => {
+            // 只在首次移动时建一个淡入 tween，之后每帧仅更新 quickTo
+            if (!shown) { shown = true; gsap.to(ring, { opacity: 1, duration: 0.4 }); }
+            xTo(e.clientX);
+            yTo(e.clientY);
+        }, { passive: true });
+
+        document.addEventListener('mouseleave', () => {
+            gsap.to(ring, { opacity: 0, duration: 0.3, overwrite: 'auto' });
+        });
+
+        // mouseover 在进出任意元素时都会触发，一个监听器就能兼顾进入与离开
+        let hovering = false;
+        document.addEventListener('mouseover', e => {
+            const hit = !!(e.target && e.target.closest && e.target.closest(HOVERABLE));
+            if (hit === hovering) return;
+            hovering = hit;
+            gsap.to(ring, { scale: hit ? 1.9 : 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+        });
+    }
+
+    /* ── 背景视差：环境光球随鼠标与滚动轻微位移 ── */
+    function initParallax() {
+        const layer = document.getElementById('ambientLayer');
+        if (!layer || typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const xTo = gsap.quickTo(layer, 'x', { duration: 0.9, ease: 'power3' });
+        const yTo = gsap.quickTo(layer, 'y', { duration: 0.9, ease: 'power3' });
+
+        // 视口坐标归一化到 -1 ~ 1
+        const normX = gsap.utils.pipe(
+            gsap.utils.mapRange(0, window.innerWidth, -1, 1),
+            gsap.utils.clamp(-1, 1)
+        );
+        const normY = gsap.utils.pipe(
+            gsap.utils.mapRange(0, window.innerHeight, -1, 1),
+            gsap.utils.clamp(-1, 1)
+        );
+
+        // 鼠标与滚动都会写 y，合并到同一个写入口，避免两个来源互相打断
+        let mx = 0, my = 0, progress = 0;
+        const apply = () => {
+            xTo(mx * 26);
+            yTo(my * 18 + progress * 60);
+        };
+
+        window.addEventListener('mousemove', e => {
+            mx = normX(e.clientX);
+            my = normY(e.clientY);
+            apply();
+        }, { passive: true });
+
+        if (window.ScrollTrigger) {
+            ScrollTrigger.create({
+                start: 0,
+                end: 'max',
+                onUpdate: self => { progress = self.progress; apply(); }
             });
         }
     }

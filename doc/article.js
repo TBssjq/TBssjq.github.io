@@ -52,9 +52,15 @@ const ICON_OK = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox=
 function copyCode(btn) {
     const code = btn.closest('.code-block')?.querySelector('code')?.textContent;
     if (!code) return;
+
+    // 非 HTTPS / 权限被拒时 clipboard API 会 reject，不能静默吞掉
     navigator.clipboard.writeText(code).then(() => {
         btn.innerHTML = ICON_OK;
         btn.style.opacity = '1';
         setTimeout(() => { btn.innerHTML = ICON_COPY; }, 2000);
+    }).catch(() => {
+        btn.style.opacity = '1';
+        btn.title = '复制失败，请手动选择代码';
+        setTimeout(() => { btn.title = ''; }, 2000);
     });
 }
