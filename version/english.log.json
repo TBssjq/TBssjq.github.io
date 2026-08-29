@@ -1,9 +1,9 @@
 {
-  "latest": "1.0",
+  "latest": "2.0",
   "updated": "2026-08-29",
   "entries": [
     {
-      "version": "1.0",
+      "version": "2.0",
       "date": "2026-08-29",
       "changes": [
         "底部导航栏直接使用提供的液态玻璃库（LiquidBottomTabs），支持手势滑动切换",

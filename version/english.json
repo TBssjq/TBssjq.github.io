@@ -1,6 +1,6 @@
 {
   "latestVersion": "2.0",
-  "downloadUrl": "https://github.com/YOUR_USERNAME/English/releases/download/v1.0/app-release.apk",
+  "downloadUrl": "https://github.com/tbssjq/English/releases/download/v2.0/app-release.apk",
   "forceUpdate": false,
   "changelog": "1. 底部导航栏改为直接使用提供的液态玻璃库（LiquidBottomTabs），支持手势滑动切换\n2. 主界面与注册页按钮改用库提供的 LiquidButton\n3. 修复学习时点击评分按钮立即跳到下一个单词的问题（未翻面先翻面看释义）\n4. 单词详情页卡片与按钮应用液态玻璃效果\n5. 深色模式使用固定配色，避免文字在暗色下变黑无法阅读"
 }
