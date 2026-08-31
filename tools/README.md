@@ -1,7 +1,61 @@
-# 博客生成器（Blog Generator）
+# 博客生成器 + 在线编辑器（Blog Generator & Admin）
 
-零依赖的静态博客生成器，博客风格继承自 `doc/` 下的粘土态（Claymorphism）主题。
-用 Markdown 写文章，运行一条命令即可重新生成 `doc/` 下的目录页与所有文章页。
+零依赖的静态博客生成器 + 现代化 Markdown 编辑后台。
+用 Markdown 写文章，在浏览器里改完点一下就能**构建、提交、推送到 GitHub**。
+
+- **零第三方依赖**：只用 Node 内置模块，无需 `npm install`
+- **视觉与博客一致**：后台沿用 `doc/` 的粘土态（Claymorphism）主题，明暗双主题
+- **一键发布**：构建 → `git add` → `commit` → `pull --rebase` → `push`，一个按钮走完
+- **文章分类 / 标签**：后台可归类，目录页自动生成筛选条
+
+> 需要 Node.js 16+。仓库根目录运行即可。
+
+---
+
+## 目录
+
+- [快速开始](#快速开始)
+- [项目架构](#项目架构)
+- [在线编辑器](#在线编辑器)
+- [分类与标签](#分类与标签)
+- [一键 Git 推送](#一键-git-推送)
+- [命令行用法](#命令行用法)
+- [写文章](#写文章)
+- [插入图片](#插入图片)
+- [删除文章](#删除文章)
+- [性能优化](#性能优化)
+- [HTTP 接口](#http-接口)
+- [环境变量](#环境变量)
+- [安全设计](#安全设计)
+- [构建验证](#构建验证)
+- [常见问题](#常见问题)
+
+---
+
+## 快速开始
+
+```bash
+cd tools
+npm run admin
+```
+
+终端会打印后台地址（默认 <http://127.0.0.1:4321/admin/>）和管理口令，并自动打开浏览器。
+
+| 命令 | 说明 |
+| --- | --- |
+| `npm run admin` | 启动后台并自动打开浏览器 |
+| `npm run serve` | 启动后台但不打开浏览器 |
+| `npm run build` | 只构建，生成 `doc/` |
+| `npm run verify` | 校验生成结果与 `doc/` 是否逐字节一致 |
+
+首次启动会**随机生成管理口令**并打印到终端，同时存入 `tools/.admin-token`（已被 `.gitignore` 排除）。
+忘了口令，删掉这个文件重启就会重新生成；也可以显式指定：
+
+```bash
+ADMIN_TOKEN=my-secret npm run serve
+```
+
+---
 
 ## 项目架构
 
@@ -10,104 +64,198 @@ tools/
 ├── package.json          # 仅含 npm scripts，无运行时依赖
 ├── README.md
 ├── src/
-│   ├── config.js         # 站点配置：标题、年份、Giscus、输入输出目录
+│   ├── config.js         # 站点配置：标题、分类、Git、后台参数
 │   ├── markdown.js       # 极简 Markdown 解析器（零依赖）
 │   ├── templates.js      # 文章页 / 目录页 HTML 模板（复用 doc 风格类名）
-│   ├── new-post.js       # 新建文章：交互式问答 / 命令行参数，支持导入图片
-│   ├── remove-post.js    # 删除文章：删除源与产物，并重新生成目录页
 │   ├── build.js          # 主构建：扫描 posts → 渲染 → 复制主题 → 输出 doc/
 │   ├── store.js          # 存储层：后台唯一接触 posts/ 的模块（含路径穿越校验）
+│   ├── git.js            # Git 封装：状态 / 提交 / 变基拉取 / 推送
 │   ├── auth.js           # 后台鉴权：口令校验 / 会话 / 登录限速
-│   └── server.js         # 在线后台：零依赖 HTTP 服务（站点预览 + 后台 UI + REST API）
+│   ├── server.js         # 在线后台：零依赖 HTTP 服务（预览 + 后台 UI + REST API）
+│   ├── new-post.js       # 命令行新建文章
+│   ├── remove-post.js    # 命令行删除文章
+│   └── verify.js         # 构建产物一致性校验
 ├── public/               # 后台前端（无构建、无框架、无内联代码）
 │   ├── admin.html
-│   ├── admin.css
-│   └── admin.js
+│   ├── admin.css         # 粘土态主题，配色对齐 doc/
+│   ├── admin.js
+│   └── admin-theme.js    # 首屏前置脚本，避免主题闪烁
 ├── theme/                # 静态主题资源（构建时复制到 doc/）
-│   ├── article.css        # 文章页样式（粘土态，来自 doc/article.css）
-│   ├── index.css          # 目录页样式（来自 doc/index.css）
-│   ├── article.js         # 文章页交互：暗色切换 / 代码复制 / Giscus
-│   ├── index.js           # 目录页交互：暗色切换
-│   └── layout.css         # 页面骨架布局（替代原 article 页里的 Tailwind 工具类）
+│   ├── article.css / article.js
+│   ├── index.css / index.js   # 目录页样式 + 分类筛选交互
 └── posts/                # 文章源文件（Markdown + frontmatter）
-    └── 2026/
-        ├── 7.21.md
-        ├── 5.30.md
-        └── 4.24.md
+    └── 2026/*.md
 ```
 
-构建产物输出到仓库根目录的 `doc/`（与现有站点结构一致）。
+构建产物输出到仓库根目录的 `doc/`，与现有站点结构一致。
 
-## 使用方法
+---
+
+## 在线编辑器
+
+### 界面布局
+
+```
+┌───────────────────────────────────────────────────────────────────┐
+│ 水 博客后台        [新建] [构建] [同步 GitHub]  ⦿ 预览   ☀/🌙  退出 │
+├──────────────┬────────────────────────────────────────────────────┤
+│ 🔍 搜索      │  标题输入框                                         │
+│ 分类筛选 chips│  日期 / slug / 日期标签 / 分类 / 标签 / 摘要        │
+│ ── 2026 ──   │  ── Markdown 工具栏 ────────────────────            │
+│  文章卡片…   │  ┌ 编辑区（Monospace） ┊ 实时预览（衬线体）┐        │
+│              │  └                                        ┘        │
+│              │  字数 / 词数 / 行数 / 阅读时长   [编辑│分栏│预览]   │
+├──────────────┴────────────────────────────────────────────────────┤
+│ 输出 │ Git  变更文件 / 最近提交 / 提交信息 / 一键推送              │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+### 编辑器功能
+
+| 功能 | 说明 |
+| --- | --- |
+| 实时分栏预览 | 左侧写 Markdown、右侧渲染结果；支持**滚动同步**，中间分隔条可拖拽调宽度 |
+| 视图切换 | 编辑 / 分栏 / 预览，宽度比例记在本地 |
+| Markdown 工具栏 | 加粗、斜体、H2/H3、引用、无序 / 有序 / 任务列表、代码块、行内代码、链接、表格、分隔线、图片 |
+| 图片插入 | 点按钮选择、**拖拽进编辑区**、或**直接 Ctrl+V 粘贴**截图 |
+| 统计 | 字数 / 词数（中英混排分别计算）/ 行数 / 预计阅读时长 |
+| 本地草稿 | 改动自动存进 `localStorage`，浏览器崩溃或误关页面后可一键恢复 |
+| 分类 / 标签 | 分类输入框带已有分类联想，标签用逗号分隔，构建后同步到目录页 |
+| Git 面板 | 分支、上游、待提交 / 待推送 / 待拉取、改动文件清单、最近提交 |
+| 明暗主题 | 跟随系统，也可手动切换，选择记在本地；首屏由 `admin-theme.js` 预置，不会闪白 |
+
+### 快捷键
+
+| 快捷键 | 作用 |
+| --- | --- |
+| `Ctrl / ⌘ + S` | 保存 |
+| `Ctrl + B` | 加粗（光标在正文区） |
+| `Ctrl + I` | 斜体 |
+| `Ctrl + K` | 插入链接 |
+| `Ctrl + Shift + B` | 构建站点 |
+| `Ctrl + Shift + G` | 一键推送到 GitHub |
+
+---
+
+## 分类与标签
+
+分类写在 frontmatter 里，构建后会体现在三处：
+
+```markdown
+---
+title: 夏天的风
+date: 2026-08-01
+category: 随笔          # 省略则归入「未分类」
+tags: 夏天, 海, 随笔     # 逗号、顿号、空格分隔都支持
+---
+```
+
+1. **后台侧栏**：按分类筛选文章，chip 上带篇数
+2. **目录页**：顶部生成分类筛选条，点击即筛选，空的年份段会自动折叠；支持 `#分类名` 直达
+3. **文章页**：标题下方显示分类徽标与标签
+
+`config.js` 里的 `defaultCategory` 控制缺省分类名（默认 `未分类`）。
+分类是自由文本，不用预先注册 —— 后台输入框会自动联想已用过的分类。
+
+---
+
+## 一键 Git 推送
+
+后台底部 Git 面板提供三档操作：
+
+| 按钮 | 行为 |
+| --- | --- |
+| **仅本地提交** | `git add -A` → `git commit`（不推送，适合攒几篇再发） |
+| **一键推送** | 构建 → `add` → `commit` → `pull --rebase --autostash` → `push` |
+| **刷新状态** | 重新读取分支、上游、改动文件、最近提交 |
+
+顶部工具栏的「同步 GitHub」= 打开面板并直接跑一键推送。
+
+细节：
+
+- **先构建再提交**：勾选项，默认开启，保证推上去的 `doc/` 是最新的
+- **先拉取再推送**：默认 `pull --rebase --autostash`，落后远程时自动变基；**一旦 rebase 冲突会立即中止推送**并提示去命令行处理，不会把冲突状态硬推上去
+- **没有改动就跳过提交**，但已有的本地提交仍会被推送
+- **首次推送自动补 `-u`**，无需手动设置上游
+- 提交信息留空时用 `config.js` 里的 `commitTemplate`（`{time}` 会替换成本地时间）
+
+### 相关配置
+
+`src/config.js`：
+
+```js
+git: {
+  enabled: true,          // 关掉整个 Git 面板
+  remote: 'origin',
+  branch: '',             // 留空 = 跟随当前分支
+  pullBeforePush: true,
+  push: true,             // false = 只提交不推送
+  timeout: 120000,        // 单条 git 命令超时（毫秒）
+  commitTemplate: 'chore(blog): 更新文章 {time}',
+}
+```
+
+不想在后台暴露 Git，设 `ADMIN_GIT=0` 即可，面板会整体禁用。
+
+---
+
+## 命令行用法
 
 ```bash
-cd tools
-npm run new        # 交互式新建一篇文章（可顺带插入图片）
-npm run build      # 生成 doc/index.html + doc/<year>/*.html，并同步主题资源
-npm run dev        # 构建一次（带 --watch 时监听 posts/ 增量重建）
-npm run verify     # 构建到临时预览并与 doc/ 逐字节比对，验证风格/结构一致
-npm run admin      # 启动在线后台（浏览器打开，可在线写文章 / 传图 / 一键构建）
-npm run serve      # 同上，但不自动打开浏览器
+npm run new        # 交互式新建文章（可顺带插入图片）
+npm run remove     # 交互式删除文章
+npm run build      # 生成 doc/index.html + doc/<year>/*.html，并同步主题
+npm run dev        # 构建一次并监听 posts/ 增量重建
+npm run verify     # 构建到临时目录与 doc/ 逐字节比对
+npm run admin      # 启动在线后台并打开浏览器
+npm run serve      # 启动在线后台但不打开浏览器
 ```
 
-> 需要 Node.js 16+。无需 `npm install`，没有任何第三方依赖。
->
-> 想先预览生成结果而不覆盖 `doc/`，可指定输出目录：
-> `BLOG_OUT=.preview npm run build`（PowerShell：`$env:BLOG_OUT=".preview"; npm run build`）
-
-## 添加一篇文章
-
-### 方式一：交互式（推荐）
+想先预览而不覆盖 `doc/`：
 
 ```bash
-npm run new
+BLOG_OUT=.preview npm run build
+# PowerShell:
+$env:BLOG_OUT=".preview"; npm run build
 ```
 
-依次回答标题、日期、slug、日期标签，最后进入**图片添加**环节：
-逐行输入本地图片路径后回车即可导入（想加图注就写成 `路径|图注`），直接回车结束。
-（目录页摘要由构建器自动取正文前 15 字，无需手动填写。）
-
-```
-文章标题: 夏天的风
-发布日期 YYYY-MM-DD (2026-08-01):
-文件名 slug (8.1):
-目录页日期标签 (8月1日):
-
-添加图片：输入本地图片路径后回车（可加 "|图注"），直接回车结束。
-  图片路径: D:\pics\sea.png|海边的傍晚
-  图片路径:
-```
-
-图片会被复制到 `posts/<年份>/images/`，并在正文中自动写入 Markdown 图片语法。
-
-### 方式二：命令行参数（可脚本化）
+### 新建文章
 
 ```bash
 node src/new-post.js --title "夏天的风" --date 2026-08-01 \
-  --excerpt "一句话摘要" \
-  --image "D:\pics\sea.png|海边的傍晚" \
-  --image "D:\pics\sky.jpg"
+  --category 随笔 --tags "夏天,海" \
+  --image "D:\pics\sea.png|海边的傍晚"
 ```
 
-可用参数：`--title` `--date` `--slug` `--tag` `--body`、
-可重复的 `--image "路径|图注"`，可选 `--excerpt "覆盖摘要"`（默认取正文前 15 字），
-以及 `--open`（创建后用默认编辑器打开）。
+可用参数：`--title` `--date` `--slug` `--tag` `--category` `--tags` `--body` `--excerpt`，
+可重复的 `--image "路径|图注"`，以及 `--open`。
 
-支持的图片格式：`png / jpg / jpeg / gif / webp / svg / avif / bmp`。
+### 删除文章
 
-### 方式三：手写 Markdown
+```bash
+node src/remove-post.js --slug 8.1            # 按 slug 删除（自动定位年份）
+node src/remove-post.js --slug 8.1 --dry      # 只预览将删除的文件
+node src/remove-post.js --slug 8.1 --no-build # 删完不重新构建
+node src/remove-post.js --slug 8.1 --purge-year
+```
 
-在 `posts/<年份>/` 下新建一个 `.md` 文件，例如 `posts/2026/8.01.md`：
+---
+
+## 写文章
+
+在 `posts/<年份>/` 下新建 `.md`，例如 `posts/2026/8.01.md`：
 
 ```markdown
 ---
 title: 文章标题
 date: 2026-08-01
-dateTag: 8月1日          # 目录卡片上显示的日期标签，可省略（默认从 date 推导）
+dateTag: 8月1日          # 目录卡片上的日期标签，可省略（默认从 date 推导）
 slug: 8.01               # 输出文件名，可省略（默认用文件名）
-excerpt: 覆盖摘要          # 可选：省略则构建时自动取正文前 15 字
-titleSuffix: none        # 可选：<title> 不追加站点名（还原早期手写页面）
-compactConfig: true      # 可选：Tailwind 配置用早期的紧凑写法
+category: 随笔            # 分类，可省略（默认「未分类」）
+tags: 夏天, 海            # 标签，可省略
+excerpt: 覆盖摘要          # 可省略，默认取正文前 15 字
+titleSuffix: none        # 可选：<title> 不追加站点名
+compactConfig: true      # 可选：Tailwind 配置用早期紧凑写法
 ---
 
 正文用 Markdown 书写……
@@ -118,56 +266,22 @@ compactConfig: true      # 可选：Tailwind 配置用早期的紧凑写法
 
 > 引用文字
 
-\`\`\`js
+```js
 console.log('代码块');
-\`\`\`
+```
 ```
 
-保存后运行 `npm run build` 即可。
+保存后运行 `npm run build`（或直接在后台点「构建」）。
 
-## 删除一篇文章
+**支持的语法**：`#`~`###` 标题、`**粗体**`、`*斜体*`、`` `行内代码` ``、
+`-` / `1.` 列表、`>` 引用、`---` 分隔线、```` ``` ```` 代码块、
+`[链接](url)`、`![图片](src "图注")`。
 
-删除会移除源 Markdown（`posts/<年份>/<slug>.md`）、已生成的产物
-（`doc/<年份>/<slug>.html`，受 `BLOG_OUT` 影响），并重新构建目录页，使 `doc/index.html` 不再引用该文章。
+---
 
-### 方式一：交互式（推荐）
+## 插入图片
 
-```bash
-npm run remove
-```
-
-列出所有文章并输入序号即可删除：
-
-```
-选择要删除的文章：
-  [1] 2026/8.1  夏天的风
-  [2] 2026/7.21 旧文章
-输入序号:
-```
-
-### 方式二：命令行参数（可脚本化）
-
-```bash
-npm run remove -- --slug 8.1            # 按 slug 删除（自动定位年份）
-npm run remove -- --year 2026 --slug 8.1  # 同时指定年份，避免重名歧义
-npm run remove -- --slug 8.1 --dry        # 只预览将删除的文件，不实际删除
-npm run remove -- --slug 8.1 --no-build   # 只删除源与产物，不重新生成目录页
-npm run remove -- --slug 8.1 --purge-year # 该年再无其它文章时，一并清空整年目录
-```
-
-可用参数：
-
-- `--slug <slug>`：要删除的文章文件名（不含 `.md`）。
-- `--year <yyyy>`：与 `--slug` 配合，精确指定年份。
-- `--dry`：预览模式，列出将删除的文件但不执行删除、不重新构建。
-- `--no-build`：删除源与产物后跳过重新构建（需自行运行 `npm run build`）。
-- `--purge-year`：当该年份已无其它文章时，一并删除 `posts/<年份>/` 与输出目录。
-
-> 删除前可先用 `--dry` 确认影响范围；删除后会自动重新构建目录页。
-
-## 在文章里插入图片
-
-把图片放在 `posts/<年份>/` 或其 `images/` 子目录下（`npm run new` 会自动放进 `images/`），
+把图片放在 `posts/<年份>/` 或其 `images/` 子目录下（后台上传会自动放进 `images/`），
 构建时这些资源会原样复制到对应年份的输出目录。正文中有两种写法：
 
 ```markdown
@@ -176,128 +290,184 @@ npm run remove -- --slug 8.1 --purge-year # 该年再无其它文章时，一并
 段落里也可以夹一张 ![小图](images/icon.png) 行内图片。
 ```
 
-单独成行的图片会渲染成与 `doc/2026/4.24.html` 完全一致的结构：
+支持的格式：`png / jpg / jpeg / gif / webp / svg / avif / bmp`，单张上限 5 MB（`ADMIN_MAX_IMAGE`）。
 
-```html
-<div class="my-8">
-    <img src="images/sea.png" alt="替代文字" class="w-full rounded-xl shadow-lg" loading="lazy">
-    <p class="text-center text-sm text-gray-400 mt-2 no-dropcap">海边的傍晚</p>
-</div>
+---
+
+## 删除文章
+
+删除会移除源 Markdown（`posts/<年份>/<slug>.md`）、已生成的产物
+（`doc/<年份>/<slug>.html`，受 `BLOG_OUT` 影响），并重新构建目录页，
+使 `doc/index.html` 不再引用该文章。详情见[命令行用法](#命令行用法)。
+
+---
+
+## 性能优化
+
+| 位置 | 做法 |
+| --- | --- |
+| 静态资源 | ETag + `Last-Modified` 协商缓存，命中直接回 `304`，不传正文 |
+| 文本压缩 | 按 `Accept-Encoding` 自动选 brotli / gzip / deflate，压缩结果按 ETag 缓存，压了更大就放弃 |
+| 大文件 | 超过 4 MB 或非文本类型仍走 `createReadStream`，不占内存 |
+| 预览渲染 | 服务端按正文 SHA-1 缓存渲染结果（LRU 240 条）；客户端再缓存一层，并对请求做 220ms 防抖 |
+| 过期请求 | 预览请求带 `AbortController`，新的输入会取消在途请求，并用序号丢弃迟到响应 |
+| 文章列表 | `store.list()` 带 1 秒 TTL 缓存，所有写操作主动失效，不会读到脏数据 |
+| 日志输出 | 只保留最近 500 行，长时间运行不会让 DOM 无限膨胀 |
+| 首屏主题 | 由 `admin-theme.js` 同步执行，避免明暗切换时闪白 |
+
+## 动效与移动端
+
+全站动效由 **GSAP**（核心 + ScrollToPlugin + Flip + SplitText）驱动，并遵循以下原则：
+
+- **优雅降级**：GSAP 未加载（如离线）时页面照常工作，只是没有动画；所有动效代码都做了 `typeof gsap` 防御。
+- **尊重减弱动效**：检测到 `prefers-reduced-motion: reduce` 时自动关闭位移/缩放类动画，仅保留必要的淡入。
+- **性能**：统一用 `transform` / `opacity`（合成层），`will-change` 仅加在真正在动的元素上；正文浮现用 `IntersectionObserver` 进场，不在首屏一次性渲染大量补间。
+
+| 位置 | 动效 |
+| --- | --- |
+| 目录页 | 标题按字 `SplitText` 入场；年份 / 卡片错峰上浮；切换分类用 `Flip` 做布局过渡；卡片悬停随光标轻微 3D 倾斜；右下角「返回顶部」滚动出现并平滑滚动 |
+| 文章页 | 顶部阅读进度条（滚动联动）；标题入场；正文各块滚动进入视口时浮现；代码块复制成功有弹跳反馈；图片加载淡入；「返回顶部」按钮 |
+| 后台 | 登录卡片弹入；主界面分块入场；文章列表错峰浮现；打开文章时编辑器滑入；日志行逐条淡入；按钮点击回弹；主题切换图标旋转 |
+
+移动端适配：
+
+- 目录页：窄屏隐藏网易云播放器避免溢出、筛选条改为横向滚动、卡片留白收紧、`back-to-top` 缩小。
+- 文章页：标题 / 正文字号随屏收小、隐藏播放器、正文卡片圆角与圆间距收敛。
+- 后台：`<900px` 侧栏变为顶部区块、分栏编辑上下堆叠；`<620px` 工具栏横向滚动、元信息网格单列、状态栏换行；触屏设备加大可点区域并去掉点击延迟。
+
+> 后台的 GSAP 以**同源**文件（`tools/public/gsap*.min.js`）提供，以满足后台 `script-src 'self'` 的内容安全策略；目录页 / 文章页通过 jsDelivr CDN 加载。
+
+---
+
+## HTTP 接口
+
+全部为 JSON，未登录一律 `401`。写接口强制 `Content-Type: application/json`。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/api/login` | 登录，成功下发会话 cookie |
+| POST | `/api/logout` | 登出 |
+| GET | `/api/session` | 查询登录态与站点 / Git 配置 |
+| GET | `/api/posts` | 文章列表（含分类、标签） |
+| POST | `/api/posts` | 新建 |
+| GET | `/api/posts/<year>/<slug>` | 读取 |
+| PUT | `/api/posts/<year>/<slug>` | 保存（可改 slug / 日期 / 分类） |
+| DELETE | `/api/posts/<year>/<slug>` | 删除源文件与产物 |
+| GET | `/api/categories` | 全站分类与标签（含篇数） |
+| POST | `/api/preview` | Markdown 渲染预览 |
+| POST | `/api/build` | 触发构建，返回耗时与日志 |
+| GET | `/api/git/status` | 分支 / 上游 / ahead-behind / 改动文件 |
+| GET | `/api/git/log` | 最近 10 条提交 |
+| POST | `/api/git/sync` | 一体化同步：`{ message, build, pull, push }` |
+| POST | `/api/images` | 上传图片（base64） |
+| GET | `/api/images/<year>` | 该年图片列表 |
+
+`/api/git/sync` 返回：
+
+```json
+{
+  "ok": true, "pushed": true, "pulled": true, "committed": true,
+  "branch": "main", "remote": "origin", "ms": 1832,
+  "message": "chore(blog): 更新文章 2026-09-01 14:30",
+  "log": ["构建完成，用时 21ms", "  生成文章: 2026/8.1.html"],
+  "steps": [
+    { "step": "add",    "ok": true,  "output": "git add -A" },
+    { "step": "commit", "ok": true,  "output": "[main 3a1b2c] chore(blog): ..." },
+    { "step": "pull",   "ok": true,  "output": "Already up to date." },
+    { "step": "push",   "ok": true,  "output": "To github.com:me/me.github.io" }
+  ]
+}
 ```
 
-省略双引号里的图注则只输出图片、不生成说明文字。
+---
 
-## 在线后台（Node 驱动）
+## 环境变量
 
-不想在本地改 Markdown 再敲命令？可以起一个本地服务，直接在浏览器里写文章、传图片、点一下重新构建。
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `ADMIN_TOKEN` | 首次运行随机生成 | 管理口令 |
+| `ADMIN_PORT` | `4321` | 监听端口 |
+| `ADMIN_HOST` | `127.0.0.1` | **要对外访问必须显式设为 `0.0.0.0`** |
+| `ADMIN_SECURE_COOKIE` | 关闭 | 设为 `1` 给会话 cookie 加 `Secure`（走 HTTPS 时必须开） |
+| `ADMIN_SESSION_TTL` | `28800`（8 小时） | 会话有效期（秒），滑动续期 |
+| `ADMIN_MAX_BODY` | `12582912`（12 MB） | 请求体上限 |
+| `ADMIN_MAX_IMAGE` | `5242880`（5 MB） | 单张图片上限 |
+| `ADMIN_MAX_LOGIN` | `8` | 登录失败次数上限（超出限速 10 分钟） |
+| `ADMIN_GIT` | `1` | 设为 `0` 关闭后台 Git 功能 |
+| `GIT_REMOTE` | `origin` | 远程仓库名 |
+| `GIT_BRANCH` | 当前分支 | 推送目标分支 |
+| `GIT_PULL` | `1` | 设为 `0` 推送前不拉取 |
+| `GIT_PUSH` | `1` | 设为 `0` 只提交不推送 |
+| `GIT_TIMEOUT` | `120000` | 单条 git 命令超时（毫秒） |
+| `GIT_COMMIT_TEMPLATE` | `chore(blog): 更新文章 {time}` | 默认提交信息 |
+| `BLOG_OUT` | 仓库 `doc/` | 构建输出目录 |
 
-```bash
-cd tools
-npm run admin
-# 后台地址 : http://127.0.0.1:4321/admin/
-# 站点预览 : http://127.0.0.1:4321/
-```
+---
 
-首次启动会**随机生成管理口令**并打印到终端，同时存入 `tools/.admin-token`（已被 `.gitignore` 排除）。
-忘了口令，删掉这个文件重启就会重新生成；也可以用环境变量指定：
+## 安全设计
 
-```bash
-ADMIN_TOKEN=my-secret npm run serve
-```
-
-> ⚠️ **GitHub Pages 只能托管静态文件，跑不了 Node。**
-> 所以后台服务要跑在你自己的机器上（或 VPS / Render / Railway 等支持 Node 的主机），
-> 生成的 `doc/` 仍然照旧推到 GitHub，由 Pages 发布。两者职责是分开的。
-
-### 能做什么
-
-|功能|说明|
-|---|---|
-|文章列表|按年份分组，显示标题 / 日期 / slug|
-|在线编辑|标题、日期、slug、日期标签、摘要、Markdown 正文|
-|实时预览|服务端用同一套 `markdown.js` 渲染，所见即所得|
-|图片上传|存到 `posts/<年份>/images/`，自动插入 Markdown 语法|
-|一键构建|直接调用 `build()`，把构建日志回显到页面底部|
-|改名 / 改期|改 slug 或日期后自动搬运文件，并清理旧产物避免死链|
-
-快捷键：`Ctrl / ⌘ + S` 保存。
-
-### 环境变量
-
-|变量|默认值|说明|
-|---|---|---|
-|`ADMIN_TOKEN`|首次运行随机生成|管理口令|
-|`ADMIN_PORT`|`4321`|监听端口|
-|`ADMIN_HOST`|`127.0.0.1`|**要对外访问必须显式设为 `0.0.0.0`**|
-|`ADMIN_SECURE_COOKIE`|关闭|设为 `1` 给会话 cookie 加 `Secure`（走 HTTPS 时必须开）|
-|`ADMIN_SESSION_TTL`|`28800`（8 小时）|会话有效期（秒），滑动续期|
-|`ADMIN_MAX_BODY`|`12582912`（12 MB）|请求体上限|
-|`ADMIN_MAX_IMAGE`|`5242880`（5 MB）|单张图片上限|
-|`ADMIN_MAX_LOGIN`|`8`|登录失败次数上限（超出限速 10 分钟）|
-
-### HTTP 接口
-
-全部为 JSON，未登录一律 `401`。
-
-|方法|路径|说明|
-|---|---|---|
-|POST|`/api/login`|登录，成功下发会话 cookie|
-|POST|`/api/logout`|登出|
-|GET|`/api/session`|查询登录态|
-|GET|`/api/posts`|文章列表|
-|POST|`/api/posts`|新建|
-|GET|`/api/posts/<year>/<slug>`|读取|
-|PUT|`/api/posts/<year>/<slug>`|保存（可改 slug / 日期）|
-|DELETE|`/api/posts/<year>/<slug>`|删除源文件与产物|
-|POST|`/api/preview`|Markdown 渲染预览|
-|POST|`/api/images`|上传图片（base64）|
-|GET|`/api/images/<year>`|该年图片列表|
-|POST|`/api/build`|触发构建，返回耗时与日志|
-
-### 安全设计
-
-- **默认只监听 `127.0.0.1`**，对外暴露需要显式 `ADMIN_HOST=0.0.0.0`，且务必套 HTTPS 反向代理
-- 口令不在代码里硬编码；首次运行随机生成，用 `crypto.timingSafeEqual` 做定长防时序比较
+- **默认只监听 `127.0.0.1`**，对外暴露需显式 `ADMIN_HOST=0.0.0.0`，且务必套 HTTPS 反向代理
+- 口令不硬编码；首次运行随机生成，用 `crypto.timingSafeEqual` 做定长防时序比较
 - 会话 cookie：`HttpOnly` + `SameSite=Strict`；服务端只存随机 sid，重启即失效
-- **CSRF**：所有写接口强制 `Content-Type: application/json`，配合 `SameSite=Strict` 的 cookie，
-  跨站表单既发不出 JSON 也带不上 cookie，因此不再额外发 token
-- **路径穿越**：所有文件路径都经 `store.js` 的 `safeJoin()` 校验，解析后必须仍在 `posts/` 之内；
+- **CSRF**：所有写接口强制 `Content-Type: application/json`，配合 `SameSite=Strict`，
+  跨站表单既发不出 JSON 也带不上 cookie
+- **命令注入**：Git 全部走 `execFileSync('git', [args])`，不经 shell、不拼命令行字符串；
+  提交信息还会额外过滤控制字符并截断到 300 字
+- **路径穿越**：所有文件路径经 `store.js` 的 `safeJoin()` 校验；
   年份限 `\d{4}`、slug 限 `[A-Za-z0-9._-]` 且不能以点开头
-- 登录失败超过阈值即限速；后台页面下发严格 CSP（`default-src 'self'`，无内联代码）
+- **后台 CSP**：`default-src 'self'`，仅放行 Google Fonts；无内联脚本 / 样式
 - 上传文件校验扩展名白名单与大小上限
+- 登录失败超过阈值即限速
 
-### 想让内容直接落到 GitHub？
-
-当前后台写的是本地 `posts/`，构建产物在本地 `doc/`，发布仍需手动 `git commit && git push`。
-若希望保存后自动提交，把 `store.save()` 之后的 `git add / commit / push` 补上即可
-（`child_process.execFileSync('git', [...])`），改动集中在一处。
+---
 
 ## 构建验证
 
-`npm run verify` 会把站点生成到临时目录 `.verify-preview/`，再与仓库里的 `doc/`
-逐字节比对，确认生成器输出与 `doc/` 风格、结构完全一致：
+`npm run verify` 会把站点生成到临时目录，与仓库里的 `doc/` 逐字节比对：
 
 ```bash
 npm run verify
-# 输出示例：
 # IDENTICAL  2026/4.24.html
-# IDENTICAL  2026/5.30.html
 # IDENTICAL  index.html
-# IDENTICAL  article.css
 # ...
 # 全部与 doc/ 逐字节一致。
 ```
 
-- 退出码 `0` 表示完全一致；`1` 表示存在差异（此时运行 `npm run build` 可把 `doc/` 同步为最新生成结果）。
-- 预览而不覆盖 `doc/`：`BLOG_OUT=.preview npm run preview`（PowerShell：`$env:BLOG_OUT=".preview"; npm run preview`）。
+- 退出码 `0` 表示完全一致；`1` 表示存在差异（此时 `npm run build` 可把 `doc/` 同步为最新结果）
+- 预览而不覆盖 `doc/`：`BLOG_OUT=.preview npm run preview`
 
-## 样式与交互
+---
 
-- 视觉风格完全沿用 `doc/` 的粘土态（陶瓷灰底 + 陶土橙强调 + 双向软阴影）。
-- 文章页与目录页的暗色切换、代码复制、Giscus 评论均与原站一致（`theme/article.js`、`theme/index.js`）。
-- `layout.css` 仅提供页面骨架布局，替代原 article 页里依赖的 Tailwind CDN 工具类，使整站**零外部库**。
+## 常见问题
+
+**GitHub Pages 上能用这个后台吗？**
+不能。Pages 只托管静态文件，跑不了 Node。后台要跑在你自己的机器上（或 VPS / Render / Railway），
+生成的 `doc/` 照旧推到 GitHub 由 Pages 发布。两者职责是分开的。
+
+**推送失败提示认证错误？**
+HTTPS 远程需要凭证管理器或 Personal Access Token；更省事的做法是把远程换成 SSH：
+`git remote set-url origin git@github.com:用户名/仓库.git`。
+
+**rebase 冲突了怎么办？**
+后台会中止推送并在输出里提示。到命令行 `git status` 看冲突文件，解决后
+`git rebase --continue`，再回来点推送。
+
+**后台样式和博客不一样？**
+后台刻意沿用 `doc/` 的粘土态配色（陶瓷灰 `#d8dde6` / 陶土橙 `#f97316`）与
+`Noto Serif SC` + `ZCOOL KuaiLe` 字体。字体从 Google Fonts 加载，
+加载失败会自动回落到系统字体，不影响功能。
+
+**`npm run build` 之后 `npm run verify` 报差异？**
+说明你改过 `theme/` 或 `templates.js` 但没重新构建。跑一次 `npm run build` 即可。
+
+**忘了管理口令？**
+删除 `tools/.admin-token` 重启服务，会重新生成一个。
+
+---
 
 ## 自定义
 
-改 `src/config.js`：站点标题、目录文案、`comingYears`（目录页"即将发布"占位年份）、
-Giscus 仓库配置。改 `theme/` 下的 css/js 调整外观与交互；构建时会自动同步到 `doc/`。
+- 改 `src/config.js`：站点标题、目录文案、`comingYears`、`defaultCategory`、
+  Giscus 仓库配置、Git 行为
+- 改 `theme/` 下的 css/js 调整博客外观与交互；构建时自动同步到 `doc/`
+- 改 `public/admin.css` 的 `:root` / `html[data-theme='dark']` 变量调整后台配色

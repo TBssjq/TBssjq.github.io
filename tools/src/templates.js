@@ -14,6 +14,16 @@ const FONTS = [
   '    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">',
 ].join('\n');
 
+// GSAP 动效库（核心 + 插件）。CDN 加载，JS 中均做 typeof gsap 防御，
+// 加载失败也能正常浏览，只是没有动画。
+const GSAP_CDN = 'https://cdn.jsdelivr.net/npm/gsap@3.13.0';
+const GSAP_SCRIPTS = [
+  '    <script src="' + GSAP_CDN + '/dist/gsap.min.js"><\/script>',
+  '    <script src="' + GSAP_CDN + '/dist/ScrollToPlugin.min.js"><\/script>',
+  '    <script src="' + GSAP_CDN + '/dist/Flip.min.js"><\/script>',
+  '    <script src="' + GSAP_CDN + '/dist/SplitText.min.js"><\/script>',
+].join('\n');
+
 // 原 doc 文章页用的 Tailwind 配置（darkMode=class，accent 橙）
 // compact=true 时输出早期手写页面的紧凑写法： colors: { accent: '#f97316' }
 function tailwindConfig(compact) {
@@ -116,6 +126,20 @@ function indexHeader(brand) {
   ].join('\n');
 }
 
+// 标题下方的分类 / 标签 / 日期信息条
+function articleMeta(post) {
+  const tags = (post.tags || []).map(function (t) {
+    return '                        <span class="tag-chip">' + md.escapeHtml(t) + '</span>';
+  }).join('\n');
+  return [
+    '                <p class="article-meta">',
+    '                    <span class="cat-tag">' + md.escapeHtml(post.category) + '</span>',
+    tags,
+    '                    <span class="meta-date">' + md.escapeHtml(post.dateTag) + '</span>',
+    '                </p>',
+  ].join('\n');
+}
+
 function articlePage(cfg, post, htmlBody) {
   // 标题后缀：frontmatter 可写 titleSuffix: none 以还原早期页面的纯标题
   const pageTitle = post.titleSuffix === 'none'
@@ -133,6 +157,7 @@ function articlePage(cfg, post, htmlBody) {
     FONTS,
     tailwindConfig(post.compactConfig === 'true' || post.compactConfig === true),
     '    <link rel="stylesheet" href="../article.css">',
+    GSAP_SCRIPTS,
     '</head>',
     '<body class="min-h-screen">',
     articleHeader(cfg.brand),
@@ -141,6 +166,8 @@ function articlePage(cfg, post, htmlBody) {
     '        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">',
     '            <article>',
     '                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">' + md.escapeHtml(post.title) + '</h1>',
+    '',
+    articleMeta(post),
     '',
     // 注意：doc/ 手写页面此处开标签缩进为 12 空格、闭标签为 16 空格，保持一致
     '            <div class="article-body prose text-gray-700 dark:text-gray-300">',
@@ -174,10 +201,11 @@ function articlePage(cfg, post, htmlBody) {
 
 function articleCard(year, post) {
   return [
-    '                        <article class="article-card">',
+    '                        <article class="article-card" data-category="' + md.escapeHtml(post.category) + '">',
     '                            <a href="' + year + '/' + post.slug + '.html" target="_blank" rel="noopener noreferrer">',
     '                                <div class="card-row">',
     '                                    <div class="card-body">',
+    '                                        <span class="cat-tag">' + md.escapeHtml(post.category) + '</span>',
     '                                        <h3 class="article-card__title">' + md.escapeHtml(post.title) + '</h3>',
     '                                        <p class="article-card__excerpt">' + md.escapeHtml(post.excerpt) + '</p>',
     '                                    </div>',
@@ -190,7 +218,7 @@ function articleCard(year, post) {
 
 function yearSection(year, posts) {
   return [
-    '                <section class="year-section">',
+    '                <section class="year-section" data-year="' + md.escapeHtml(year) + '">',
     '                    <h2 class="year-heading">' + year + '</h2>',
     '                    <div class="year-list">',
     posts.map(function (p) { return articleCard(year, p); }).join('\n\n'),
@@ -199,9 +227,31 @@ function yearSection(year, posts) {
   ].join('\n');
 }
 
+// 分类筛选条：纯静态输出，交互由 theme/index.js 负责（无内联脚本）
+function filterBar(categories) {
+  const total = categories.reduce(function (n, c) { return n + c.count; }, 0);
+  const chip = function (value, label, count, active) {
+    return [
+      '                    <button class="filter-chip' + (active ? ' is-active' : '') + '" type="button" data-filter="' + md.escapeHtml(value) + '">',
+      '                        <span class="filter-chip__text">' + md.escapeHtml(label) + '</span>',
+      '                        <span class="filter-chip__count">' + count + '</span>',
+      '                    </button>',
+    ].join('\n');
+  };
+  const chips = [chip('__all__', '全部', total, true)].concat(
+    categories.map(function (c) { return chip(c.name, c.name, c.count, false); })
+  );
+  return [
+    '            <nav class="filter-bar" aria-label="按分类筛选">',
+    chips.join('\n'),
+    '            </nav>',
+    '            <p class="filter-empty" id="filterEmpty" hidden>该分类下还没有文章</p>',
+  ].join('\n');
+}
+
 function comingSection(year) {
   return [
-    '                <section class="year-section">',
+    '                <section class="year-section is-coming">',
     '                    <h2 class="year-heading">' + year + '</h2>',
     '                    <div class="year-list">',
     '                        <article class="article-card is-coming">',
@@ -218,11 +268,13 @@ function comingSection(year) {
   ].join('\n');
 }
 
-function indexPage(cfg, years) {
+function indexPage(cfg, years, categories) {
   const sections = years
     .map(function (y) { return yearSection(y.name, y.posts); })
     .concat((cfg.comingYears || []).map(comingSection))
     .join('\n\n');
+
+  const bar = (categories && categories.length) ? filterBar(categories) : null;
 
   return [
     '<!DOCTYPE html>',
@@ -244,17 +296,19 @@ function indexPage(cfg, years) {
     '                <p class="page-desc">' + md.escapeHtml(cfg.pageDesc) + '</p>',
     '            </div>',
     '',
+    bar,
     '            <div class="article-list">',
     sections,
     '            </div>',
     '        </div>',
     '    </main>',
     '',
+    GSAP_SCRIPTS,
     '    <script src="index.js" defer><\/script>',
     '</body>',
     '</html>',
     '',
-  ].join('\n');
+  ].filter(function (l) { return l !== null; }).join('\n');
 }
 
 module.exports = { articlePage: articlePage, indexPage: indexPage };

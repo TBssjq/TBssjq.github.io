@@ -31,7 +31,8 @@ function inline(text) {
         (title ? ' title="' + title + '"' : '') + ' loading="lazy">';
     });
 
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
+  // 链接：URL 允许成对括号（如 https://x.com/a/b(c)），避免被第一个 ) 截断
+  text = text.replace(/\[([^\]]+)\]\(((?:\([^)]*\)|[^()])+)\)/g,
     function (_, t, url) { return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + t + '</a>'; });
 
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');

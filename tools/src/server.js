@@ -21,10 +21,13 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
+const crypto = require('crypto');
 const { execFile } = require('child_process');
 const cfg = require('./config');
 const store = require('./store');
 const auth = require('./auth');
+const git = require('./git');
 const { render } = require('./markdown');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -89,15 +92,41 @@ function sendText(res, status, text, type) {
 function sendFile(req, res, file, extraHeaders) {
   const ext = path.extname(file).toLowerCase();
   const stat = fs.statSync(file);
+  const type = MIME[ext] || 'application/octet-stream';
+  const etag = etagOf(stat);
+
   const headers = Object.assign({
-    'Content-Type': MIME[ext] || 'application/octet-stream',
-    'Content-Length': stat.size,
+    'Content-Type': type,
+    'ETag': etag,
+    'Last-Modified': stat.mtime.toUTCString(),
   }, extraHeaders || {});
 
   // 后台资源与静态站点用不同缓存策略：后台不缓存，站点允许短缓存便于刷新预览
   if (!headers['Cache-Control']) headers['Cache-Control'] = 'no-cache';
 
-  res.writeHead(200, headers);
+  // 协商缓存命中：直接 304，不传正文
+  if (req.headers['if-none-match'] === etag) {
+    headers['Content-Length'] = 0;
+    res.writeHead(304, Object.assign({}, SECURITY_HEADERS, headers));
+    res.end();
+    return;
+  }
+
+  // 可压缩的小文件走内存压缩，其余仍用流，避免大图片占内存
+  if (COMPRESSIBLE.test(type) && stat.size <= COMPRESS_MAX) {
+    const packed = compressBody(req, etag, fs.readFileSync(file));
+    if (packed) {
+      headers['Content-Encoding'] = packed.encoding;
+      headers['Content-Length'] = packed.body.length;
+      headers['Vary'] = 'Accept-Encoding';
+      res.writeHead(200, Object.assign({}, SECURITY_HEADERS, headers));
+      res.end(isHead(res) ? undefined : packed.body);
+      return;
+    }
+  }
+
+  headers['Content-Length'] = stat.size;
+  res.writeHead(200, Object.assign({}, SECURITY_HEADERS, headers));
   if (req.method === 'HEAD') { res.end(); return; }
   fs.createReadStream(file)
     .on('error', () => res.end())
@@ -155,7 +184,54 @@ function currentSession(req) {
   return auth.getSession(cookies[auth.COOKIE_NAME]);
 }
 
-/* ── 静态资源 ── */
+/* ── 静态资源：ETag 协商缓存 + gzip/brotli 压缩 ── */
+
+// 只压缩文本类资源，且只对有收益的体积动手
+const COMPRESSIBLE = /^(text\/|application\/(javascript|json|xml|x-httpd-php)|image\/svg\+xml)/i;
+const COMPRESS_MIN = 1024;
+const COMPRESS_MAX = 4 * 1024 * 1024;
+// 压缩结果缓存：key = ETag + 编码。站点文件少且小，缓存几十条足够
+const compressedCache = new Map();
+const COMPRESSED_CACHE_MAX = 48;
+
+function etagOf(stat) {
+  return '"' + stat.size.toString(16) + '-' + stat.mtimeMs.toString(16) + '"';
+}
+
+function pickEncoding(req) {
+  const accept = String(req.headers['accept-encoding'] || '').toLowerCase();
+  if (/\bbr\b/.test(accept) && typeof zlib.brotliCompressSync === 'function') return 'br';
+  if (/\bgzip\b/.test(accept)) return 'gzip';
+  if (/\bdeflate\b/.test(accept)) return 'deflate';
+  return '';
+}
+
+function compressBody(req, etag, buf) {
+  const encoding = pickEncoding(req);
+  if (!encoding || buf.length < COMPRESS_MIN || buf.length > COMPRESS_MAX) return null;
+
+  const key = etag + '|' + encoding;
+  const hit = compressedCache.get(key);
+  if (hit) return hit;
+
+  let out;
+  try {
+    if (encoding === 'br') out = zlib.brotliCompressSync(buf, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 6 } });
+    else if (encoding === 'gzip') out = zlib.gzipSync(buf, { level: 6 });
+    else out = zlib.deflateSync(buf, { level: 6 });
+  } catch (e) {
+    return null;
+  }
+  // 压了反而更大就放弃
+  if (out.length >= buf.length) return null;
+
+  const entry = { encoding: encoding, body: out };
+  if (compressedCache.size >= COMPRESSED_CACHE_MAX) {
+    compressedCache.delete(compressedCache.keys().next().value);
+  }
+  compressedCache.set(key, entry);
+  return entry;
+}
 
 // 把 URL 路径映射到 baseDir 内的文件；越界一律返回 null
 function resolveInside(baseDir, urlPath) {
@@ -188,8 +264,10 @@ function serveAdminAsset(req, res, name) {
   if (!file) return sendText(res, 404, '资源不存在: ' + name);
   sendFile(req, res, file, {
     'Cache-Control': 'no-cache',
-    // 后台页面启用严格 CSP：所有脚本/样式都来自同域文件，无内联代码
-    'Content-Security-Policy': "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+    // 后台页面启用严格 CSP：所有脚本/样式都来自同域文件，无内联代码。
+    // 仅放行 Google Fonts（与博客同源的 Noto Serif SC / ZCOOL KuaiLe），
+    // 加载失败会自动回落到系统字体，不影响功能。
+    'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
   });
 }
 
@@ -244,17 +322,92 @@ async function apiSavePost(req, res, year, slug) {
   return sendJson(res, 200, { ok: true, post: result });
 }
 
+// 实时预览会跟着打字高频触发，这里按正文哈希缓存渲染结果，
+// 相同内容直接复用，避免重复解析整篇 Markdown。
+const previewCache = new Map();
+const PREVIEW_CACHE_MAX = 240;
+
+function previewOf(body) {
+  const key = crypto.createHash('sha1').update(body, 'utf8').digest('hex');
+  const hit = previewCache.get(key);
+  if (hit !== undefined) return hit;
+  const html = render(body);
+  if (previewCache.size >= PREVIEW_CACHE_MAX) {
+    previewCache.delete(previewCache.keys().next().value);
+  }
+  previewCache.set(key, html);
+  return html;
+}
+
 async function apiPreview(req, res) {
   const data = await readJson(req);
-  return sendJson(res, 200, { html: render(String(data.body || '')) });
+  return sendJson(res, 200, { html: previewOf(String(data.body || '')) });
 }
 
 function apiBuild(req, res) {
   try {
     const result = store.build();
+    // 正文可能变了，预览缓存失效
+    previewCache.clear();
+    store.invalidateList();
     return sendJson(res, 200, { ok: true, ms: result.ms, log: result.log });
   } catch (e) {
     return sendJson(res, 500, { error: '构建失败: ' + e.message, stack: String(e.stack || '').split('\n').slice(0, 5) });
+  }
+}
+
+/* ── Git ── */
+
+function apiGitStatus(req, res) {
+  try {
+    return sendJson(res, 200, git.status());
+  } catch (e) {
+    return sendJson(res, 500, { error: e.message || '读取 Git 状态失败', detail: String(e.detail || '') });
+  }
+}
+
+function apiGitLog(req, res) {
+  try {
+    return sendJson(res, 200, { commits: git.log(10) });
+  } catch (e) {
+    return sendJson(res, 500, { error: e.message || '读取提交历史失败' });
+  }
+}
+
+// 一键同步：构建 → git add → commit → pull --rebase → push
+async function apiGitSync(req, res) {
+  const data = await readJson(req);
+  if (!cfg.git.enabled) {
+    return sendJson(res, 403, { error: 'Git 功能已关闭（ADMIN_GIT=0）' });
+  }
+
+  const log = [];
+  let ms = 0;
+
+  try {
+    if (data.build !== false) {
+      const t0 = Date.now();
+      const built = store.build();
+      ms += Date.now() - t0;
+      log.push('构建完成，用时 ' + built.ms + 'ms');
+      built.log.forEach(function (l) { log.push('  ' + l); });
+      previewCache.clear();
+      store.invalidateList();
+    }
+
+    const t1 = Date.now();
+    const result = git.sync({ message: data.message, pull: data.pull, push: data.push });
+    ms += Date.now() - t1;
+
+    return sendJson(res, 200, Object.assign({ log: log, ms: ms }, result));
+  } catch (e) {
+    const detail = String(e.detail || '').trim();
+    return sendJson(res, e.status || 500, {
+      error: e.message || '同步失败',
+      detail: detail,
+      log: log,
+      ms: ms,
+    });
   }
 }
 
@@ -293,6 +446,14 @@ async function handleApi(req, res, pathname) {
       tokenGenerated: auth.token.generated,
       outputDir: path.resolve(cfg.outputDir),
       postsDir: path.resolve(cfg.postsDir),
+      git: {
+        enabled: !!cfg.git.enabled,
+        repoRoot: path.resolve(cfg.repoRoot),
+        remote: cfg.git.remote,
+        push: !!cfg.git.push,
+        defaultMessage: cfg.git.enabled ? git.defaultMessage() : '',
+        defaultCategory: cfg.defaultCategory || '未分类',
+      },
     });
   }
 
@@ -329,6 +490,19 @@ async function handleApi(req, res, pathname) {
 
     if (pathname === '/api/preview' && method === 'POST') return await apiPreview(req, res);
     if (pathname === '/api/build' && method === 'POST') return apiBuild(req, res);
+
+    // 分类 / 标签（文章管理用）
+    if (pathname === '/api/categories' && method === 'GET') {
+      return sendJson(res, 200, {
+        categories: store.listCategories(),
+        tags: store.listTags(),
+      });
+    }
+
+    // Git：一键同步
+    if (pathname === '/api/git/status' && method === 'GET') return apiGitStatus(req, res);
+    if (pathname === '/api/git/log' && method === 'GET') return apiGitLog(req, res);
+    if (pathname === '/api/git/sync' && method === 'POST') return await apiGitSync(req, res);
 
     if (pathname === '/api/images' && method === 'POST') return await apiUploadImage(req, res);
 
@@ -406,6 +580,16 @@ function start() {
     console.log('    站点预览 : http://' + (cfg.admin.host === '0.0.0.0' ? '127.0.0.1' : cfg.admin.host) + ':' + cfg.admin.port + '/');
     console.log('    监听地址 : ' + cfg.admin.host + ' (' + shown + ')');
     console.log('    输出目录 : ' + path.resolve(cfg.outputDir));
+    if (cfg.git.enabled && git.isRepo()) {
+      const st = git.status();
+      console.log('    Git 仓库 : ' + (st.branch || '(未检出)') +
+        '  待提交 ' + (st.staged + st.unstaged + st.untracked) + ' 项' +
+        (st.ahead ? '  领先 ' + st.ahead : '') + (st.behind ? '  落后 ' + st.behind : ''));
+    } else if (!cfg.git.enabled) {
+      console.log('    Git 同步 : 已关闭（ADMIN_GIT=0）');
+    } else {
+      console.log('    Git 同步 : 不可用（当前不是 Git 仓库）');
+    }
     console.log('');
 
     if (auth.token.generated) {

@@ -214,3 +214,107 @@ body { background: #d8dde6; }
     width: 5px !important; border-radius: 3px !important;
     box-shadow: 0 0 8px rgba(249,115,22,.4);
 }
+
+/* ═══════════════════════════════════════════
+   分类筛选条 + 卡片分类徽标
+   ═══════════════════════════════════════════ */
+.filter-bar {
+    display: flex; flex-wrap: wrap; gap: .625rem;
+    margin: 0 0 1.75rem;
+    justify-content: center;
+}
+.filter-chip {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .45rem .95rem;
+    border: none; cursor: pointer;
+    font-family: inherit; font-size: .8125rem; font-weight: 500;
+    color: #5a6a7a; background: #e0e5ec;
+    border-radius: 9999px;
+    box-shadow: 4px 4px 10px rgba(163,177,198,.5), -3px -3px 10px rgba(255,255,255,.65);
+    transition: all .35s cubic-bezier(.34,1.56,.64,1);
+}
+.dark .filter-chip {
+    color: #94a3b8; background: #1a2030;
+    box-shadow: 4px 4px 10px rgba(0,0,0,.3), -3px -3px 10px rgba(50,62,85,.25);
+}
+.filter-chip:hover { transform: translateY(-2px); }
+.filter-chip.is-active {
+    color: #fff; background: linear-gradient(135deg, #f97316, #fb923c);
+    box-shadow: 4px 4px 12px rgba(249,115,22,.35), -3px -3px 10px rgba(255,255,255,.55);
+}
+.dark .filter-chip.is-active {
+    box-shadow: 4px 4px 12px rgba(0,0,0,.35), 0 0 0 1px rgba(249,115,22,.35);
+}
+.filter-chip__count {
+    padding: 0 .4rem;
+    min-width: 1.25rem; text-align: center;
+    font-size: .6875rem; font-weight: 600;
+    border-radius: 9999px;
+    background: rgba(90,106,122,.12);
+}
+.dark .filter-chip__count { background: rgba(148,163,184,.15); }
+.filter-chip.is-active .filter-chip__count { background: rgba(255,255,255,.25); }
+
+.filter-empty {
+    margin: 0 0 1.5rem; text-align: center;
+    font-size: .875rem; color: #94a3b8;
+}
+
+.article-card[data-category].is-hidden { display: none; }
+.year-section.is-hidden { display: none; }
+
+.cat-tag {
+    display: inline-block;
+    margin: 0 0 .5rem;
+    padding: .1rem .6rem;
+    font-size: .6875rem; font-weight: 500; letter-spacing: .02em;
+    color: #b45309; background: rgba(249,115,22,.12);
+    border-radius: 9999px;
+}
+.dark .cat-tag { color: #fdba74; background: rgba(249,115,22,.16); }
+
+/* ═══════════════════════════════════════════
+   返回顶部（GSAP 控制显隐 + 滚动）
+   ═══════════════════════════════════════════ */
+.back-to-top {
+    position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 50;
+    width: 3rem; height: 3rem;
+    display: grid; place-items: center;
+    border: none; cursor: pointer;
+    color: var(--accent); background: #e0e5ec;
+    border-radius: 50%;
+    box-shadow: 6px 6px 16px rgba(163,177,198,.5), -4px -4px 12px rgba(255,255,255,.7);
+    transition: box-shadow .3s var(--ease), color .2s var(--ease);
+}
+.back-to-top .i, .back-to-top svg { width: 1.25rem; height: 1.25rem; }
+.dark .back-to-top {
+    background: #1a2030;
+    color: #fb923c;
+    box-shadow: 6px 6px 16px rgba(0,0,0,.32), -4px -4px 12px rgba(50,62,85,.22);
+}
+.back-to-top:hover {
+    color: #fff;
+    background: linear-gradient(135deg, #f97316, #fb923c);
+    box-shadow: 6px 6px 16px rgba(249,115,22,.4), -3px -3px 10px rgba(255,255,255,.5);
+}
+.back-to-top:active { transform: scale(.94); }
+
+/* ═══════════════════════════════════════════
+   移动端适配
+   ═══════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .header-inner { padding: 0 .85rem; }
+    .back-link span { display: none; }
+    .music-player--top { display: none; }            /* 窄屏隐藏网易云播放器，避免溢出 */
+    .page-wrap { padding: 1rem .5rem; padding-block: 2rem; }
+    .page-title { font-size: 1.6rem; }
+    .article-card { padding: 1rem; border-radius: .65rem; }
+    .card-row { gap: .65rem; }
+    .date-tag { font-size: .68rem; padding: .2rem .55rem; }
+    .filter-bar { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding-bottom: .4rem; -webkit-overflow-scrolling: touch; }
+    .filter-chip { flex: none; }
+    .back-to-top { right: .9rem; bottom: .9rem; width: 2.75rem; height: 2.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .article-list { animation: none; }
+}

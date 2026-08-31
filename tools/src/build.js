@@ -18,6 +18,20 @@ function plainText(mdText) {
 }
 
 // 读取一个 .md 文件，拆分 frontmatter 与正文
+// 标签归一化：与 store.js 保持一致（"a, b" / "a、b" / "a b" 都认）
+function splitTags(value) {
+  const raw = Array.isArray(value) ? value : String(value || '').split(/[,，、;；\s]+/);
+  const seen = new Set();
+  const out = [];
+  raw.forEach(function (t) {
+    const s = String(t || '').trim();
+    if (!s || s.length > 40 || seen.has(s)) return;
+    seen.add(s);
+    out.push(s);
+  });
+  return out.slice(0, 20);
+}
+
 function parsePost(file) {
   const raw = fs.readFileSync(file, 'utf8');
   const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
@@ -51,11 +65,27 @@ function parsePost(file) {
     dateTag: meta.dateTag || (month + '月' + day + '日'),
     slug: meta.slug || base,
     excerpt: excerpt,
+    category: String(meta.category || '').trim().slice(0, 40) || (cfg.defaultCategory || '未分类'),
+    tags: splitTags(meta.tags),
     markdown: body,
     // 兼容早期手写页面的排版细节
     titleSuffix: meta.titleSuffix,
     compactConfig: meta.compactConfig,
   };
+}
+
+// 汇总分类（按篇数降序、同篇数按名称升序）
+function collectCategories(posts) {
+  const map = new Map();
+  posts.forEach(function (p) {
+    map.set(p.category, (map.get(p.category) || 0) + 1);
+  });
+  return Array.from(map.entries())
+    .map(function (e) { return { name: e[0], count: e[1] }; })
+    .sort(function (a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.name < b.name ? -1 : 1;
+    });
 }
 
 // 递归复制文章目录下的非 Markdown 资源（图片等）
@@ -124,7 +154,8 @@ function build() {
       return { name: y, posts: groups[y] };
     });
 
-  writeHtml(path.join(cfg.outputDir, 'index.html'), tpl.indexPage(cfg, years));
+  const categories = collectCategories(posts);
+  writeHtml(path.join(cfg.outputDir, 'index.html'), tpl.indexPage(cfg, years, categories));
   console.log('  生成目录: index.html');
 
   copyTheme();

@@ -77,12 +77,17 @@ function parseRaw(file) {
   return { meta: meta, body: body };
 }
 
-const FM_ORDER = ['title', 'date', 'slug', 'dateTag', 'excerpt'];
+const FM_ORDER = ['title', 'date', 'slug', 'dateTag', 'category', 'tags', 'excerpt'];
 
 function serialize(meta, body) {
   const lines = ['---'];
   FM_ORDER.forEach(function (k) {
-    if (meta[k]) lines.push(k + ': ' + String(meta[k]).replace(/[\r\n]+/g, ' '));
+    const v = meta[k];
+    if (v === undefined || v === null) return;
+    // tags 允许是数组，统一写成 "a, b" 形式
+    const text = Array.isArray(v) ? v.join(', ') : String(v);
+    if (!text.trim()) return;
+    lines.push(k + ': ' + text.replace(/[\r\n]+/g, ' '));
   });
   // 保留 frontmatter 里出现过的其它自定义键，避免编辑时被静默丢弃
   Object.keys(meta).forEach(function (k) {
@@ -115,6 +120,34 @@ function slugFromDate(dateStr) {
   return parseInt(m[2], 10) + '.' + parseInt(m[3], 10);
 }
 
+// 标签允许 "a, b" / "a、b" / "a b" 三种写法，统一收敛成去重后的数组
+function normalizeTags(value) {
+  const raw = Array.isArray(value) ? value : String(value || '').split(/[,，、;；\s]+/);
+  const seen = new Set();
+  const out = [];
+  raw.forEach(function (t) {
+    const s = String(t || '').trim();
+    if (!s || s.length > 40) return;
+    if (seen.has(s)) return;
+    seen.add(s);
+    out.push(s);
+  });
+  return out.slice(0, 20);
+}
+
+function normalizeCategory(value) {
+  const s = String(value || '').trim().slice(0, 40);
+  return s || cfg.defaultCategory || '未分类';
+}
+
+// 从 frontmatter 里读出 category / tags（兼容旧文章：没有就是默认分类、空标签）
+function taxonomy(meta) {
+  return {
+    category: normalizeCategory(meta.category),
+    tags: normalizeTags(meta.tags),
+  };
+}
+
 function removeOutput(year, slug) {
   const html = safeJoin(cfg.outputDir, assertYear(year), assertSlug(slug) + '.html');
   if (fs.existsSync(html)) fs.unlinkSync(html);
@@ -133,7 +166,20 @@ function removeEmptyYear(year) {
 
 /* ── 对外操作 ── */
 
+// list() 每次都要遍历 posts/ 并逐个读文件，后台刷新很频繁。
+// 这里做一层短 TTL 缓存；所有写操作都会主动失效它，因此不会读到脏数据。
+const LIST_TTL = 1000;
+let listCache = { at: 0, value: null };
+
+function invalidateList() {
+  listCache.at = 0;
+  listCache.value = null;
+}
+
 function list() {
+  const now = Date.now();
+  if (listCache.value && now - listCache.at < LIST_TTL) return listCache.value;
+
   const base = path.resolve(cfg.postsDir);
   if (!fs.existsSync(base)) return [];
   const out = [];
@@ -158,21 +204,57 @@ function list() {
         date: parsed.meta.date || entry.name + '-01-01',
         dateTag: parsed.meta.dateTag || '',
         excerpt: parsed.meta.excerpt || '',
+        category: normalizeCategory(parsed.meta.category),
+        tags: normalizeTags(parsed.meta.tags),
         updatedAt: stat.mtime.toISOString(),
         size: stat.size,
       });
     });
   });
-  return out.sort(function (a, b) {
+
+  const value = out.sort(function (a, b) {
     if (a.date !== b.date) return a.date < b.date ? 1 : -1;
     return a.slug < b.slug ? -1 : 1;
   });
+  listCache = { at: now, value: value };
+  return value;
+}
+
+// 汇总全站分类（含每类篇数），供后台侧栏与目录页筛选条使用
+function listCategories() {
+  const map = new Map();
+  list().forEach(function (p) {
+    const cur = map.get(p.category) || { name: p.category, count: 0 };
+    cur.count += 1;
+    map.set(p.category, cur);
+  });
+  return Array.from(map.values()).sort(function (a, b) {
+    if (b.count !== a.count) return b.count - a.count;
+    return a.name < b.name ? -1 : 1;
+  });
+}
+
+// 汇总全站标签
+function listTags() {
+  const map = new Map();
+  list().forEach(function (p) {
+    p.tags.forEach(function (t) {
+      map.set(t, (map.get(t) || 0) + 1);
+    });
+  });
+  return Array.from(map.entries())
+    .map(function (e) { return { name: e[0], count: e[1] }; })
+    .sort(function (a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.name < b.name ? -1 : 1;
+    });
 }
 
 function read(year, slug) {
   const file = postFile(year, slug);
   if (!fs.existsSync(file)) throw new StoreError('文章不存在: ' + year + '/' + slug, 404);
   const parsed = parseRaw(file);
+  const tax = taxonomy(parsed.meta);
   return {
     year: assertYear(year),
     slug: assertSlug(slug),
@@ -180,6 +262,8 @@ function read(year, slug) {
     date: parsed.meta.date || year + '-01-01',
     dateTag: parsed.meta.dateTag || '',
     excerpt: parsed.meta.excerpt || '',
+    category: tax.category,
+    tags: tax.tags,
     body: parsed.body,
   };
 }
@@ -202,11 +286,15 @@ function create(data) {
     date: date,
     slug: slug,
     dateTag: String(data.dateTag || '').trim() || dateTagOf(date),
+    category: normalizeCategory(data.category),
   };
+  const tags = normalizeTags(data.tags);
+  if (tags.length) meta.tags = tags;
   if (data.excerpt) meta.excerpt = String(data.excerpt).trim();
 
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, serialize(meta, data.body), 'utf8');
+  invalidateList();
   return { year: year, slug: slug };
 }
 
@@ -231,7 +319,10 @@ function save(year, slug, data) {
     date: date,
     slug: targetSlug,
     dateTag: String(data.dateTag || '').trim() || dateTagOf(date),
+    category: normalizeCategory(data.category),
   };
+  const tags = normalizeTags(data.tags);
+  if (tags.length) meta.tags = tags;
   if (data.excerpt) meta.excerpt = String(data.excerpt).trim();
 
   fs.mkdirSync(path.dirname(targetFile), { recursive: true });
@@ -243,6 +334,7 @@ function save(year, slug, data) {
     removeOutput(year, slug);
     removeEmptyYear(year);
   }
+  invalidateList();
   return { year: targetYear, slug: targetSlug };
 }
 
@@ -252,6 +344,7 @@ function remove(year, slug) {
   fs.unlinkSync(file);
   removeOutput(year, slug);
   removeEmptyYear(year);
+  invalidateList();
   return { year: assertYear(year), slug: assertSlug(slug) };
 }
 
@@ -320,6 +413,8 @@ function build() {
 module.exports = {
   StoreError: StoreError,
   list: list,
+  listCategories: listCategories,
+  listTags: listTags,
   read: read,
   create: create,
   save: save,
@@ -329,4 +424,7 @@ module.exports = {
   build: build,
   parseRaw: parseRaw,
   serialize: serialize,
+  normalizeTags: normalizeTags,
+  normalizeCategory: normalizeCategory,
+  invalidateList: invalidateList,
 };

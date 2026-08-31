@@ -1,29 +1,119 @@
 'use strict';
 
-// 后台前端。无构建、无框架、无内联代码 —— 服务端下发的是严格 CSP，
-// 所以所有事件都必须用 addEventListener 绑定，样式一律走 class。
+// 后台前端：无构建、无框架、无内联代码（服务端下发严格 CSP）。
+// 所有事件都用 addEventListener 绑定，列表节点一律用 DOM API 创建（天然免疫 XSS）。
 
 const $ = id => document.getElementById(id);
 
+const THEME_KEY = 'blog-admin-theme';
+const DRAFT_PREFIX = 'blog-admin-draft:';
+const SPLIT_KEY = 'blog-admin-split';
+
+const els = {};
 const state = {
   posts: [],
-  current: null,   // { year, slug }
+  current: null,          // { year, slug }
   dirty: false,
+  categories: [],
+  tags: [],
+  filter: { category: '__all__', query: '' },
+  session: null,
+  git: null,
+  lastRendered: null,
+  draftKey: '',
 };
 
-/* ── 日志 ── */
+/* ══════════════════════════════════════════
+   工具
+   ══════════════════════════════════════════ */
 
-function log(msg, kind) {
-  const el = $('log');
-  const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-  const line = document.createElement('div');
-  line.className = 'log-line' + (kind ? ' log-line--' + kind : '');
-  line.textContent = '[' + time + '] ' + msg;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
+function debounce(fn, wait) {
+  let t = null;
+  return function () {
+    const args = arguments;
+    clearTimeout(t);
+    t = setTimeout(function () { fn.apply(null, args); }, wait);
+  };
 }
 
-/* ── 请求 ── */
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+function nowTime() {
+  const d = new Date();
+  return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = String(text);
+  return node;
+}
+
+/* ══════════════════════════════════════════
+   日志
+   ══════════════════════════════════════════ */
+
+function log(msg, kind) {
+  const box = els.log;
+  const line = el('div', 'log-line' + (kind ? ' log-line--' + kind : ''));
+  line.textContent = '[' + nowTime() + '] ' + msg;
+  box.appendChild(line);
+  animLogLine(line);
+  // 只保留最近 500 行，避免长时间运行后 DOM 越来越重
+  while (box.childNodes.length > 500) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ══════════════════════════════════════════
+   动效（GSAP，离线 / 减弱动效时自动降级）
+   ══════════════════════════════════════════ */
+const ANIM_ON = typeof gsap !== 'undefined';
+if (ANIM_ON && window.ScrollToPlugin) gsap.registerPlugin(ScrollToPlugin);
+if (ANIM_ON && window.Flip) gsap.registerPlugin(Flip);
+if (ANIM_ON && window.SplitText) gsap.registerPlugin(SplitText);
+const REDUCED = ANIM_ON && matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (ANIM_ON) gsap.defaults({ ease: 'power3.out', duration: 0.5 });
+
+function animLoginIn() {
+  if (!ANIM_ON || REDUCED) return;
+  gsap.fromTo('.login-card', { y: 26, autoAlpha: 0, scale: 0.96 },
+    { y: 0, autoAlpha: 1, scale: 1, duration: 0.55, ease: 'back.out(1.5)' });
+}
+
+function animAppIn() {
+  if (!ANIM_ON || REDUCED) return;
+  const tl = gsap.timeline({ defaults: { duration: 0.5, ease: 'power3.out' } });
+  tl.from('.topbar', { y: -20, autoAlpha: 0 }, 0)
+    .from('.sidebar', { x: -24, autoAlpha: 0 }, 0.05)
+    .from('.editor-pane', { y: 18, autoAlpha: 0 }, 0.12)
+    .from('.dock', { y: 24, autoAlpha: 0 }, 0.16);
+}
+
+function animListIn() {
+  if (!ANIM_ON || REDUCED) return;
+  const items = els.postList.querySelectorAll('.post-item');
+  if (items.length) gsap.from(items, { x: -14, autoAlpha: 0, stagger: 0.04, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+}
+
+function animEditorIn() {
+  if (!ANIM_ON || REDUCED) return;
+  gsap.fromTo(els.editorForm, { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.45, ease: 'power3.out' });
+}
+
+function animLogLine(line) {
+  if (!ANIM_ON || REDUCED) return;
+  gsap.from(line, { autoAlpha: 0, x: -10, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+}
+
+/* ══════════════════════════════════════════
+   请求
+   ══════════════════════════════════════════ */
 
 async function api(path, options) {
   const res = await fetch(path, Object.assign({ credentials: 'same-origin' }, options || {}));
@@ -35,71 +125,124 @@ async function api(path, options) {
     if (res.status === 401) showLogin();
     const err = new Error((data && data.error) || ('请求失败（' + res.status + '）'));
     err.status = res.status;
+    err.detail = data && data.detail ? data.detail : '';
     throw err;
   }
   return data;
 }
 
-function apiJson(path, method, body) {
+function apiJson(path, method, body, signal) {
   return api(path, {
     method: method,
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal: signal,
   });
 }
 
-/* ── 视图切换 ── */
+/* ══════════════════════════════════════════
+   主题
+   ══════════════════════════════════════════ */
+
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* 隐私模式忽略 */ }
+}
+
+/* ══════════════════════════════════════════
+   视图切换
+   ══════════════════════════════════════════ */
 
 function showLogin(info) {
-  $('appView').hidden = true;
-  $('loginView').hidden = false;
-  if (info && info.tokenGenerated) {
-    $('loginHint').textContent = '首次运行：管理口令已打印在启动服务的终端，并保存到 tools/.admin-token';
-  } else {
-    $('loginHint').textContent = '管理口令见 tools/.admin-token，或用 ADMIN_TOKEN 环境变量指定';
-  }
-  $('tokenInput').focus();
+  els.appView.hidden = true;
+  els.loginView.hidden = false;
+  els.loginHint.textContent = (info && info.tokenGenerated)
+    ? '首次运行：管理口令已打印在启动服务的终端，并保存到 tools/.admin-token'
+    : '管理口令见 tools/.admin-token，或用 ADMIN_TOKEN 环境变量指定';
+  els.tokenInput.focus();
+  animLoginIn();
 }
 
 function showApp() {
-  $('loginView').hidden = true;
-  $('appView').hidden = false;
+  els.loginView.hidden = true;
+  els.appView.hidden = false;
+  animAppIn();
 }
 
-/* ── 文章列表 ── */
+/* ══════════════════════════════════════════
+   侧栏：分类筛选 + 搜索 + 文章列表
+   ══════════════════════════════════════════ */
+
+function renderCategoryFilter() {
+  const box = els.categoryFilter;
+  box.textContent = '';
+
+  const makeChip = function (value, label, count) {
+    const chip = el('button', 'chip');
+    chip.type = 'button';
+    chip.dataset.category = value;
+    chip.appendChild(el('span', null, label));
+    chip.appendChild(el('span', 'chip__count', count));
+    if (state.filter.category === value) chip.classList.add('is-active');
+    chip.addEventListener('click', function () {
+      state.filter.category = value;
+      renderCategoryFilter();
+      renderList();
+    });
+    return chip;
+  };
+
+  box.appendChild(makeChip('__all__', '全部', state.posts.length));
+  state.categories.forEach(function (c) {
+    box.appendChild(makeChip(c.name, c.name, c.count));
+  });
+}
+
+function matchesFilter(p) {
+  if (state.filter.category !== '__all__' && p.category !== state.filter.category) return false;
+  const q = state.filter.query.trim().toLowerCase();
+  if (!q) return true;
+  return (p.title + ' ' + p.slug + ' ' + p.category + ' ' + p.tags.join(' ') + ' ' + p.excerpt)
+    .toLowerCase().indexOf(q) !== -1;
+}
 
 function renderList() {
-  const list = $('postList');
+  const list = els.postList;
   list.textContent = '';
-  $('postCount').textContent = String(state.posts.length);
+
+  const shown = state.posts.filter(matchesFilter);
+  els.postCount.textContent = String(shown.length);
+
+  if (!shown.length) {
+    list.appendChild(el('div', 'list-empty', state.posts.length ? '没有匹配的文章' : '还没有文章，点顶部「新建」'));
+    return;
+  }
 
   const groups = new Map();
-  state.posts.forEach(function (p) {
+  shown.forEach(function (p) {
     if (!groups.has(p.year)) groups.set(p.year, []);
     groups.get(p.year).push(p);
   });
 
   groups.forEach(function (items, year) {
-    const head = document.createElement('div');
-    head.className = 'post-group';
-    head.textContent = year + ' 年';
-    list.appendChild(head);
+    list.appendChild(el('div', 'post-group', year + ' 年'));
 
     items.forEach(function (p) {
-      const btn = document.createElement('button');
+      const btn = el('button', 'post-item');
       btn.type = 'button';
-      btn.className = 'post-item';
       if (state.current && state.current.year === p.year && state.current.slug === p.slug) {
         btn.classList.add('is-active');
       }
 
-      const title = document.createElement('span');
-      title.textContent = p.title;
-      btn.appendChild(title);
+      btn.appendChild(el('span', 'post-item__title', p.title));
 
-      const meta = document.createElement('span');
-      meta.className = 'meta';
-      meta.textContent = p.date + ' · ' + p.slug + '.md';
+      const meta = el('span', 'post-item__meta');
+      meta.appendChild(el('span', 'post-cat', p.category));
+      meta.appendChild(el('span', null, p.date));
       btn.appendChild(meta);
 
       btn.addEventListener('click', function () {
@@ -110,41 +253,103 @@ function renderList() {
       list.appendChild(btn);
     });
   });
+
+  animListIn();
 }
 
 async function loadPosts() {
   const data = await api('/api/posts');
-  state.posts = data.posts || [];
+  state.posts = (data.posts || []).map(normalizePost);
+  renderCategoryFilter();
   renderList();
 }
 
-/* ── 编辑器 ── */
+async function loadTaxonomy() {
+  try {
+    const data = await api('/api/categories');
+    state.categories = data.categories || [];
+    state.tags = data.tags || [];
+  } catch (e) { /* 分类读取失败不阻塞主流程 */ }
+
+  const catList = $('categoryList');
+  catList.textContent = '';
+  state.categories.forEach(function (c) {
+    const opt = document.createElement('option');
+    opt.value = c.name;
+    catList.appendChild(opt);
+  });
+
+  const tagList = $('tagList');
+  tagList.textContent = '';
+  state.tags.slice(0, 60).forEach(function (t) {
+    const opt = document.createElement('option');
+    opt.value = t.name;
+    tagList.appendChild(opt);
+  });
+}
+
+function normalizePost(p) {
+  p.category = p.category || '未分类';
+  p.tags = Array.isArray(p.tags) ? p.tags : [];
+  return p;
+}
+
+/* ══════════════════════════════════════════
+   编辑器
+   ══════════════════════════════════════════ */
 
 function fillForm(post) {
-  $('postLoc').textContent = 'posts/' + post.year + '/' + post.slug + '.md';
-  $('fTitle').value = post.title || '';
-  $('fDate').value = post.date || '';
-  $('fSlug').value = post.slug || '';
-  $('fDateTag').value = post.dateTag || '';
-  $('fExcerpt').value = post.excerpt || '';
-  $('fBody').value = post.body || '';
+  els.postLoc.textContent = 'posts/' + post.year + '/' + post.slug + '.md';
+  els.fTitle.value = post.title || '';
+  els.fDate.value = post.date || '';
+  els.fSlug.value = post.slug || '';
+  els.fDateTag.value = post.dateTag || '';
+  els.fCategory.value = post.category || '';
+  els.fTags.value = (post.tags || []).join(', ');
+  els.fExcerpt.value = post.excerpt || '';
+  els.fBody.value = post.body || '';
   setDirty(false);
+  updateStats();
 }
 
 function setDirty(v) {
   state.dirty = v;
-  $('btnSave').textContent = v ? '保存 ●' : '保存';
+  els.btnSave.textContent = v ? '保存 ●' : '保存';
+  els.saveDot.classList.toggle('is-dirty', v);
+}
+
+function collectForm() {
+  return {
+    title: els.fTitle.value.trim(),
+    date: els.fDate.value.trim(),
+    slug: els.fSlug.value.trim(),
+    dateTag: els.fDateTag.value.trim(),
+    category: els.fCategory.value.trim(),
+    tags: els.fTags.value,
+    excerpt: els.fExcerpt.value.trim(),
+    body: els.fBody.value,
+  };
 }
 
 async function openPost(year, slug) {
   try {
     const data = await api('/api/posts/' + encodeURIComponent(year) + '/' + encodeURIComponent(slug));
+    const post = data.post;
+
+    // 切换文章前把上一份草稿立即落盘（不能用防抖版，否则会写进新文章的 key）
+    if (state.current) saveDraftNow();
+
     state.current = { year: year, slug: slug };
-    $('emptyState').hidden = true;
-    $('editorForm').hidden = false;
-    fillForm(data.post);
+    state.draftKey = DRAFT_PREFIX + year + '/' + slug;
+    state.lastRendered = null;
+
+    els.emptyState.hidden = true;
+    els.editorForm.hidden = false;
+    animEditorIn();
+    fillForm(post);
     renderList();
-    showTab('write');
+    checkDraft();
+    renderPreview(true);
     log('已打开 ' + year + '/' + slug + '.md');
   } catch (e) {
     log('打开失败: ' + e.message, 'err');
@@ -152,62 +357,95 @@ async function openPost(year, slug) {
 }
 
 function closeEditor() {
+  if (state.current) clearDraft();
   state.current = null;
-  $('editorForm').hidden = true;
-  $('emptyState').hidden = false;
+  state.draftKey = '';
+  els.editorForm.hidden = true;
+  els.emptyState.hidden = false;
   renderList();
 }
 
-/* ── 保存 / 新建 / 删除 ── */
+/* ── 本地草稿：防浏览器崩溃 / 误关页面丢内容 ── */
 
-function collectForm() {
-  return {
-    title: $('fTitle').value.trim(),
-    date: $('fDate').value.trim(),
-    slug: $('fSlug').value.trim(),
-    dateTag: $('fDateTag').value.trim(),
-    excerpt: $('fExcerpt').value.trim(),
-    body: $('fBody').value,
-  };
+function saveDraftNow() {
+  if (!state.draftKey || !state.dirty) return;
+  try {
+    localStorage.setItem(state.draftKey, JSON.stringify({
+      at: Date.now(),
+      data: collectForm(),
+    }));
+  } catch (e) { /* 超配额时静默失败 */ }
 }
+
+const saveDraft = debounce(saveDraftNow, 900);
+
+function readDraft() {
+  if (!state.draftKey) return null;
+  try {
+    const raw = localStorage.getItem(state.draftKey);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function clearDraft() {
+  if (!state.draftKey) return;
+  try { localStorage.removeItem(state.draftKey); } catch (e) { /* ignore */ }
+}
+
+function checkDraft() {
+  const draft = readDraft();
+  if (!draft || !draft.data) { els.draftBar.hidden = true; return; }
+  const same = JSON.stringify(draft.data) === JSON.stringify(collectForm());
+  if (same) { clearDraft(); els.draftBar.hidden = true; return; }
+  els.draftText.textContent = '发现本地草稿（' + new Date(draft.at).toLocaleString('zh-CN') + '）未保存';
+  els.draftBar.hidden = false;
+}
+
+/* ══════════════════════════════════════════
+   保存 / 新建 / 删除
+   ══════════════════════════════════════════ */
 
 async function savePost() {
   if (!state.current) return;
-  const btn = $('btnSave');
-  btn.disabled = true;
+  if (!els.fTitle.value.trim()) { log('标题不能为空', 'err'); els.fTitle.focus(); return; }
+  if (!els.fSlug.value.trim()) { log('slug 不能为空', 'err'); els.fSlug.focus(); return; }
+
+  els.btnSave.disabled = true;
   try {
     const data = await apiJson(
       '/api/posts/' + encodeURIComponent(state.current.year) + '/' + encodeURIComponent(state.current.slug),
       'PUT',
       collectForm()
     );
+    const moved = data.post.year !== state.current.year || data.post.slug !== state.current.slug;
     state.current = { year: data.post.year, slug: data.post.slug };
+    state.draftKey = DRAFT_PREFIX + data.post.year + '/' + data.post.slug;
     setDirty(false);
-    log('已保存 ' + data.post.year + '/' + data.post.slug + '.md（记得点「构建站点」刷新页面）', 'ok');
-    await loadPosts();
+    clearDraft();
+    els.draftBar.hidden = true;
+    log('已保存 ' + data.post.year + '/' + data.post.slug + '.md' + (moved ? '（已移动到新位置）' : ''), 'ok');
+    await Promise.all([loadPosts(), loadTaxonomy()]);
   } catch (e) {
     log('保存失败: ' + e.message, 'err');
   } finally {
-    btn.disabled = false;
+    els.btnSave.disabled = false;
   }
 }
 
 async function createPost() {
   if (state.dirty && !confirm('当前文章未保存，确定新建？')) return;
-  const today = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  const date = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
 
   try {
     const data = await apiJson('/api/posts', 'POST', {
       title: '未命名文章',
-      date: date,
+      date: todayStr(),
+      category: els.fCategory.value.trim() || (state.session && state.session.git.defaultCategory) || '未分类',
       body: '在这里写正文。段落之间空一行。\n',
     });
     log('已新建 ' + data.post.year + '/' + data.post.slug + '.md', 'ok');
     await loadPosts();
     await openPost(data.post.year, data.post.slug);
-    $('fTitle').select();
+    els.fTitle.select();
   } catch (e) {
     log('新建失败: ' + e.message, 'err');
   }
@@ -216,60 +454,270 @@ async function createPost() {
 async function deletePost() {
   if (!state.current) return;
   const label = state.current.year + '/' + state.current.slug + '.md';
-  if (!confirm('确定删除 ' + label + ' ？此操作会同时删除源文件与已生成页面。')) return;
+  if (!confirm('确定删除 ' + label + ' ？\n此操作会同时删除源文件与已生成页面，且不可撤销。')) return;
 
   try {
-    await api('/api/posts/' + encodeURIComponent(state.current.year) + '/' + encodeURIComponent(state.current.slug), { method: 'DELETE' });
-    log('已删除 ' + label + '（记得点「构建站点」刷新目录页）', 'ok');
+    // 写接口一律要求 application/json，DELETE 也带上（配合 SameSite=Strict 挡 CSRF）
+    await apiJson(
+      '/api/posts/' + encodeURIComponent(state.current.year) + '/' + encodeURIComponent(state.current.slug),
+      'DELETE'
+    );
+    log('已删除 ' + label, 'ok');
     closeEditor();
-    await loadPosts();
+    await Promise.all([loadPosts(), loadTaxonomy()]);
+    if (state.git) loadGitStatus();
   } catch (e) {
     log('删除失败: ' + e.message, 'err');
   }
 }
 
-/* ── 构建 ── */
+/* ══════════════════════════════════════════
+   构建 / 预览
+   ══════════════════════════════════════════ */
 
-async function runBuild() {
-  const btn = $('btnBuild');
-  btn.disabled = true;
-  btn.textContent = '构建中…';
-  log('开始构建…');
+async function runBuild(silent) {
+  els.btnBuild.disabled = true;
+  const label = els.btnBuild.querySelector('.btn-label');
+  const old = label ? label.textContent : '';
+  if (label) label.textContent = '构建中';
+  if (!silent) log('开始构建…');
+
   try {
     const data = await api('/api/build', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     (data.log || []).forEach(function (line) { log('  ' + line); });
     log('构建完成，用时 ' + data.ms + 'ms', 'ok');
+    return true;
   } catch (e) {
     log('构建失败: ' + e.message, 'err');
+    return false;
   } finally {
-    btn.disabled = false;
-    btn.textContent = '构建站点';
+    if (label) label.textContent = old;
+    els.btnBuild.disabled = false;
   }
 }
 
-/* ── 预览 ── */
+// ── 实时预览：防抖 + 客户端缓存 + 过期响应丢弃 ──
 
-async function showTab(name) {
-  const write = name === 'write';
-  $('fBody').hidden = !write;
-  $('previewPane').hidden = write;
+const previewCache = new Map();
+const PREVIEW_CACHE_MAX = 60;
+let previewSeq = 0;
+let previewAbort = null;
+let previewTimer = null;
 
-  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
-    tab.classList.toggle('is-active', tab.dataset.tab === name);
+function cachePreview(body, html) {
+  if (previewCache.size >= PREVIEW_CACHE_MAX) {
+    previewCache.delete(previewCache.keys().next().value);
+  }
+  previewCache.set(body, html);
+}
+
+function setPreview(html) {
+  const ratio = els.preview.scrollHeight > els.preview.clientHeight
+    ? els.preview.scrollTop / (els.preview.scrollHeight - els.preview.clientHeight)
+    : 0;
+  els.preview.innerHTML = html || '<p class="preview-empty">开始写正文，这里会实时渲染</p>';
+  if (ratio > 0) {
+    els.preview.scrollTop = ratio * (els.preview.scrollHeight - els.preview.clientHeight);
+  }
+}
+
+async function renderPreview(force) {
+  if (els.panes.dataset.view === 'edit') return;
+  const body = els.fBody.value;
+  if (!force && body === state.lastRendered) return;
+
+  if (previewCache.has(body)) {
+    setPreview(previewCache.get(body));
+    state.lastRendered = body;
+    return;
+  }
+
+  const seq = ++previewSeq;
+  if (previewAbort) previewAbort.abort();
+  previewAbort = new AbortController();
+
+  try {
+    const data = await apiJson('/api/preview', 'POST', { body: body }, previewAbort.signal);
+    if (seq !== previewSeq) return;              // 已有更新的请求发出，丢弃这次结果
+    cachePreview(body, data.html || '');
+    setPreview(data.html || '');
+    state.lastRendered = body;
+  } catch (e) {
+    if (e.name === 'AbortError') return;         // 主动取消，不算错误
+    log('预览渲染失败: ' + e.message, 'err');
+  }
+}
+
+function schedulePreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(function () { renderPreview(false); }, 220);
+}
+
+function setView(view) {
+  els.panes.dataset.view = view;
+  Array.prototype.forEach.call(els.viewSwitch.children, function (b) {
+    b.classList.toggle('is-active', b.dataset.view === view);
   });
+  if (view !== 'edit') renderPreview(true);
+}
 
-  if (!write) {
-    const html = await renderMarkdown($('fBody').value).catch(function () { return ''; });
-    $('previewPane').innerHTML = html;
+/* ── 滚动同步 ── */
+
+let syncing = false;
+function syncScroll(from) {
+  if (els.panes.dataset.view !== 'split' || syncing) return;
+  const a = from === 'edit' ? els.fBody : els.preview;
+  const b = from === 'edit' ? els.preview : els.fBody;
+  const aMax = a.scrollHeight - a.clientHeight;
+  const bMax = b.scrollHeight - b.clientHeight;
+  if (aMax <= 0 || bMax <= 0) return;
+  syncing = true;
+  b.scrollTop = (a.scrollTop / aMax) * bMax;
+  requestAnimationFrame(function () { syncing = false; });
+}
+
+/* ── 字数统计 ── */
+
+function updateStats() {
+  const text = els.fBody.value;
+  const cjk = (text.match(/[\u4e00-\u9fa5\u3040-\u30ff]/g) || []).length;
+  const latin = (text.replace(/[\u4e00-\u9fa5\u3040-\u30ff]/g, ' ')
+    .match(/[A-Za-z0-9_'-]+/g) || []).length;
+  const words = cjk + latin;
+  const lines = text ? text.split('\n').length : 0;
+
+  els.statChars.textContent = text.length + ' 字';
+  els.statWords.textContent = words + ' 词';
+  els.statLines.textContent = lines + ' 行';
+  els.statRead.textContent = '约 ' + Math.max(1, Math.round(words / 300)) + ' 分钟';
+  els.statPath.textContent = state.current ? 'posts/' + state.current.year + '/' + state.current.slug + '.md' : '';
+}
+
+/* ══════════════════════════════════════════
+   Markdown 工具栏
+   ══════════════════════════════════════════ */
+
+function replaceRange(start, end, text, selStart, selEnd) {
+  const ta = els.fBody;
+  ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+  ta.focus();
+  ta.selectionStart = selStart === undefined ? start + text.length : selStart;
+  ta.selectionEnd = selEnd === undefined ? ta.selectionStart : selEnd;
+  setDirty(true);
+  saveDraft();
+  updateStats();
+  schedulePreview();
+}
+
+// 包裹型：**加粗** / *斜体* / `代码`
+function wrapSelection(before, after, placeholder) {
+  const ta = els.fBody;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const selected = ta.value.slice(start, end);
+  const value = ta.value;
+
+  // 光标没选内容、且左右已经是被包裹的标记 → 取消包裹
+  if (!selected &&
+      value.slice(start - before.length, start) === before &&
+      value.slice(end, end + after.length) === after) {
+    const inner = value.slice(start, end);
+    replaceRange(start - before.length, end + after.length, inner,
+      start - before.length, start - before.length + inner.length);
+    return;
   }
+
+  const sel = selected || placeholder || '';
+  replaceRange(start, end, before + sel + after, start + before.length, start + before.length + sel.length);
 }
 
-async function renderMarkdown(body) {
-  const data = await apiJson('/api/preview', 'POST', { body: body });
-  return data.html || '';
+// 行首型：> 引用 / - 列表 / ## 标题
+function prefixLines(prefix, placeholder) {
+  const ta = els.fBody;
+  const value = ta.value;
+  let start = ta.selectionStart;
+  let end = ta.selectionEnd;
+
+  const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+  let lineEnd = value.indexOf('\n', end);
+  if (lineEnd === -1) lineEnd = value.length;
+
+  let block = value.slice(lineStart, lineEnd);
+  if (!block && placeholder) block = placeholder;
+
+  const lines = block.split('\n');
+  const allOn = lines.every(function (l) { return l.indexOf(prefix) === 0; });
+  const next = lines.map(function (l) {
+    return allOn ? l.slice(prefix.length) : prefix + l;
+  }).join('\n');
+
+  replaceRange(lineStart, lineEnd, next, lineStart, lineStart + next.length);
 }
 
-/* ── 图片上传 ── */
+function prefixOrdered() {
+  const ta = els.fBody;
+  const value = ta.value;
+  let start = ta.selectionStart;
+  let end = ta.selectionEnd;
+
+  const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+  let lineEnd = value.indexOf('\n', end);
+  if (lineEnd === -1) lineEnd = value.length;
+
+  let block = value.slice(lineStart, lineEnd);
+  if (!block) block = '列表项';
+
+  const lines = block.split('\n');
+  const allOn = lines.every(function (l) { return /^\d+\.\s/.test(l); });
+  const next = lines
+    .map(function (l, i) { return allOn ? l.replace(/^\d+\.\s/, '') : (i + 1) + '. ' + l; })
+    .join('\n');
+
+  replaceRange(lineStart, lineEnd, next, lineStart, lineStart + next.length);
+}
+
+function insertBlock(text, placeholderLine) {
+  const ta = els.fBody;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end) || placeholderLine || '';
+  const value = ta.value;
+  const needBefore = start > 0 && value[start - 1] !== '\n' ? '\n' : '';
+  const needAfter = value[end] === undefined || value[end] === '\n' ? '\n' : '\n\n';
+  replaceRange(start, end, needBefore + text + sel + needAfter);
+}
+
+const MD_ACTIONS = {
+  bold: function () { wrapSelection('**', '**', '加粗'); },
+  italic: function () { wrapSelection('*', '*', '斜体'); },
+  inlinecode: function () { wrapSelection('`', '`', 'code'); },
+  h2: function () { prefixLines('## ', '标题'); },
+  h3: function () { prefixLines('### ', '小标题'); },
+  quote: function () { prefixLines('> ', '引用'); },
+  ul: function () { prefixLines('- ', '列表项'); },
+  ol: prefixOrdered,
+  task: function () { prefixLines('- [ ] ', '待办'); },
+  code: function () { insertBlock('```\n', '代码'); },
+  hr: function () { insertBlock('\n---\n'); },
+  link: function () {
+    const ta = els.fBody;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const text = ta.value.slice(start, end) || '链接文字';
+    replaceRange(start, end, '[' + text + '](https://)', start + 1, start + 1 + text.length);
+  },
+  table: function () {
+    insertBlock([
+      '| 列 A | 列 B |',
+      '| --- | --- |',
+      '| 内容 | 内容 |',
+    ].join('\n'));
+  },
+};
+
+/* ══════════════════════════════════════════
+   图片上传（按钮 / 拖拽 / 粘贴）
+   ══════════════════════════════════════════ */
 
 function toBase64(file) {
   return new Promise(function (resolve, reject) {
@@ -280,28 +728,22 @@ function toBase64(file) {
   });
 }
 
-function insertAtCursor(text) {
-  const ta = $('fBody');
-  const start = ta.selectionStart === null ? ta.value.length : ta.selectionStart;
-  const end = ta.selectionEnd === null ? start : ta.selectionEnd;
-  ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
-  ta.selectionStart = ta.selectionEnd = start + text.length;
-  ta.dispatchEvent(new Event('input'));
-  ta.focus();
-}
-
 async function uploadImages(files) {
-  if (!state.current) { log('请先打开一篇文章', 'err'); return; }
-  const year = ($('fDate').value || '').slice(0, 4) || String(new Date().getFullYear());
+  if (!state.current) { log('请先打开一篇文章再插入图片', 'err'); return; }
+  const year = (els.fDate.value || '').slice(0, 4) || String(new Date().getFullYear());
 
   for (const file of files) {
+    if (!/^image\//.test(file.type)) continue;
     try {
       const data = await apiJson('/api/images', 'POST', {
         year: year,
         name: file.name,
         data: await toBase64(file),
       });
-      insertAtCursor('![](' + data.image.path + ')\n');
+      const ta = els.fBody;
+      const snippet = '![](' + data.image.path + ')\n';
+      const start = ta.selectionStart === null ? ta.value.length : ta.selectionStart;
+      replaceRange(start, ta.selectionEnd === null ? start : ta.selectionEnd, snippet);
       log('已上传图片: ' + data.image.path, 'ok');
     } catch (e) {
       log('图片上传失败（' + file.name + '）: ' + e.message, 'err');
@@ -309,80 +751,463 @@ async function uploadImages(files) {
   }
 }
 
-/* ── 启动 ── */
+/* ══════════════════════════════════════════
+   Git 面板
+   ══════════════════════════════════════════ */
 
-async function boot() {
-  try {
-    const session = await api('/api/session');
-    if (!session.ok) { showLogin(session); return; }
-    showApp();
-    log('后台已就绪，输出目录: ' + session.outputDir);
-    await loadPosts();
-  } catch (e) {
-    showLogin();
+function renderGitStatus(st) {
+  state.git = st;
+
+  const sum = els.gitSummary;
+  sum.textContent = '';
+
+  const pill = function (label, value, kind) {
+    const p = el('span', 'git-pill' + (kind ? ' is-' + kind : ''));
+    p.appendChild(el('span', null, label));
+    const strong = el('strong', null, value);
+    p.appendChild(strong);
+    return p;
+  };
+
+  if (!st.available) {
+    sum.appendChild(pill('Git', '不可用', 'warn'));
+    (st.warnings || []).forEach(function (w) {
+      sum.appendChild(el('span', 'git-pill is-warn', w));
+    });
+  } else {
+    sum.appendChild(pill('分支', st.branch || '(未检出)'));
+    if (st.upstream) sum.appendChild(pill('上游', st.upstream));
+    sum.appendChild(pill('待提交', String(st.staged + st.unstaged + st.untracked), st.clean ? '' : 'warn'));
+    if (st.ahead) sum.appendChild(pill('待推送', String(st.ahead), 'warn'));
+    if (st.behind) sum.appendChild(pill('待拉取', String(st.behind), 'warn'));
+    if (st.clean && !st.ahead) sum.appendChild(pill('工作区', '干净', 'clean'));
+    (st.warnings || []).forEach(function (w) {
+      sum.appendChild(el('span', 'git-pill is-warn', w));
+    });
+  }
+
+  const total = st.available ? (st.staged + st.unstaged + st.untracked + st.ahead) : 0;
+  els.gitBadge.textContent = String(total);
+  els.gitBadge.hidden = total === 0;
+
+  const files = els.gitFiles;
+  files.textContent = '';
+  const list = st.files || [];
+  if (!list.length) {
+    files.appendChild(el('div', 'git-empty', st.available ? '没有改动' : '——'));
+  } else {
+    list.forEach(function (f) {
+      const row = el('div', 'git-file');
+      row.appendChild(el('span', 'git-file__code', f.code));
+      const path = el('span', 'git-file__path', f.path);
+      path.title = f.path;
+      row.appendChild(path);
+      files.appendChild(row);
+    });
+    if (st.total > list.length) {
+      files.appendChild(el('div', 'git-empty', '… 还有 ' + (st.total - list.length) + ' 项未列出'));
+    }
   }
 }
 
+function renderGitLog(commits) {
+  const box = els.gitLog;
+  box.textContent = '';
+  if (!commits || !commits.length) {
+    box.appendChild(el('div', 'git-empty', '暂无提交'));
+    return;
+  }
+  commits.forEach(function (c) {
+    const row = el('div', 'git-commit');
+    row.appendChild(el('span', 'git-commit__hash', c.hash));
+    const msg = el('span', 'git-commit__msg', c.subject);
+    msg.title = c.author + ' · ' + c.time;
+    row.appendChild(msg);
+    box.appendChild(row);
+  });
+}
+
+async function loadGitStatus() {
+  try {
+    const st = await api('/api/git/status');
+    renderGitStatus(st);
+  } catch (e) {
+    log('读取 Git 状态失败: ' + e.message, 'err');
+  }
+}
+
+async function loadGitLog() {
+  try {
+    const data = await api('/api/git/log');
+    renderGitLog(data.commits || []);
+  } catch (e) { /* 忽略 */ }
+}
+
+async function runGitSync(mode) {
+  // mode: 'commit' = 只本地提交；'push' = 提交并推送
+  const message = els.gitMessage.value.trim();
+  const payload = {
+    message: message,
+    build: els.gitBuild.checked,
+    pull: els.gitPull.checked,
+    push: mode === 'push',
+  };
+
+  const btn = mode === 'push' ? els.btnGitPush : els.btnGitCommit;
+  btn.disabled = true;
+  log(mode === 'push' ? '开始同步到 GitHub…' : '开始本地提交…');
+
+  try {
+    const data = await apiJson('/api/git/sync', 'POST', payload);
+    (data.log || []).forEach(function (line) { log('  ' + line); });
+
+    (data.steps || []).forEach(function (s) {
+      const text = 'git ' + s.step + (s.skipped ? '（跳过）' : '');
+      log('  ' + text + (s.output ? ': ' + String(s.output).split('\n')[0] : ''),
+        s.ok ? (s.skipped ? 'warn' : 'ok') : 'err');
+    });
+
+    if (data.ok) {
+      log(data.pushed ? '已推送到 ' + data.remote + '/' + data.branch + '（' + data.ms + 'ms）'
+        : '本地提交完成（' + data.ms + 'ms）', 'ok');
+      els.gitMessage.value = '';
+    } else {
+      log(data.error || '同步未完全成功', 'err');
+      if (data.detail) log(data.detail, 'err');
+    }
+    await Promise.all([loadGitStatus(), loadGitLog()]);
+  } catch (e) {
+    log('同步失败: ' + e.message, 'err');
+    if (e.detail) log(e.detail, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function openGitPanel() {
+  selectDock('git');
+  els.dock.classList.remove('is-collapsed');
+  loadGitStatus();
+  loadGitLog();
+}
+
+function selectDock(name) {
+  Array.prototype.forEach.call(document.querySelectorAll('.dock-tab'), function (t) {
+    t.classList.toggle('is-active', t.dataset.dock === name);
+  });
+  els.log.hidden = name !== 'log';
+  els.gitPanel.hidden = name !== 'git';
+}
+
+/* ══════════════════════════════════════════
+   启动
+   ══════════════════════════════════════════ */
+
+async function boot() {
+  let session;
+  try {
+    session = await api('/api/session');
+  } catch (e) {
+    showLogin();
+    return;
+  }
+
+  if (!session.ok) { showLogin(session); return; }
+
+  state.session = session;
+  showApp();
+  log('后台已就绪，输出目录: ' + session.outputDir);
+
+  if (session.git && session.git.enabled) {
+    log('Git 仓库: ' + session.git.repoRoot + '（远程 ' + session.git.remote + '）');
+    els.gitMessage.placeholder = session.git.defaultMessage || 'chore(blog): 更新文章';
+  } else {
+    els.btnGit.disabled = true;
+    els.btnGitPush.disabled = true;
+    els.btnGitCommit.disabled = true;
+    log('Git 功能已关闭（ADMIN_GIT=0）', 'warn');
+  }
+
+  await Promise.all([loadPosts(), loadTaxonomy()]);
+  await Promise.all([loadGitStatus(), loadGitLog()]);
+}
+
+/* ══════════════════════════════════════════
+   事件绑定
+   ══════════════════════════════════════════ */
+
 function bind() {
-  $('loginForm').addEventListener('submit', async function (e) {
+  // 登录
+  els.loginForm.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const btn = $('loginBtn');
-    btn.disabled = true;
-    $('loginError').textContent = '';
+    els.loginBtn.disabled = true;
+    els.loginError.textContent = '';
     try {
-      await apiJson('/api/login', 'POST', { token: $('tokenInput').value });
-      $('tokenInput').value = '';
+      await apiJson('/api/login', 'POST', { token: els.tokenInput.value });
+      els.tokenInput.value = '';
       showApp();
       log('登录成功');
-      await loadPosts();
+      await boot();
     } catch (err) {
-      $('loginError').textContent = err.message;
+      els.loginError.textContent = err.message;
     } finally {
-      btn.disabled = false;
+      els.loginBtn.disabled = false;
     }
   });
 
-  $('btnLogout').addEventListener('click', async function () {
-    try { await api('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch (e) { /* 忽略 */ }
+  els.btnLogout.addEventListener('click', async function () {
+    try {
+      await api('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    } catch (e) { /* 忽略 */ }
     closeEditor();
     state.posts = [];
+    state.current = null;
     showLogin();
   });
 
-  $('btnNew').addEventListener('click', createPost);
-  $('btnSave').addEventListener('click', savePost);
-  $('btnDelete').addEventListener('click', deletePost);
-  $('btnBuild').addEventListener('click', runBuild);
+  // 顶部操作
+  els.btnNew.addEventListener('click', createPost);
+  els.btnBuild.addEventListener('click', function () { runBuild(false); });
+  els.btnGit.addEventListener('click', function () {
+    openGitPanel();
+    els.gitMessage.value = els.gitMessage.value.trim() ||
+      (state.session && state.session.git ? state.session.git.defaultMessage : '') || 'chore(blog): 更新文章';
+  });
+  els.btnTheme.addEventListener('click', function () {
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+  });
 
-  $('btnImage').addEventListener('click', function () { $('fileInput').click(); });
-  $('fileInput').addEventListener('change', async function (e) {
+  // 搜索
+  els.searchInput.addEventListener('input', debounce(function () {
+    state.filter.query = els.searchInput.value;
+    renderList();
+  }, 160));
+
+  // 编辑器
+  els.btnSave.addEventListener('click', savePost);
+  els.btnDelete.addEventListener('click', deletePost);
+
+  ['fTitle', 'fDate', 'fSlug', 'fDateTag', 'fCategory', 'fTags', 'fExcerpt', 'fBody'].forEach(function (id) {
+    els[id].addEventListener('input', function () {
+      setDirty(true);
+      saveDraft();
+      if (id === 'fBody') { updateStats(); schedulePreview(); }
+    });
+  });
+
+  els.fBody.addEventListener('scroll', function () { syncScroll('edit'); });
+  els.preview.addEventListener('scroll', function () { syncScroll('preview'); });
+
+  els.btnRestoreDraft.addEventListener('click', function () {
+    const draft = readDraft();
+    if (!draft || !draft.data) return;
+    const d = draft.data;
+    els.fTitle.value = d.title || '';
+    els.fDate.value = d.date || '';
+    els.fSlug.value = d.slug || '';
+    els.fDateTag.value = d.dateTag || '';
+    els.fCategory.value = d.category || '';
+    els.fTags.value = d.tags || '';
+    els.fExcerpt.value = d.excerpt || '';
+    els.fBody.value = d.body || '';
+    setDirty(true);
+    els.draftBar.hidden = true;
+    updateStats();
+    renderPreview(true);
+    log('已恢复本地草稿（记得点保存）', 'warn');
+  });
+
+  els.btnDropDraft.addEventListener('click', function () {
+    clearDraft();
+    els.draftBar.hidden = true;
+    log('已丢弃本地草稿');
+  });
+
+  // Markdown 工具栏
+  els.mdToolbar.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-md]');
+    if (!btn || !MD_ACTIONS[btn.dataset.md]) return;
+    MD_ACTIONS[btn.dataset.md]();
+  });
+
+  // 视图切换
+  els.viewSwitch.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    setView(btn.dataset.view);
+  });
+
+  // 图片：按钮 / 拖拽 / 粘贴
+  els.btnImage.addEventListener('click', function () { els.fileInput.click(); });
+  els.fileInput.addEventListener('change', async function (e) {
     const files = Array.prototype.slice.call(e.target.files || []);
     e.target.value = '';
     if (files.length) await uploadImages(files);
   });
 
-  document.querySelectorAll('.tab').forEach(function (tab) {
-    tab.addEventListener('click', function () { showTab(tab.dataset.tab); });
+  const panes = els.panes;
+  ['dragenter', 'dragover'].forEach(function (type) {
+    panes.addEventListener(type, function (e) {
+      if (!e.dataTransfer) return;
+      e.preventDefault();
+      panes.classList.add('is-drop');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (type) {
+    panes.addEventListener(type, function (e) {
+      e.preventDefault();
+      panes.classList.remove('is-drop');
+    });
+  });
+  panes.addEventListener('drop', function (e) {
+    const files = e.dataTransfer ? Array.prototype.slice.call(e.dataTransfer.files || []) : [];
+    if (files.length) uploadImages(files);
+  });
+  els.fBody.addEventListener('paste', function (e) {
+    if (!e.clipboardData) return;
+    const files = Array.prototype.slice.call(e.clipboardData.files || []);
+    if (!files.length) return;
+    e.preventDefault();
+    uploadImages(files);
   });
 
-  $('btnClearLog').addEventListener('click', function () { $('log').textContent = ''; });
-
-  // 表单任何改动都标记为未保存
-  ['fTitle', 'fDate', 'fSlug', 'fDateTag', 'fExcerpt', 'fBody'].forEach(function (id) {
-    $(id).addEventListener('input', function () { setDirty(true); });
+  // 底部面板
+  document.querySelectorAll('.dock-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      selectDock(tab.dataset.dock);
+      els.dock.classList.remove('is-collapsed');
+      if (tab.dataset.dock === 'git') { loadGitStatus(); loadGitLog(); }
+    });
+  });
+  els.btnClearLog.addEventListener('click', function () { els.log.textContent = ''; });
+  els.btnToggleDock.addEventListener('click', function () {
+    const collapsed = els.dock.classList.toggle('is-collapsed');
+    els.btnToggleDock.textContent = collapsed ? '展开' : '收起';
   });
 
+  // Git 操作
+  els.btnGitRefresh.addEventListener('click', function () { loadGitStatus(); loadGitLog(); });
+  els.btnGitCommit.addEventListener('click', function () { runGitSync('commit'); });
+  els.btnGitPush.addEventListener('click', function () { runGitSync('push'); });
+
+  // 主题切换：图标旋转反馈
+  els.btnTheme.addEventListener('click', function () {
+    if (ANIM_ON && !REDUCED) {
+      gsap.fromTo(els.btnTheme, { rotation: -120 }, { rotation: 0, duration: 0.6, ease: 'back.out(1.7)' });
+    }
+  });
+
+  // 通用点击「回弹」微交互（动画结束后清除内联 transform，避免覆盖 CSS hover）
+  if (ANIM_ON && !REDUCED) {
+    document.addEventListener('click', function (e) {
+      const t = e.target.closest('.btn, .icon-btn, .tool, .chip, .post-item, .dock-tab, .filter-chip, .vs-btn, .git-tab');
+      if (!t) return;
+      gsap.fromTo(t, { scale: 0.93 }, { scale: 1, duration: 0.4, ease: 'back.out(2.2)', clearProps: 'transform' });
+    });
+  }
+
+  // 分栏拖拽
+  initResizer();
+
+  // 快捷键
   document.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+
+    if (e.key === 's' || e.key === 'S') {
       e.preventDefault();
       if (state.current) savePost();
+      return;
+    }
+    if (e.shiftKey && (e.key === 'B' || e.key === 'b')) {
+      e.preventDefault();
+      runBuild(false);
+      return;
+    }
+    if (e.shiftKey && (e.key === 'G' || e.key === 'g')) {
+      e.preventDefault();
+      openGitPanel();
+      runGitSync('push');
+      return;
+    }
+    // 编辑器内快捷键
+    if (document.activeElement === els.fBody) {
+      if (e.key === 'b' || e.key === 'B') { e.preventDefault(); MD_ACTIONS.bold(); return; }
+      if (e.key === 'i' || e.key === 'I') { e.preventDefault(); MD_ACTIONS.italic(); return; }
+      if (e.key === 'k' || e.key === 'K') { e.preventDefault(); MD_ACTIONS.link(); return; }
     }
   });
 
   window.addEventListener('beforeunload', function (e) {
-    if (state.dirty) { e.preventDefault(); e.returnValue = ''; }
+    if (state.dirty) { saveDraft(); e.preventDefault(); e.returnValue = ''; }
   });
 }
 
+/* 分栏宽度拖拽 */
+function initResizer() {
+  const edit = els.panes.querySelector('.pane-edit');
+  const preview = els.panes.querySelector('.pane-preview');
+
+  const applyRatio = function (pct) {
+    edit.style.flex = '0 0 ' + pct + '%';
+    preview.style.flex = '0 0 ' + (100 - pct) + '%';
+  };
+
+  const saved = parseFloat(localStorage.getItem(SPLIT_KEY));
+  if (saved >= 20 && saved <= 80) applyRatio(saved);
+
+  let dragging = false;
+
+  const onMove = function (e) {
+    if (!dragging) return;
+    const rect = els.panes.getBoundingClientRect();
+    const pct = Math.min(80, Math.max(20, ((e.clientX - rect.left) / rect.width) * 100));
+    applyRatio(pct);
+  };
+  const onUp = function () {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.cursor = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    const m = /flex:\s*0\s+0\s+([\d.]+)%/.exec(edit.style.flex || '');
+    if (m) localStorage.setItem(SPLIT_KEY, m[1]);
+  };
+
+  els.paneResizer.addEventListener('mousedown', function (e) {
+    if (els.panes.dataset.view !== 'split') return;
+    dragging = true;
+    document.body.style.cursor = 'col-resize';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  });
+}
+
+/* ══════════════════════════════════════════
+   入口
+   ══════════════════════════════════════════ */
+
+function cacheEls() {
+  const ids = [
+    'loginView', 'loginForm', 'loginHint', 'tokenInput', 'loginBtn', 'loginError',
+    'appView', 'btnNew', 'btnBuild', 'btnGit', 'btnPreview', 'btnTheme', 'btnLogout',
+    'searchInput', 'categoryFilter', 'postCount', 'postList',
+    'emptyState', 'editorForm', 'fTitle', 'postLoc', 'btnDelete', 'btnSave',
+    'draftBar', 'draftText', 'btnRestoreDraft', 'btnDropDraft',
+    'fDate', 'fSlug', 'fDateTag', 'fCategory', 'fTags', 'fExcerpt', 'fBody',
+    'mdToolbar', 'btnImage', 'fileInput', 'saveDot',
+    'panes', 'paneResizer', 'previewPane',
+    'statChars', 'statWords', 'statLines', 'statRead', 'statPath', 'viewSwitch',
+    'dock', 'log', 'gitPanel', 'gitSummary', 'gitMessage', 'gitBuild', 'gitPull',
+    'btnGitRefresh', 'btnGitCommit', 'btnGitPush', 'gitFiles', 'gitLog', 'gitBadge',
+    'btnClearLog', 'btnToggleDock',
+  ];
+  ids.forEach(function (id) { els[id] = $(id); });
+  els.preview = els.previewPane;   // 预览容器
+}
+
+cacheEls();
 bind();
+setView(els.panes.dataset.view || 'split'); // 让视图切换按钮显示正确的高亮态
 boot();

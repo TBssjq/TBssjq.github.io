@@ -38,15 +38,7 @@ function initGiscus() {
     document.body.appendChild(s);
 }
 
-document.getElementById('themeToggle')?.addEventListener('click', () => {
-    root.classList.toggle('dark');
-    localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-    updateGiscusTheme();
-});
-
-initGiscus();
-
-const ICON_COPY = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+const ICON_COPY = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 0 01-2-2V6a2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
 const ICON_OK = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
 
 function copyCode(btn) {
@@ -57,6 +49,9 @@ function copyCode(btn) {
     navigator.clipboard.writeText(code).then(() => {
         btn.innerHTML = ICON_OK;
         btn.style.opacity = '1';
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(btn, { scale: 0.8 }, { scale: 1, duration: 0.45, ease: 'back.out(2.2)' });
+        }
         setTimeout(() => { btn.innerHTML = ICON_COPY; }, 2000);
     }).catch(() => {
         btn.style.opacity = '1';
@@ -64,3 +59,113 @@ function copyCode(btn) {
         setTimeout(() => { btn.title = ''; }, 2000);
     });
 }
+
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+    root.classList.toggle('dark');
+    localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+    updateGiscusTheme();
+    if (typeof gsap !== 'undefined' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.fromTo('#themeToggle', { rotation: -90 }, { rotation: 0, duration: 0.6, ease: 'back.out(1.7)' });
+    }
+});
+
+initGiscus();
+
+// 代码块复制按钮：绑定事件
+document.querySelectorAll('.code-block .copy-btn').forEach((b) => {
+    b.addEventListener('click', () => copyCode(b));
+});
+
+/* ═══════════════════════════════════════════
+   GSAP 动效（文章页）
+   ═══════════════════════════════════════════ */
+(function initArticleAnim() {
+    if (typeof gsap === 'undefined') return;
+    if (window.ScrollToPlugin) gsap.registerPlugin(ScrollToPlugin);
+    gsap.defaults({ ease: 'power3.out', duration: 0.6 });
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const $ = (s) => document.querySelector(s);
+
+    // ── 阅读进度条 ──
+    const prog = document.createElement('div');
+    prog.className = 'read-progress';
+    document.body.appendChild(prog);
+    gsap.set(prog, { scaleX: 0, transformOrigin: 'left center' });
+    const setProg = gsap.quickTo(prog, 'scaleX', { duration: 0.18, ease: 'none' });
+
+    // ── 标题入场 ──
+    const title = $('.article-title');
+    if (title) {
+        if (reduced) {
+            gsap.set(title, { autoAlpha: 1 });
+        } else {
+            gsap.from(title, { yPercent: 28, autoAlpha: 0, duration: 0.7, ease: 'power3.out' });
+        }
+    }
+    if ($('.article-meta') && !reduced) {
+        gsap.from('.article-meta', { y: 14, autoAlpha: 0, duration: 0.5, delay: 0.18 });
+    }
+
+    // ── 正文逐块进入视口浮现 ──
+    const blocks = Array.prototype.slice.call(
+        document.querySelectorAll('.article-body > p, .article-body > h2, .article-body > h3, .article-body > blockquote, .article-body > ul, .article-body > ol, .article-body > pre, .article-body > .code-block, .article-body > table, .article-body > hr')
+    );
+
+    if (reduced || !('IntersectionObserver' in window)) {
+        gsap.set(blocks, { autoAlpha: 1 });
+    } else {
+        gsap.set(blocks, { autoAlpha: 0, y: 26 });
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                // 同一批进入的元素做轻微错峰
+                const delay = Math.min(0.12, (el.__ioIndex || 0) * 0.03);
+                gsap.to(el, { autoAlpha: 1, y: 0, duration: 0.6, delay, ease: 'power3.out', overwrite: 'auto' });
+                io.unobserve(el);
+            });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+        blocks.forEach((el, i) => { el.__ioIndex = i % 6; io.observe(el); });
+    }
+
+    // ── 图片载入淡入 ──
+    document.querySelectorAll('.article-body img').forEach((img) => {
+        if (img.complete) return;
+        img.style.opacity = '0';
+        img.addEventListener('load', () => {
+            if (typeof gsap !== 'undefined' && !reduced) gsap.to(img, { opacity: 1, duration: 0.6 });
+            else img.style.opacity = '1';
+        });
+    });
+
+    // ── 返回顶部按钮 ──
+    const btt = document.createElement('button');
+    btt.className = 'back-to-top';
+    btt.type = 'button';
+    btt.setAttribute('aria-label', '返回顶部');
+    btt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+    document.body.appendChild(btt);
+    gsap.set(btt, { autoAlpha: 0, scale: 0.6, y: 10 });
+
+    btt.addEventListener('click', () => {
+        if (window.ScrollToPlugin) gsap.to(window, { duration: 0.8, scrollTo: { y: 0 }, ease: 'power2.inOut' });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ── 滚动驱动：进度条 + 返回顶部显隐 ──
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const doc = document.documentElement;
+            const max = doc.scrollHeight - doc.clientHeight;
+            const p = max > 0 ? doc.scrollTop / max : 0;
+            setProg(p);
+            const show = doc.scrollTop > 360;
+            gsap.to(btt, { autoAlpha: show ? 1 : 0, scale: show ? 1 : 0.6, y: show ? 0 : 10, duration: 0.3, overwrite: 'auto' });
+            ticking = false;
+        });
+    }, { passive: true });
+})();
