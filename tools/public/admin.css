@@ -180,35 +180,6 @@ html[data-theme='dark'] .btn-primary {
 }
 .check input { accent-color: var(--accent); width: 14px; height: 14px; }
 
-/* ── 登录 ── */
-.login-view {
-    min-height: 100vh;
-    display: grid; place-items: center;
-    padding: 24px;
-    background: var(--bg);
-}
-.login-card {
-    width: 100%; max-width: 360px;
-    padding: 34px 32px;
-    border-radius: var(--r-lg);
-    background: var(--surface);
-    box-shadow: var(--sh-out-lg);
-    text-align: center;
-}
-.login-logo {
-    width: 62px; height: 62px; margin: 0 auto 14px;
-    display: grid; place-items: center;
-    font-family: var(--display); font-size: 30px;
-    color: #fff;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 5px 5px 14px rgba(249, 115, 22, .35), -4px -4px 12px rgba(255, 255, 255, .6);
-}
-.login-title { margin: 0 0 6px; font-size: 20px; font-weight: 700; }
-.login-hint { margin: 0 0 20px; color: var(--dim); font-size: 12.5px; line-height: 1.7; }
-.login-card .field { margin-bottom: 14px; text-align: center; }
-.login-error { margin: 12px 0 0; min-height: 18px; color: var(--danger); font-size: 12.5px; }
-
 /* ── 骨架 ── */
 .app { display: flex; flex-direction: column; height: 100vh; }
 
@@ -288,6 +259,60 @@ html[data-theme='dark'] .btn-primary {
     background: rgba(90, 106, 122, .12);
 }
 .chip.is-active .chip__count { background: rgba(255, 255, 255, .26); }
+
+/* ── 标签编辑器（文章内）── */
+.tag-editor {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 7px 10px;
+    border-radius: 12px;
+    background: var(--sunken);
+    box-shadow: inset 3px 3px 7px rgba(163,177,198,.5), inset -3px -3px 7px rgba(255,255,255,.6);
+}
+.tag-chips { display: contents; }
+.tag-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 6px 3px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 12px; font-weight: 600;
+}
+.tag-chip__remove {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border: none; border-radius: 50%;
+    background: rgba(180,83,9,.18); color: var(--accent-ink);
+    cursor: pointer; font-size: 13px; line-height: 1;
+}
+.tag-chip__remove:hover { background: var(--danger); color: #fff; }
+.tag-input { flex: 1; min-width: 90px; border: none; background: transparent; box-shadow: none; padding: 4px 2px; }
+
+/* ── 标签管理面板 ── */
+.tag-manager {
+    margin: 0 0 10px; padding: 10px;
+    border-radius: 12px;
+    background: var(--surface-2);
+    box-shadow: inset 3px 3px 7px rgba(163,177,198,.5), inset -3px -3px 7px rgba(255,255,255,.6);
+}
+.tag-manager__list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; max-height: 168px; overflow: auto; }
+.tag-manager__empty { color: var(--muted); font-size: 12px; padding: 2px 0; }
+.tag-manager__item {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 5px 3px 10px; border-radius: 999px;
+    background: var(--surface); color: var(--dim); font-size: 12px;
+    box-shadow: var(--sh-out-sm);
+}
+.tag-manager__del {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border: none; border-radius: 50%;
+    background: rgba(90,106,122,.14); color: var(--dim); cursor: pointer; font-size: 13px; line-height: 1;
+}
+.tag-manager__del:hover { background: var(--danger); color: #fff; }
+.tag-manager__add { display: flex; gap: 6px; }
+.tag-manager__add .field { flex: 1; }
+
+/* ── 文章列表中标签 ── */
+.post-tags { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.post-tag { padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: 10.5px; font-weight: 600; }
 
 .sidebar-head {
     display: flex; align-items: center; justify-content: space-between;
@@ -568,6 +593,7 @@ html[data-theme='dark'] .btn-primary {
 
 /* ── 底部面板 ── */
 .dock {
+    position: relative;
     flex: none;
     display: flex; flex-direction: column;
     height: 190px;
@@ -577,6 +603,18 @@ html[data-theme='dark'] .btn-primary {
 }
 html[data-theme='dark'] .dock { box-shadow: 0 -6px 18px rgba(0, 0, 0, .32); }
 .dock.is-collapsed { height: 36px; }
+
+.dock-resizer {
+    position: absolute;
+    top: -7px;
+    left: 0;
+    right: 0;
+    height: 12px;
+    cursor: row-resize;
+    background: linear-gradient(to bottom, rgba(249, 115, 22, .12), transparent 75%);
+    z-index: 4;
+}
+.dock-resizer:hover { background: linear-gradient(to bottom, rgba(249, 115, 22, .18), transparent 75%); }
 
 .dock-tabs {
     display: flex; align-items: center; gap: 6px;

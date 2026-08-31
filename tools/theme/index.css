@@ -260,18 +260,10 @@ body { background: #d8dde6; }
     font-size: .875rem; color: #94a3b8;
 }
 
-.article-card[data-category].is-hidden { display: none; }
+.article-card.is-hidden { display: none; }
 .year-section.is-hidden { display: none; }
 
-.cat-tag {
-    display: inline-block;
-    margin: 0 0 .5rem;
-    padding: .1rem .6rem;
-    font-size: .6875rem; font-weight: 500; letter-spacing: .02em;
-    color: #b45309; background: rgba(249,115,22,.12);
-    border-radius: 9999px;
-}
-.dark .cat-tag { color: #fdba74; background: rgba(249,115,22,.16); }
+
 
 /* ═══════════════════════════════════════════
    返回顶部（GSAP 控制显隐 + 滚动）

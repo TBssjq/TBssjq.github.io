@@ -65,7 +65,6 @@ function parsePost(file) {
     dateTag: meta.dateTag || (month + '月' + day + '日'),
     slug: meta.slug || base,
     excerpt: excerpt,
-    category: String(meta.category || '').trim().slice(0, 40) || (cfg.defaultCategory || '未分类'),
     tags: splitTags(meta.tags),
     markdown: body,
     // 兼容早期手写页面的排版细节
@@ -74,11 +73,13 @@ function parsePost(file) {
   };
 }
 
-// 汇总分类（按篇数降序、同篇数按名称升序）
-function collectCategories(posts) {
+// 汇总标签（按篇数降序、同篇数按名称升序）
+function collectTags(posts) {
   const map = new Map();
   posts.forEach(function (p) {
-    map.set(p.category, (map.get(p.category) || 0) + 1);
+    (p.tags || []).forEach(function (t) {
+      map.set(t, (map.get(t) || 0) + 1);
+    });
   });
   return Array.from(map.entries())
     .map(function (e) { return { name: e[0], count: e[1] }; })
@@ -154,8 +155,8 @@ function build() {
       return { name: y, posts: groups[y] };
     });
 
-  const categories = collectCategories(posts);
-  writeHtml(path.join(cfg.outputDir, 'index.html'), tpl.indexPage(cfg, years, categories));
+  const tags = collectTags(posts);
+  writeHtml(path.join(cfg.outputDir, 'index.html'), tpl.indexPage(cfg, years, tags));
   console.log('  生成目录: index.html');
 
   copyTheme();

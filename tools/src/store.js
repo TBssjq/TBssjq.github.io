@@ -77,7 +77,7 @@ function parseRaw(file) {
   return { meta: meta, body: body };
 }
 
-const FM_ORDER = ['title', 'date', 'slug', 'dateTag', 'category', 'tags', 'excerpt'];
+const FM_ORDER = ['title', 'date', 'slug', 'dateTag', 'tags', 'excerpt'];
 
 function serialize(meta, body) {
   const lines = ['---'];
@@ -135,17 +135,59 @@ function normalizeTags(value) {
   return out.slice(0, 20);
 }
 
-function normalizeCategory(value) {
-  const s = String(value || '').trim().slice(0, 40);
-  return s || cfg.defaultCategory || '未分类';
-}
-
-// 从 frontmatter 里读出 category / tags（兼容旧文章：没有就是默认分类、空标签）
+// 从 frontmatter 里读出 tags（兼容旧文章：没有就是空标签）
 function taxonomy(meta) {
   return {
-    category: normalizeCategory(meta.category),
     tags: normalizeTags(meta.tags),
   };
+}
+
+// ── 标签池：持久化在 tools/tags.json，支持后台「添加 / 删除标签」管理 ──
+const TAGS_FILE = path.join(__dirname, '..', 'tags.json');
+
+function readTagPool() {
+  try {
+    const arr = JSON.parse(fs.readFileSync(TAGS_FILE, 'utf8'));
+    if (Array.isArray(arr)) return arr.filter(function (t) { return typeof t === 'string'; });
+  } catch (e) { /* 文件不存在或损坏时用空池 */ }
+  return [];
+}
+
+function writeTagPool(names) {
+  fs.writeFileSync(TAGS_FILE, JSON.stringify(Array.from(new Set(names)), null, 2) + '\n', 'utf8');
+}
+
+// 校验并加入标签池（已存在则幂等），返回规范化后的名称
+function addTag(name) {
+  const s = String(name || '').trim();
+  if (!s || s.length > 40) throw new StoreError('标签名无效（1–40 字）', 400);
+  const pool = readTagPool();
+  if (pool.indexOf(s) === -1) {
+    pool.push(s);
+    writeTagPool(pool);
+  }
+  return s;
+}
+
+// 删除标签：同时从标签池与所有文章里摘掉它，返回受影响文章数
+function deleteTag(name) {
+  const s = String(name || '').trim();
+  if (!s) throw new StoreError('标签名无效', 400);
+  writeTagPool(readTagPool().filter(function (t) { return t !== s; }));
+  let n = 0;
+  list().forEach(function (p) {
+    const file = postFile(p.year, p.slug);
+    const parsed = parseRaw(file);
+    const cur = normalizeTags(parsed.meta.tags);
+    if (cur.indexOf(s) === -1) return;
+    const tags = cur.filter(function (t) { return t !== s; });
+    const meta = Object.assign({}, parsed.meta);
+    if (tags.length) meta.tags = tags; else delete meta.tags;
+    fs.writeFileSync(file, serialize(meta, parsed.body), 'utf8');
+    n++;
+  });
+  invalidateList();
+  return n;
 }
 
 function removeOutput(year, slug) {
@@ -204,7 +246,6 @@ function list() {
         date: parsed.meta.date || entry.name + '-01-01',
         dateTag: parsed.meta.dateTag || '',
         excerpt: parsed.meta.excerpt || '',
-        category: normalizeCategory(parsed.meta.category),
         tags: normalizeTags(parsed.meta.tags),
         updatedAt: stat.mtime.toISOString(),
         size: stat.size,
@@ -218,20 +259,6 @@ function list() {
   });
   listCache = { at: now, value: value };
   return value;
-}
-
-// 汇总全站分类（含每类篇数），供后台侧栏与目录页筛选条使用
-function listCategories() {
-  const map = new Map();
-  list().forEach(function (p) {
-    const cur = map.get(p.category) || { name: p.category, count: 0 };
-    cur.count += 1;
-    map.set(p.category, cur);
-  });
-  return Array.from(map.values()).sort(function (a, b) {
-    if (b.count !== a.count) return b.count - a.count;
-    return a.name < b.name ? -1 : 1;
-  });
 }
 
 // 汇总全站标签
@@ -262,7 +289,6 @@ function read(year, slug) {
     date: parsed.meta.date || year + '-01-01',
     dateTag: parsed.meta.dateTag || '',
     excerpt: parsed.meta.excerpt || '',
-    category: tax.category,
     tags: tax.tags,
     body: parsed.body,
   };
@@ -286,7 +312,6 @@ function create(data) {
     date: date,
     slug: slug,
     dateTag: String(data.dateTag || '').trim() || dateTagOf(date),
-    category: normalizeCategory(data.category),
   };
   const tags = normalizeTags(data.tags);
   if (tags.length) meta.tags = tags;
@@ -319,7 +344,6 @@ function save(year, slug, data) {
     date: date,
     slug: targetSlug,
     dateTag: String(data.dateTag || '').trim() || dateTagOf(date),
-    category: normalizeCategory(data.category),
   };
   const tags = normalizeTags(data.tags);
   if (tags.length) meta.tags = tags;
@@ -413,8 +437,10 @@ function build() {
 module.exports = {
   StoreError: StoreError,
   list: list,
-  listCategories: listCategories,
   listTags: listTags,
+  readTagPool: readTagPool,
+  addTag: addTag,
+  deleteTag: deleteTag,
   read: read,
   create: create,
   save: save,
@@ -425,6 +451,5 @@ module.exports = {
   parseRaw: parseRaw,
   serialize: serialize,
   normalizeTags: normalizeTags,
-  normalizeCategory: normalizeCategory,
   invalidateList: invalidateList,
 };

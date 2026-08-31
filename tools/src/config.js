@@ -26,9 +26,6 @@ module.exports = {
   // 没有文章、但想在目录页占位的年份（"即将发布"占位卡）
   comingYears: ['2025'],
 
-  // 分类：文章 frontmatter 里 category 为空时归入此类
-  defaultCategory: '未分类',
-
   // 仓库根目录（一键 Git 同步的作用范围）
   repoRoot: path.join(TOOLS_DIR, '..'),
 
@@ -43,14 +40,10 @@ module.exports = {
   // ── 在线后台（Node 服务，见 src/server.js）──
   admin: {
     port: Number(process.env.ADMIN_PORT || 4321),
-    // 默认只监听回环地址。要对外暴露必须显式 ADMIN_HOST=0.0.0.0，
-    // 且务必套一层 HTTPS 反向代理 —— 明文 HTTP 下口令与会话 cookie 等于裸奔。
+    // 默认只监听回环地址。要对外暴露必须显式 ADMIN_HOST=0.0.0.0
     host: process.env.ADMIN_HOST || '127.0.0.1',
-    sessionTTL: Number(process.env.ADMIN_SESSION_TTL || 28800),          // 8 小时
     maxBodyBytes: Number(process.env.ADMIN_MAX_BODY || 12 * 1024 * 1024),
     maxImageBytes: Number(process.env.ADMIN_MAX_IMAGE || 5 * 1024 * 1024),
-    maxLoginAttempts: Number(process.env.ADMIN_MAX_LOGIN || 8),
-    loginWindowMs: 10 * 60 * 1000,
   },
 
   // ── 一键 Git 同步（见 src/git.js）──

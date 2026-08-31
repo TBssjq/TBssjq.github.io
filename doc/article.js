@@ -1,9 +1,35 @@
+function safeStorageGet(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (error) {
+        return null;
+    }
+}
+
+function safeStorageSet(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        // 私有模式 / 禁用 storage 时忽略，页面仍然可用
+    }
+}
+
+function safeMatchMedia(query) {
+    try {
+        return typeof matchMedia === 'function' && matchMedia(query).matches;
+    } catch (error) {
+        return false;
+    }
+}
+
 // 用户没手动选过时，跟随系统暗色偏好
 const root = document.documentElement;
-const stored = localStorage.getItem('theme');
-if (stored === 'dark' || (!stored && matchMedia('(prefers-color-scheme: dark)').matches)) {
+const stored = safeStorageGet('theme');
+if (stored === 'dark' || (!stored && safeMatchMedia('(prefers-color-scheme: dark)'))) {
     root.classList.add('dark');
 }
+
+const isFilePage = typeof location !== 'undefined' && location.protocol === 'file:';
 
 // 评论区主题跟着站点手动暗色开关走（giscus 是跨域 iframe，只能靠 postMessage 同步）
 const GISCUS_LIGHT = 'https://TBssjq.github.io/giscus-light.css';
@@ -11,14 +37,15 @@ const GISCUS_DARK = 'https://TBssjq.github.io/giscus-dark.css';
 const giscusTheme = () => root.classList.contains('dark') ? GISCUS_DARK : GISCUS_LIGHT;
 
 function updateGiscusTheme() {
+    if (isFilePage) return;
     document.querySelector('iframe.giscus-frame')
         ?.contentWindow
         ?.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, 'https://giscus.app');
 }
 
-// 没有 .giscus 挂载点（比如编辑器页）就不加载评论
+// 没有 .giscus 挂载点、或本地 file:// 页面都不加载评论，避免跨域/权限错误
 function initGiscus() {
-    if (!document.querySelector('.giscus')) return;
+    if (isFilePage || !document.querySelector('.giscus')) return;
     const s = document.createElement('script');
     s.src = 'https://giscus.app/client.js';
     s.async = true;
@@ -62,9 +89,9 @@ function copyCode(btn) {
 
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     root.classList.toggle('dark');
-    localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+    safeStorageSet('theme', root.classList.contains('dark') ? 'dark' : 'light');
     updateGiscusTheme();
-    if (typeof gsap !== 'undefined' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (typeof gsap !== 'undefined' && !safeMatchMedia('(prefers-reduced-motion: reduce)')) {
         gsap.fromTo('#themeToggle', { rotation: -90 }, { rotation: 0, duration: 0.6, ease: 'back.out(1.7)' });
     }
 });
@@ -84,7 +111,7 @@ document.querySelectorAll('.code-block .copy-btn').forEach((b) => {
     if (window.ScrollToPlugin) gsap.registerPlugin(ScrollToPlugin);
     gsap.defaults({ ease: 'power3.out', duration: 0.6 });
 
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = safeMatchMedia('(prefers-reduced-motion: reduce)');
     const $ = (s) => document.querySelector(s);
 
     // ── 阅读进度条 ──

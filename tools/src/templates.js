@@ -133,7 +133,6 @@ function articleMeta(post) {
   }).join('\n');
   return [
     '                <p class="article-meta">',
-    '                    <span class="cat-tag">' + md.escapeHtml(post.category) + '</span>',
     tags,
     '                    <span class="meta-date">' + md.escapeHtml(post.dateTag) + '</span>',
     '                </p>',
@@ -200,12 +199,15 @@ function articlePage(cfg, post, htmlBody) {
 }
 
 function articleCard(year, post) {
+  const tags = (post.tags || []).map(function (t) {
+    return '<span class="tag-chip">' + md.escapeHtml(t) + '</span>';
+  }).join(' ');
   return [
-    '                        <article class="article-card" data-category="' + md.escapeHtml(post.category) + '">',
+    '                        <article class="article-card" data-tags="' + md.escapeHtml((post.tags || []).join(' ')) + '">',
     '                            <a href="' + year + '/' + post.slug + '.html" target="_blank" rel="noopener noreferrer">',
     '                                <div class="card-row">',
     '                                    <div class="card-body">',
-    '                                        <span class="cat-tag">' + md.escapeHtml(post.category) + '</span>',
+    tags,
     '                                        <h3 class="article-card__title">' + md.escapeHtml(post.title) + '</h3>',
     '                                        <p class="article-card__excerpt">' + md.escapeHtml(post.excerpt) + '</p>',
     '                                    </div>',
@@ -227,9 +229,9 @@ function yearSection(year, posts) {
   ].join('\n');
 }
 
-// 分类筛选条：纯静态输出，交互由 theme/index.js 负责（无内联脚本）
-function filterBar(categories) {
-  const total = categories.reduce(function (n, c) { return n + c.count; }, 0);
+// 标签筛选条：纯静态输出，交互由 theme/index.js 负责（无内联脚本）
+function filterBar(tags) {
+  const total = tags.reduce(function (n, c) { return n + c.count; }, 0);
   const chip = function (value, label, count, active) {
     return [
       '                    <button class="filter-chip' + (active ? ' is-active' : '') + '" type="button" data-filter="' + md.escapeHtml(value) + '">',
@@ -239,13 +241,13 @@ function filterBar(categories) {
     ].join('\n');
   };
   const chips = [chip('__all__', '全部', total, true)].concat(
-    categories.map(function (c) { return chip(c.name, c.name, c.count, false); })
+    tags.map(function (c) { return chip(c.name, c.name, c.count, false); })
   );
   return [
-    '            <nav class="filter-bar" aria-label="按分类筛选">',
+    '            <nav class="filter-bar" aria-label="按标签筛选">',
     chips.join('\n'),
     '            </nav>',
-    '            <p class="filter-empty" id="filterEmpty" hidden>该分类下还没有文章</p>',
+    '            <p class="filter-empty" id="filterEmpty" hidden>该标签下还没有文章</p>',
   ].join('\n');
 }
 
@@ -268,13 +270,13 @@ function comingSection(year) {
   ].join('\n');
 }
 
-function indexPage(cfg, years, categories) {
+function indexPage(cfg, years, tags) {
   const sections = years
     .map(function (y) { return yearSection(y.name, y.posts); })
     .concat((cfg.comingYears || []).map(comingSection))
     .join('\n\n');
 
-  const bar = (categories && categories.length) ? filterBar(categories) : null;
+  const bar = (tags && tags.length) ? filterBar(tags) : null;
 
   return [
     '<!DOCTYPE html>',

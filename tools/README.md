@@ -39,7 +39,7 @@ cd tools
 npm run admin
 ```
 
-终端会打印后台地址（默认 <http://127.0.0.1:4321/admin/>）和管理口令，并自动打开浏览器。
+终端会打印后台地址（默认 <http://127.0.0.1:4321/admin/>），并自动打开浏览器。
 
 | 命令 | 说明 |
 | --- | --- |
@@ -47,13 +47,6 @@ npm run admin
 | `npm run serve` | 启动后台但不打开浏览器 |
 | `npm run build` | 只构建，生成 `doc/` |
 | `npm run verify` | 校验生成结果与 `doc/` 是否逐字节一致 |
-
-首次启动会**随机生成管理口令**并打印到终端，同时存入 `tools/.admin-token`（已被 `.gitignore` 排除）。
-忘了口令，删掉这个文件重启就会重新生成；也可以显式指定：
-
-```bash
-ADMIN_TOKEN=my-secret npm run serve
-```
 
 ---
 
@@ -70,7 +63,6 @@ tools/
 │   ├── build.js          # 主构建：扫描 posts → 渲染 → 复制主题 → 输出 doc/
 │   ├── store.js          # 存储层：后台唯一接触 posts/ 的模块（含路径穿越校验）
 │   ├── git.js            # Git 封装：状态 / 提交 / 变基拉取 / 推送
-│   ├── auth.js           # 后台鉴权：口令校验 / 会话 / 登录限速
 │   ├── server.js         # 在线后台：零依赖 HTTP 服务（预览 + 后台 UI + REST API）
 │   ├── new-post.js       # 命令行新建文章
 │   ├── remove-post.js    # 命令行删除文章
@@ -139,23 +131,21 @@ tools/
 
 ## 分类与标签
 
-分类写在 frontmatter 里，构建后会体现在三处：
+标签写在 frontmatter 里，构建后会体现在三处：
 
 ```markdown
 ---
 title: 夏天的风
 date: 2026-08-01
-category: 随笔          # 省略则归入「未分类」
 tags: 夏天, 海, 随笔     # 逗号、顿号、空格分隔都支持
 ---
 ```
 
-1. **后台侧栏**：按分类筛选文章，chip 上带篇数
-2. **目录页**：顶部生成分类筛选条，点击即筛选，空的年份段会自动折叠；支持 `#分类名` 直达
-3. **文章页**：标题下方显示分类徽标与标签
+1. **后台侧栏**：按标签筛选文章，chip 上带篇数；点「管理」可新建标签、删除标签（删除会同时从其所有文章中移除）
+2. **目录页**：顶部生成标签筛选条，点击即筛选，空的年份段会自动折叠；支持 `#标签名` 直达
+3. **文章页**：标题下方显示标签 chips
 
-`config.js` 里的 `defaultCategory` 控制缺省分类名（默认 `未分类`）。
-分类是自由文本，不用预先注册 —— 后台输入框会自动联想已用过的分类。
+标签是自由文本，不用预先注册 —— 后台「标签管理」可新建标签，编辑器输入框会自动联想已用过的标签。
 
 ---
 
@@ -223,11 +213,11 @@ $env:BLOG_OUT=".preview"; npm run build
 
 ```bash
 node src/new-post.js --title "夏天的风" --date 2026-08-01 \
-  --category 随笔 --tags "夏天,海" \
+  --tags "夏天,海" \
   --image "D:\pics\sea.png|海边的傍晚"
 ```
 
-可用参数：`--title` `--date` `--slug` `--tag` `--category` `--tags` `--body` `--excerpt`，
+可用参数：`--title` `--date` `--slug` `--tags` `--body` `--excerpt`，
 可重复的 `--image "路径|图注"`，以及 `--open`。
 
 ### 删除文章
@@ -251,7 +241,6 @@ title: 文章标题
 date: 2026-08-01
 dateTag: 8月1日          # 目录卡片上的日期标签，可省略（默认从 date 推导）
 slug: 8.01               # 输出文件名，可省略（默认用文件名）
-category: 随笔            # 分类，可省略（默认「未分类」）
 tags: 夏天, 海            # 标签，可省略
 excerpt: 覆盖摘要          # 可省略，默认取正文前 15 字
 titleSuffix: none        # 可选：<title> 不追加站点名
@@ -341,19 +330,19 @@ console.log('代码块');
 
 ## HTTP 接口
 
-全部为 JSON，未登录一律 `401`。写接口强制 `Content-Type: application/json`。
+全部为 JSON。写接口强制 `Content-Type: application/json`。
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| POST | `/api/login` | 登录，成功下发会话 cookie |
-| POST | `/api/logout` | 登出 |
-| GET | `/api/session` | 查询登录态与站点 / Git 配置 |
+| GET | `/api/session` | 查询站点 / Git 配置（无需登录） |
 | GET | `/api/posts` | 文章列表（含分类、标签） |
 | POST | `/api/posts` | 新建 |
 | GET | `/api/posts/<year>/<slug>` | 读取 |
-| PUT | `/api/posts/<year>/<slug>` | 保存（可改 slug / 日期 / 分类） |
+| PUT | `/api/posts/<year>/<slug>` | 保存（可改 slug / 日期 / 标签） |
 | DELETE | `/api/posts/<year>/<slug>` | 删除源文件与产物 |
-| GET | `/api/categories` | 全站分类与标签（含篇数） |
+| GET | `/api/tags` | 全站标签（含篇数）+ 标签池 |
+| POST | `/api/tags` | 新建标签（body: `{ name }`） |
+| DELETE | `/api/tags` | 删除标签（body: `{ name }`，同步从其所有文章中移除） |
 | POST | `/api/preview` | Markdown 渲染预览 |
 | POST | `/api/build` | 触发构建，返回耗时与日志 |
 | GET | `/api/git/status` | 分支 / 上游 / ahead-behind / 改动文件 |
@@ -385,14 +374,10 @@ console.log('代码块');
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `ADMIN_TOKEN` | 首次运行随机生成 | 管理口令 |
 | `ADMIN_PORT` | `4321` | 监听端口 |
 | `ADMIN_HOST` | `127.0.0.1` | **要对外访问必须显式设为 `0.0.0.0`** |
-| `ADMIN_SECURE_COOKIE` | 关闭 | 设为 `1` 给会话 cookie 加 `Secure`（走 HTTPS 时必须开） |
-| `ADMIN_SESSION_TTL` | `28800`（8 小时） | 会话有效期（秒），滑动续期 |
 | `ADMIN_MAX_BODY` | `12582912`（12 MB） | 请求体上限 |
 | `ADMIN_MAX_IMAGE` | `5242880`（5 MB） | 单张图片上限 |
-| `ADMIN_MAX_LOGIN` | `8` | 登录失败次数上限（超出限速 10 分钟） |
 | `ADMIN_GIT` | `1` | 设为 `0` 关闭后台 Git 功能 |
 | `GIT_REMOTE` | `origin` | 远程仓库名 |
 | `GIT_BRANCH` | 当前分支 | 推送目标分支 |
@@ -407,17 +392,13 @@ console.log('代码块');
 ## 安全设计
 
 - **默认只监听 `127.0.0.1`**，对外暴露需显式 `ADMIN_HOST=0.0.0.0`，且务必套 HTTPS 反向代理
-- 口令不硬编码；首次运行随机生成，用 `crypto.timingSafeEqual` 做定长防时序比较
-- 会话 cookie：`HttpOnly` + `SameSite=Strict`；服务端只存随机 sid，重启即失效
-- **CSRF**：所有写接口强制 `Content-Type: application/json`，配合 `SameSite=Strict`，
-  跨站表单既发不出 JSON 也带不上 cookie
+- **CSRF**：所有写接口强制 `Content-Type: application/json`，跨站表单发不出 JSON 即无法提交
 - **命令注入**：Git 全部走 `execFileSync('git', [args])`，不经 shell、不拼命令行字符串；
   提交信息还会额外过滤控制字符并截断到 300 字
 - **路径穿越**：所有文件路径经 `store.js` 的 `safeJoin()` 校验；
   年份限 `\d{4}`、slug 限 `[A-Za-z0-9._-]` 且不能以点开头
 - **后台 CSP**：`default-src 'self'`，仅放行 Google Fonts；无内联脚本 / 样式
 - 上传文件校验扩展名白名单与大小上限
-- 登录失败超过阈值即限速
 
 ---
 
@@ -460,14 +441,11 @@ HTTPS 远程需要凭证管理器或 Personal Access Token；更省事的做法�
 **`npm run build` 之后 `npm run verify` 报差异？**
 说明你改过 `theme/` 或 `templates.js` 但没重新构建。跑一次 `npm run build` 即可。
 
-**忘了管理口令？**
-删除 `tools/.admin-token` 重启服务，会重新生成一个。
-
 ---
 
 ## 自定义
 
-- 改 `src/config.js`：站点标题、目录文案、`comingYears`、`defaultCategory`、
+- 改 `src/config.js`：站点标题、目录文案、`comingYears`、
   Giscus 仓库配置、Git 行为
 - 改 `theme/` 下的 css/js 调整博客外观与交互；构建时自动同步到 `doc/`
 - 改 `public/admin.css` 的 `:root` / `html[data-theme='dark']` 变量调整后台配色

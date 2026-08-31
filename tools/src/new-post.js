@@ -6,7 +6,7 @@
 // 用法：
 //   node src/new-post.js                                  # 交互式问答
 //   node src/new-post.js --title "标题" --date 2026-08-01  # 参数式
-//   参数式可选： --slug 8.1 --excerpt "摘要(覆盖自动前15字)" --tag "8月1日"
+//   参数式可选： --slug 8.1 --excerpt "摘要(覆盖自动前15字)" --tags "夏天, 海"
 //               --image "D:\pic\a.png"                    # 可重复多次
 //               --image "D:\pic\b.png|图片说明"            # 竖线后为图注
 //               --open                                    # 创建后用系统默认程序打开
@@ -102,6 +102,7 @@ function buildMarkdown(meta, imageBlocks) {
     'dateTag: ' + meta.dateTag,
   ];
   if (meta.excerpt) fm.push('excerpt: ' + meta.excerpt); // 不写则构建时自动取正文前 15 字
+  if (meta.tags && meta.tags.length) fm.push('tags: ' + meta.tags.join(', '));
   fm.push('---', '');
 
   const body = [];
@@ -182,9 +183,12 @@ async function main() {
     }
   });
 
+  const tags = (args.tags ? String(args.tags) : '')
+    .split(/[,，、\s]+/).map(function (t) { return t.trim(); })
+    .filter(function (t) { return t && t.length <= 40; });
   const content = buildMarkdown({
     title: title, date: date, slug: slug, dateTag: dateTag,
-    excerpt: excerpt, body: args.body,
+    excerpt: excerpt, tags: tags, body: args.body,
   }, imageBlocks);
 
   fs.writeFileSync(target, content, 'utf8');

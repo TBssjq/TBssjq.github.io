@@ -107,18 +107,11 @@
             float: none !important;
             margin: 0 !important;
         }
-        /* 标题下方的分类 / 标签 / 日期 */
+        /* 标题下方的标签 / 日期 */
         .article-meta {
             display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
             gap: .5rem; margin: -1rem 0 2.5rem; text-align: center;
         }
-        .cat-tag {
-            padding: .18rem .7rem;
-            font-size: .75rem; font-weight: 500;
-            color: #b45309; background: rgba(249,115,22,.12);
-            border-radius: 9999px;
-        }
-        .dark .cat-tag { color: #fdba74; background: rgba(249,115,22,.18); }
         .tag-chip {
             padding: .18rem .6rem;
             font-size: .75rem;

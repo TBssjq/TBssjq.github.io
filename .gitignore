@@ -46,6 +46,7 @@ tools/.verify-preview/   # verify 脚本的临时比对目录（不入库）
 tools/.d*.txt            # 临时差异对比文件
 tools/.tmp*              # 临时测试产物
 tools/.admin-token       # 后台管理口令（凭证，绝不入库）
+tools/tags.json          # 标签池（运行时生成）
 
 # Live2D cache
 Live2D/

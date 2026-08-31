@@ -3,20 +3,18 @@
 // 零依赖 Node 后台服务。
 //
 //   /            静态预览：直接托管 cfg.outputDir（默认仓库 doc/）
-//   /admin/      后台 UI（登录后可管理文章、上传图片、一键构建）
+//   /admin/      后台 UI（可直接管理文章、上传图片、一键构建）
 //   /api/*       REST 接口，全部为 JSON
 //
 // 用法：
 //   node src/server.js
 //   ADMIN_PORT=8080 node src/server.js
-//   ADMIN_HOST=0.0.0.0 ADMIN_SECURE_COOKIE=1 node src/server.js   # 对外暴露（务必套 HTTPS）
-//   ADMIN_TOKEN=xxx node src/server.js                            # 显式指定口令
+//   ADMIN_HOST=0.0.0.0 node src/server.js   # 对外暴露（监听所有网卡）
 //
 // 安全默认值：
 //   · 只监听 127.0.0.1，要对外必须显式设置 ADMIN_HOST
-//   · 口令首次启动随机生成，存 tools/.admin-token（权限 0600），不在代码里留后门口令
-//   · 会话 cookie: HttpOnly + SameSite=Strict；写接口只接受 application/json（天然挡住跨站表单 CSRF）
-//   · 登录失败超过阈值即限速；所有文件路径都过 store.js 的穿越校验
+//   · 写接口只接受 application/json（配合 CSP 的 form-action 'none'，挡住跨站表单提交）
+//   · 所有文件路径都过 store.js 的穿越校验，杜绝 ../ 越界
 
 const http = require('http');
 const fs = require('fs');
@@ -26,7 +24,6 @@ const crypto = require('crypto');
 const { execFile } = require('child_process');
 const cfg = require('./config');
 const store = require('./store');
-const auth = require('./auth');
 const git = require('./git');
 const { render } = require('./markdown');
 
@@ -177,13 +174,6 @@ async function readJson(req) {
   }
 }
 
-/* ── 会话 ── */
-
-function currentSession(req) {
-  const cookies = auth.parseCookies(req.headers.cookie);
-  return auth.getSession(cookies[auth.COOKIE_NAME]);
-}
-
 /* ── 静态资源：ETag 协商缓存 + gzip/brotli 压缩 ── */
 
 // 只压缩文本类资源，且只对有收益的体积动手
@@ -267,7 +257,9 @@ function serveAdminAsset(req, res, name) {
     // 后台页面启用严格 CSP：所有脚本/样式都来自同域文件，无内联代码。
     // 仅放行 Google Fonts（与博客同源的 Noto Serif SC / ZCOOL KuaiLe），
     // 加载失败会自动回落到系统字体，不影响功能。
-    'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+    // 后台依赖 GSAP / 运行时动画产生的内联 style；保留同源脚本与字体，只放开必要的内联样式，
+    // 这样仍可阻止第三方脚本和跨站表单，同时避免界面被动画/状态样式阻塞。
+    'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
   });
 }
 
@@ -280,35 +272,6 @@ function serveSite(req, res, pathname) {
 }
 
 /* ── API ── */
-
-async function apiLogin(req, res) {
-  const ip = req.socket.remoteAddress || 'unknown';
-  if (auth.lockedOut(ip)) {
-    return sendJson(res, 429, { error: '尝试次数过多，请稍后再试' });
-  }
-
-  let payload;
-  try {
-    payload = await readJson(req);
-  } catch (e) {
-    return sendJson(res, e.status || 400, { error: e.message });
-  }
-
-  if (!auth.verifyToken(payload.token)) {
-    auth.recordFailure(ip);
-    return sendJson(res, 401, { error: '口令不正确' });
-  }
-
-  auth.clearAttempts(ip);
-  const sid = auth.createSession(ip, req.headers['user-agent']);
-  return sendJson(res, 200, { ok: true }, { 'Set-Cookie': auth.sessionCookie(sid) });
-}
-
-function apiLogout(req, res) {
-  const cookies = auth.parseCookies(req.headers.cookie);
-  auth.destroySession(cookies[auth.COOKIE_NAME]);
-  return sendJson(res, 200, { ok: true }, { 'Set-Cookie': auth.CLEAR_COOKIE });
-}
 
 async function apiCreatePost(req, res) {
   const data = await readJson(req);
@@ -429,21 +392,9 @@ const IMAGE_ROUTE = /^\/api\/images\/(\d{4})$/;
 async function handleApi(req, res, pathname) {
   const method = req.method;
 
-  if (pathname === '/api/login') {
-    if (method !== 'POST') return sendJson(res, 405, { error: '方法不允许' });
-    return apiLogin(req, res);
-  }
-  if (pathname === '/api/logout') {
-    if (method !== 'POST') return sendJson(res, 405, { error: '方法不允许' });
-    return apiLogout(req, res);
-  }
   if (pathname === '/api/session') {
-    const session = currentSession(req);
     return sendJson(res, 200, {
-      ok: !!session,
-      // 首次进入后台时提示口令文件的来源
-      tokenSource: auth.token.source,
-      tokenGenerated: auth.token.generated,
+      ok: true,
       outputDir: path.resolve(cfg.outputDir),
       postsDir: path.resolve(cfg.postsDir),
       git: {
@@ -452,17 +403,12 @@ async function handleApi(req, res, pathname) {
         remote: cfg.git.remote,
         push: !!cfg.git.push,
         defaultMessage: cfg.git.enabled ? git.defaultMessage() : '',
-        defaultCategory: cfg.defaultCategory || '未分类',
+        identity: cfg.git.enabled ? git.identity() : { name: '', email: '' },
       },
     });
   }
 
-  // 以下接口全部要求已登录
-  if (!currentSession(req)) {
-    return sendJson(res, 401, { error: '未登录或会话已过期' });
-  }
-
-  // 写操作必须是 JSON —— 配合 SameSite=Strict 的 cookie，可挡住跨站表单 CSRF
+  // 后台接口直接放行：进入 admin.html 即可操作，无需任何登录 / 口令
   if (method !== 'GET' && !isJsonRequest(req)) {
     return sendJson(res, 415, { error: '需要 Content-Type: application/json' });
   }
@@ -491,12 +437,22 @@ async function handleApi(req, res, pathname) {
     if (pathname === '/api/preview' && method === 'POST') return await apiPreview(req, res);
     if (pathname === '/api/build' && method === 'POST') return apiBuild(req, res);
 
-    // 分类 / 标签（文章管理用）
-    if (pathname === '/api/categories' && method === 'GET') {
+    // 标签（文章管理用）：tags = 文章中实际使用的标签（含篇数），pool = 标签池（含 0 篇的）
+    if (pathname === '/api/tags' && method === 'GET') {
       return sendJson(res, 200, {
-        categories: store.listCategories(),
         tags: store.listTags(),
+        pool: store.readTagPool(),
       });
+    }
+    if (pathname === '/api/tags' && method === 'POST') {
+      const body = await readJson(req, res);
+      const name = store.addTag(body && body.name);
+      return sendJson(res, 200, { ok: true, name: name });
+    }
+    if (pathname === '/api/tags' && method === 'DELETE') {
+      const body = await readJson(req, res);
+      const n = store.deleteTag(body && body.name);
+      return sendJson(res, 200, { ok: true, name: body && body.name, posts: n });
     }
 
     // Git：一键同步
@@ -558,8 +514,6 @@ function handle(req, res) {
 /* ── 启动 ── */
 
 function start() {
-  auth.startGc();
-
   const server = http.createServer(handle);
 
   server.on('error', function (err) {
@@ -591,19 +545,6 @@ function start() {
       console.log('    Git 同步 : 不可用（当前不是 Git 仓库）');
     }
     console.log('');
-
-    if (auth.token.generated) {
-      console.log('  首次运行，已生成管理口令（仅此一次显示）：');
-      console.log('');
-      console.log('    ' + auth.token.token);
-      console.log('');
-      console.log('  口令已保存到 tools/.admin-token，之后可用 ADMIN_TOKEN 环境变量覆盖。');
-      console.log('');
-    } else {
-      console.log('  管理口令来源: ' + (auth.token.source === 'env' ? '环境变量 ADMIN_TOKEN' : 'tools/.admin-token'));
-      console.log('  忘记口令？删除 tools/.admin-token 重启即会重新生成。');
-      console.log('');
-    }
   });
 
   return server;

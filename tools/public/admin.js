@@ -5,6 +5,19 @@
 
 const $ = id => document.getElementById(id);
 
+function safeStorageGet(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+
+function safeStorageSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (e) { /* 隐私模式忽略 */ }
+}
+
+function safeMatchMedia(query) {
+  try { return typeof matchMedia === 'function' && matchMedia(query).matches; }
+  catch (e) { return false; }
+}
+
 const THEME_KEY = 'blog-admin-theme';
 const DRAFT_PREFIX = 'blog-admin-draft:';
 const SPLIT_KEY = 'blog-admin-split';
@@ -14,9 +27,10 @@ const state = {
   posts: [],
   current: null,          // { year, slug }
   dirty: false,
-  categories: [],
   tags: [],
-  filter: { category: '__all__', query: '' },
+  tagPool: [],
+  currentTags: [],
+  filter: { tag: '__all__', query: '' },
   session: null,
   git: null,
   lastRendered: null,
@@ -77,22 +91,21 @@ const ANIM_ON = typeof gsap !== 'undefined';
 if (ANIM_ON && window.ScrollToPlugin) gsap.registerPlugin(ScrollToPlugin);
 if (ANIM_ON && window.Flip) gsap.registerPlugin(Flip);
 if (ANIM_ON && window.SplitText) gsap.registerPlugin(SplitText);
-const REDUCED = ANIM_ON && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const REDUCED = ANIM_ON && safeMatchMedia('(prefers-reduced-motion: reduce)');
 if (ANIM_ON) gsap.defaults({ ease: 'power3.out', duration: 0.5 });
-
-function animLoginIn() {
-  if (!ANIM_ON || REDUCED) return;
-  gsap.fromTo('.login-card', { y: 26, autoAlpha: 0, scale: 0.96 },
-    { y: 0, autoAlpha: 1, scale: 1, duration: 0.55, ease: 'back.out(1.5)' });
-}
 
 function animAppIn() {
   if (!ANIM_ON || REDUCED) return;
-  const tl = gsap.timeline({ defaults: { duration: 0.5, ease: 'power3.out' } });
-  tl.from('.topbar', { y: -20, autoAlpha: 0 }, 0)
-    .from('.sidebar', { x: -24, autoAlpha: 0 }, 0.05)
-    .from('.editor-pane', { y: 18, autoAlpha: 0 }, 0.12)
-    .from('.dock', { y: 24, autoAlpha: 0 }, 0.16);
+  const tl = gsap.timeline({
+    defaults: { duration: 0.5, ease: 'power3.out' },
+    onComplete: function () {
+      gsap.set(['.topbar', '.sidebar', '.editor-pane', '.dock'], { clearProps: 'transform,opacity' });
+    },
+  });
+  tl.fromTo('.topbar', { y: -20, autoAlpha: 0 }, { y: 0, autoAlpha: 1, clearProps: 'transform,opacity', duration: 0.5, ease: 'power3.out' }, 0)
+    .fromTo('.sidebar', { x: -24, autoAlpha: 0 }, { x: 0, autoAlpha: 1, clearProps: 'transform,opacity', duration: 0.5, ease: 'power3.out' }, 0.05)
+    .fromTo('.editor-pane', { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, clearProps: 'transform,opacity', duration: 0.5, ease: 'power3.out' }, 0.12)
+    .fromTo('.dock', { y: 24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, clearProps: 'transform,opacity', duration: 0.5, ease: 'power3.out' }, 0.16);
 }
 
 function animListIn() {
@@ -122,7 +135,6 @@ async function api(path, options) {
     try { data = await res.json(); } catch (e) { data = null; }
   }
   if (!res.ok) {
-    if (res.status === 401) showLogin();
     const err = new Error((data && data.error) || ('请求失败（' + res.status + '）'));
     err.status = res.status;
     err.detail = data && data.detail ? data.detail : '';
@@ -150,63 +162,134 @@ function currentTheme() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* 隐私模式忽略 */ }
+  safeStorageSet(THEME_KEY, theme);
 }
 
 /* ══════════════════════════════════════════
    视图切换
    ══════════════════════════════════════════ */
 
-function showLogin(info) {
-  els.appView.hidden = true;
-  els.loginView.hidden = false;
-  els.loginHint.textContent = (info && info.tokenGenerated)
-    ? '首次运行：管理口令已打印在启动服务的终端，并保存到 tools/.admin-token'
-    : '管理口令见 tools/.admin-token，或用 ADMIN_TOKEN 环境变量指定';
-  els.tokenInput.focus();
-  animLoginIn();
-}
-
 function showApp() {
-  els.loginView.hidden = true;
   els.appView.hidden = false;
   animAppIn();
 }
+
+
 
 /* ══════════════════════════════════════════
    侧栏：分类筛选 + 搜索 + 文章列表
    ══════════════════════════════════════════ */
 
-function renderCategoryFilter() {
-  const box = els.categoryFilter;
+function renderTagFilter() {
+  const box = els.tagFilter;
+  if (!box) return;
   box.textContent = '';
 
   const makeChip = function (value, label, count) {
     const chip = el('button', 'chip');
     chip.type = 'button';
-    chip.dataset.category = value;
+    chip.dataset.tag = value;
     chip.appendChild(el('span', null, label));
     chip.appendChild(el('span', 'chip__count', count));
-    if (state.filter.category === value) chip.classList.add('is-active');
+    if (state.filter.tag === value) chip.classList.add('is-active');
     chip.addEventListener('click', function () {
-      state.filter.category = value;
-      renderCategoryFilter();
+      state.filter.tag = value;
+      renderTagFilter();
       renderList();
     });
     return chip;
   };
 
   box.appendChild(makeChip('__all__', '全部', state.posts.length));
-  state.categories.forEach(function (c) {
-    box.appendChild(makeChip(c.name, c.name, c.count));
+  state.tags.forEach(function (t) {
+    box.appendChild(makeChip(t.name, t.name, t.count));
   });
 }
 
+// 把一行输入切成一个个标签（按逗号 / 顿号 / 分号），保留空格（标签名可含空格）
+function splitTagInput(s) {
+  return String(s || '').split(/[,，、;；]+/).map(function (t) { return t.trim(); })
+    .filter(function (t) { return t && t.length <= 40; });
+}
+
+// 当前文章的标签 chips
+function renderTagChips() {
+  const box = els.tagChips;
+  if (!box) return;
+  box.textContent = '';
+  state.currentTags.forEach(function (t, i) {
+    const chip = el('span', 'tag-chip');
+    chip.appendChild(document.createTextNode(t));
+    const x = el('button', 'tag-chip__remove', '×');
+    x.type = 'button';
+    x.title = '移除标签';
+    x.addEventListener('click', function () {
+      state.currentTags.splice(i, 1);
+      renderTagChips();
+      setDirty(true);
+    });
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+}
+
+function addTagToPost(raw) {
+  const list = splitTagInput(raw);
+  let added = false;
+  list.forEach(function (t) {
+    if (state.currentTags.indexOf(t) === -1) { state.currentTags.push(t); added = true; }
+  });
+  if (added) { renderTagChips(); setDirty(true); }
+}
+
+// 标签管理面板
+function renderTagManager() {
+  const box = els.tagManagerList;
+  if (!box) return;
+  box.textContent = '';
+  const tags = state.tags.slice().sort(function (a, b) { return a.name < b.name ? -1 : 1; });
+  if (!tags.length) {
+    box.appendChild(el('div', 'tag-manager__empty', '还没有标签'));
+    return;
+  }
+  tags.forEach(function (t) {
+    const item = el('span', 'tag-manager__item');
+    item.appendChild(el('span', null, t.name + (t.count ? ' (' + t.count + ')' : '')));
+    const del = el('button', 'tag-manager__del', '×');
+    del.type = 'button';
+    del.title = '删除标签（同时从其所有文章中移除）';
+    del.addEventListener('click', function () { deleteTagGlobal(t.name); });
+    item.appendChild(del);
+    box.appendChild(item);
+  });
+}
+
+async function addTagGlobal(name) {
+  try {
+    await apiJson('/api/tags', 'POST', { name: name });
+    log('已添加标签：' + name, 'ok');
+    await loadTags();
+  } catch (e) {
+    log('添加标签失败: ' + e.message, 'err');
+  }
+}
+
+async function deleteTagGlobal(name) {
+  if (!confirm('确定删除标签「' + name + '」？\n该标签会从所有文章中一并移除，且不可撤销。')) return;
+  try {
+    await apiJson('/api/tags', 'DELETE', { name: name });
+    log('已删除标签：' + name, 'ok');
+    await Promise.all([loadPosts(), loadTags()]);
+  } catch (e) {
+    log('删除标签失败: ' + e.message, 'err');
+  }
+}
+
 function matchesFilter(p) {
-  if (state.filter.category !== '__all__' && p.category !== state.filter.category) return false;
+  if (state.filter.tag !== '__all__' && (p.tags || []).indexOf(state.filter.tag) === -1) return false;
   const q = state.filter.query.trim().toLowerCase();
   if (!q) return true;
-  return (p.title + ' ' + p.slug + ' ' + p.category + ' ' + p.tags.join(' ') + ' ' + p.excerpt)
+  return (p.title + ' ' + p.slug + ' ' + (p.tags || []).join(' ') + ' ' + p.excerpt)
     .toLowerCase().indexOf(q) !== -1;
 }
 
@@ -241,7 +324,11 @@ function renderList() {
       btn.appendChild(el('span', 'post-item__title', p.title));
 
       const meta = el('span', 'post-item__meta');
-      meta.appendChild(el('span', 'post-cat', p.category));
+      const tags = el('span', 'post-tags');
+      (p.tags || []).forEach(function (t) {
+        tags.appendChild(el('span', 'post-tag', t));
+      });
+      meta.appendChild(tags);
       meta.appendChild(el('span', null, p.date));
       btn.appendChild(meta);
 
@@ -260,36 +347,41 @@ function renderList() {
 async function loadPosts() {
   const data = await api('/api/posts');
   state.posts = (data.posts || []).map(normalizePost);
-  renderCategoryFilter();
+  renderTagFilter();
   renderList();
 }
 
-async function loadTaxonomy() {
+async function loadTags() {
   try {
-    const data = await api('/api/categories');
-    state.categories = data.categories || [];
-    state.tags = data.tags || [];
-  } catch (e) { /* 分类读取失败不阻塞主流程 */ }
-
-  const catList = $('categoryList');
-  catList.textContent = '';
-  state.categories.forEach(function (c) {
-    const opt = document.createElement('option');
-    opt.value = c.name;
-    catList.appendChild(opt);
-  });
+    const data = await api('/api/tags');
+    const used = data.tags || [];          // [{name, count}]
+    const pool = data.pool || [];          // [name]
+    const map = new Map();
+    used.forEach(function (t) { map.set(t.name, t.count); });
+    pool.forEach(function (n) { if (!map.has(n)) map.set(n, 0); });
+    state.tags = Array.from(map.keys()).map(function (n) {
+      return { name: n, count: map.get(n) };
+    }).sort(function (a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.name < b.name ? -1 : 1;
+    });
+    state.tagPool = pool;
+  } catch (e) { /* 标签读取失败不阻塞主流程 */ }
 
   const tagList = $('tagList');
-  tagList.textContent = '';
-  state.tags.slice(0, 60).forEach(function (t) {
-    const opt = document.createElement('option');
-    opt.value = t.name;
-    tagList.appendChild(opt);
-  });
+  if (tagList) {
+    tagList.textContent = '';
+    state.tagPool.forEach(function (t) {
+      const opt = document.createElement('option');
+      opt.value = t;
+      tagList.appendChild(opt);
+    });
+  }
+  renderTagFilter();
+  renderTagManager();
 }
 
 function normalizePost(p) {
-  p.category = p.category || '未分类';
   p.tags = Array.isArray(p.tags) ? p.tags : [];
   return p;
 }
@@ -304,8 +396,8 @@ function fillForm(post) {
   els.fDate.value = post.date || '';
   els.fSlug.value = post.slug || '';
   els.fDateTag.value = post.dateTag || '';
-  els.fCategory.value = post.category || '';
-  els.fTags.value = (post.tags || []).join(', ');
+  state.currentTags = Array.isArray(post.tags) ? post.tags : [];
+  renderTagChips();
   els.fExcerpt.value = post.excerpt || '';
   els.fBody.value = post.body || '';
   setDirty(false);
@@ -324,8 +416,7 @@ function collectForm() {
     date: els.fDate.value.trim(),
     slug: els.fSlug.value.trim(),
     dateTag: els.fDateTag.value.trim(),
-    category: els.fCategory.value.trim(),
-    tags: els.fTags.value,
+    tags: state.currentTags,
     excerpt: els.fExcerpt.value.trim(),
     body: els.fBody.value,
   };
@@ -370,7 +461,7 @@ function closeEditor() {
 function saveDraftNow() {
   if (!state.draftKey || !state.dirty) return;
   try {
-    localStorage.setItem(state.draftKey, JSON.stringify({
+    safeStorageSet(state.draftKey, JSON.stringify({
       at: Date.now(),
       data: collectForm(),
     }));
@@ -382,7 +473,7 @@ const saveDraft = debounce(saveDraftNow, 900);
 function readDraft() {
   if (!state.draftKey) return null;
   try {
-    const raw = localStorage.getItem(state.draftKey);
+    const raw = safeStorageGet(state.draftKey);
     return raw ? JSON.parse(raw) : null;
   } catch (e) { return null; }
 }
@@ -424,7 +515,7 @@ async function savePost() {
     clearDraft();
     els.draftBar.hidden = true;
     log('已保存 ' + data.post.year + '/' + data.post.slug + '.md' + (moved ? '（已移动到新位置）' : ''), 'ok');
-    await Promise.all([loadPosts(), loadTaxonomy()]);
+    await Promise.all([loadPosts(), loadTags()]);
   } catch (e) {
     log('保存失败: ' + e.message, 'err');
   } finally {
@@ -439,7 +530,7 @@ async function createPost() {
     const data = await apiJson('/api/posts', 'POST', {
       title: '未命名文章',
       date: todayStr(),
-      category: els.fCategory.value.trim() || (state.session && state.session.git.defaultCategory) || '未分类',
+      tags: [],
       body: '在这里写正文。段落之间空一行。\n',
     });
     log('已新建 ' + data.post.year + '/' + data.post.slug + '.md', 'ok');
@@ -464,7 +555,7 @@ async function deletePost() {
     );
     log('已删除 ' + label, 'ok');
     closeEditor();
-    await Promise.all([loadPosts(), loadTaxonomy()]);
+    await Promise.all([loadPosts(), loadTags()]);
     if (state.git) loadGitStatus();
   } catch (e) {
     log('删除失败: ' + e.message, 'err');
@@ -777,6 +868,10 @@ function renderGitStatus(st) {
   } else {
     sum.appendChild(pill('分支', st.branch || '(未检出)'));
     if (st.upstream) sum.appendChild(pill('上游', st.upstream));
+    if (st.identity && (st.identity.name || st.identity.email)) {
+      const gitIdentity = [st.identity.name, st.identity.email].filter(Boolean).join(' <') + (st.identity.email ? '>' : '');
+      sum.appendChild(pill('身份', gitIdentity || '未配置'));
+    }
     sum.appendChild(pill('待提交', String(st.staged + st.unstaged + st.untracked), st.clean ? '' : 'warn'));
     if (st.ahead) sum.appendChild(pill('待推送', String(st.ahead), 'warn'));
     if (st.behind) sum.appendChild(pill('待拉取', String(st.behind), 'warn'));
@@ -908,17 +1003,19 @@ async function boot() {
   try {
     session = await api('/api/session');
   } catch (e) {
-    showLogin();
-    return;
+    session = {
+      ok: true,
+      outputDir: '(未读取到会话信息)',
+      postsDir: '',
+      git: { enabled: false },
+    };
   }
-
-  if (!session.ok) { showLogin(session); return; }
 
   state.session = session;
   showApp();
-  log('后台已就绪，输出目录: ' + session.outputDir);
+  log('后台已就绪，输出目录: ' + (session && session.outputDir ? session.outputDir : '(未读取到会话信息)'));
 
-  if (session.git && session.git.enabled) {
+  if (session && session.git && session.git.enabled) {
     log('Git 仓库: ' + session.git.repoRoot + '（远程 ' + session.git.remote + '）');
     els.gitMessage.placeholder = session.git.defaultMessage || 'chore(blog): 更新文章';
   } else {
@@ -928,7 +1025,7 @@ async function boot() {
     log('Git 功能已关闭（ADMIN_GIT=0）', 'warn');
   }
 
-  await Promise.all([loadPosts(), loadTaxonomy()]);
+  await Promise.all([loadPosts(), loadTags()]);
   await Promise.all([loadGitStatus(), loadGitLog()]);
 }
 
@@ -937,34 +1034,6 @@ async function boot() {
    ══════════════════════════════════════════ */
 
 function bind() {
-  // 登录
-  els.loginForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    els.loginBtn.disabled = true;
-    els.loginError.textContent = '';
-    try {
-      await apiJson('/api/login', 'POST', { token: els.tokenInput.value });
-      els.tokenInput.value = '';
-      showApp();
-      log('登录成功');
-      await boot();
-    } catch (err) {
-      els.loginError.textContent = err.message;
-    } finally {
-      els.loginBtn.disabled = false;
-    }
-  });
-
-  els.btnLogout.addEventListener('click', async function () {
-    try {
-      await api('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    } catch (e) { /* 忽略 */ }
-    closeEditor();
-    state.posts = [];
-    state.current = null;
-    showLogin();
-  });
-
   // 顶部操作
   els.btnNew.addEventListener('click', createPost);
   els.btnBuild.addEventListener('click', function () { runBuild(false); });
@@ -987,12 +1056,39 @@ function bind() {
   els.btnSave.addEventListener('click', savePost);
   els.btnDelete.addEventListener('click', deletePost);
 
-  ['fTitle', 'fDate', 'fSlug', 'fDateTag', 'fCategory', 'fTags', 'fExcerpt', 'fBody'].forEach(function (id) {
+  ['fTitle', 'fDate', 'fSlug', 'fDateTag', 'fExcerpt', 'fBody'].forEach(function (id) {
     els[id].addEventListener('input', function () {
       setDirty(true);
       saveDraft();
       if (id === 'fBody') { updateStats(); schedulePreview(); }
     });
+  });
+
+  // 标签：输入回车 / 逗号添加，退格删最后一个；失焦也添加
+  els.fTagInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ',' || e.key === '，') {
+      e.preventDefault();
+      addTagToPost(els.fTagInput.value);
+      els.fTagInput.value = '';
+    } else if (e.key === 'Backspace' && !els.fTagInput.value && state.currentTags.length) {
+      state.currentTags.pop();
+      renderTagChips();
+      setDirty(true);
+    }
+  });
+  els.fTagInput.addEventListener('blur', function () {
+    if (els.fTagInput.value.trim()) { addTagToPost(els.fTagInput.value); els.fTagInput.value = ''; }
+  });
+
+  // 标签管理：添加 / 删除
+  els.btnTagManage.addEventListener('click', function () {
+    els.tagManager.hidden = !els.tagManager.hidden;
+  });
+  els.tagAddForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = els.tagAddInput.value.trim();
+    els.tagAddInput.value = '';
+    if (name) addTagGlobal(name);
   });
 
   els.fBody.addEventListener('scroll', function () { syncScroll('edit'); });
@@ -1006,8 +1102,8 @@ function bind() {
     els.fDate.value = d.date || '';
     els.fSlug.value = d.slug || '';
     els.fDateTag.value = d.dateTag || '';
-    els.fCategory.value = d.category || '';
-    els.fTags.value = d.tags || '';
+    state.currentTags = Array.isArray(d.tags) ? d.tags : splitTagInput(typeof d.tags === 'string' ? d.tags : '');
+    renderTagChips();
     els.fExcerpt.value = d.excerpt || '';
     els.fBody.value = d.body || '';
     setDirty(true);
@@ -1108,6 +1204,7 @@ function bind() {
 
   // 分栏拖拽
   initResizer();
+  initDockResizer();
 
   // 快捷键
   document.addEventListener('keydown', function (e) {
@@ -1153,7 +1250,7 @@ function initResizer() {
     preview.style.flex = '0 0 ' + (100 - pct) + '%';
   };
 
-  const saved = parseFloat(localStorage.getItem(SPLIT_KEY));
+  const saved = parseFloat(safeStorageGet(SPLIT_KEY));
   if (saved >= 20 && saved <= 80) applyRatio(saved);
 
   let dragging = false;
@@ -1171,7 +1268,7 @@ function initResizer() {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
     const m = /flex:\s*0\s+0\s+([\d.]+)%/.exec(edit.style.flex || '');
-    if (m) localStorage.setItem(SPLIT_KEY, m[1]);
+    if (m) safeStorageSet(SPLIT_KEY, m[1]);
   };
 
   els.paneResizer.addEventListener('mousedown', function (e) {
@@ -1184,22 +1281,62 @@ function initResizer() {
   });
 }
 
+function initDockResizer() {
+  const dock = els.dock;
+  const resizer = els.dockResizer;
+  if (!dock || !resizer) return;
+
+  const MIN = 120;
+  const MAX = 420;
+  let dragging = false;
+  let startY = 0;
+  let startHeight = 0;
+
+  const onMove = function (e) {
+    if (!dragging) return;
+    const next = Math.min(MAX, Math.max(MIN, startHeight - (e.clientY - startY)));
+    dock.style.height = next + 'px';
+  };
+
+  const onUp = function () {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.cursor = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+
+  resizer.addEventListener('mousedown', function (e) {
+    if (dock.classList.contains('is-collapsed')) {
+      dock.classList.remove('is-collapsed');
+      dock.style.height = '190px';
+    }
+    dragging = true;
+    startY = e.clientY;
+    startHeight = dock.getBoundingClientRect().height;
+    document.body.style.cursor = 'row-resize';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  });
+}
+
 /* ══════════════════════════════════════════
    入口
    ══════════════════════════════════════════ */
 
 function cacheEls() {
   const ids = [
-    'loginView', 'loginForm', 'loginHint', 'tokenInput', 'loginBtn', 'loginError',
-    'appView', 'btnNew', 'btnBuild', 'btnGit', 'btnPreview', 'btnTheme', 'btnLogout',
-    'searchInput', 'categoryFilter', 'postCount', 'postList',
+    'appView', 'btnNew', 'btnBuild', 'btnGit', 'btnPreview', 'btnTheme',
+    'searchInput', 'tagFilter', 'postCount', 'postList',
     'emptyState', 'editorForm', 'fTitle', 'postLoc', 'btnDelete', 'btnSave',
     'draftBar', 'draftText', 'btnRestoreDraft', 'btnDropDraft',
-    'fDate', 'fSlug', 'fDateTag', 'fCategory', 'fTags', 'fExcerpt', 'fBody',
+    'fDate', 'fSlug', 'fDateTag', 'fExcerpt', 'fBody',
+    'fTagInput', 'tagChips', 'tagManager', 'tagManagerList', 'tagAddForm', 'tagAddInput', 'btnTagManage',
     'mdToolbar', 'btnImage', 'fileInput', 'saveDot',
     'panes', 'paneResizer', 'previewPane',
     'statChars', 'statWords', 'statLines', 'statRead', 'statPath', 'viewSwitch',
-    'dock', 'log', 'gitPanel', 'gitSummary', 'gitMessage', 'gitBuild', 'gitPull',
+    'dock', 'dockResizer', 'log', 'gitPanel', 'gitSummary', 'gitMessage', 'gitBuild', 'gitPull',
     'btnGitRefresh', 'btnGitCommit', 'btnGitPush', 'gitFiles', 'gitLog', 'gitBadge',
     'btnClearLog', 'btnToggleDock',
   ];
