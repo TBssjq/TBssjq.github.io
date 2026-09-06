@@ -391,7 +391,9 @@ function normalizePost(p) {
    ══════════════════════════════════════════ */
 
 function fillForm(post) {
-  els.postLoc.textContent = 'posts/' + post.year + '/' + post.slug + '.md';
+  els.postLoc.textContent = (post.year && post.slug)
+    ? 'posts/' + post.year + '/' + post.slug + '.md'
+    : '（新建，尚未保存）';
   els.fTitle.value = post.title || '';
   els.fDate.value = post.date || '';
   els.fSlug.value = post.slug || '';
@@ -497,18 +499,24 @@ function checkDraft() {
    ══════════════════════════════════════════ */
 
 async function savePost() {
-  if (!state.current) return;
   if (!els.fTitle.value.trim()) { log('标题不能为空', 'err'); els.fTitle.focus(); return; }
-  if (!els.fSlug.value.trim()) { log('slug 不能为空', 'err'); els.fSlug.focus(); return; }
+  // slug 仅在「已存在的文章」(PUT) 时必填；新建文章由服务端按日期自动生成
+  if (state.current && !els.fSlug.value.trim()) { log('slug 不能为空', 'err'); els.fSlug.focus(); return; }
 
   els.btnSave.disabled = true;
   try {
-    const data = await apiJson(
-      '/api/posts/' + encodeURIComponent(state.current.year) + '/' + encodeURIComponent(state.current.slug),
-      'PUT',
-      collectForm()
-    );
-    const moved = data.post.year !== state.current.year || data.post.slug !== state.current.slug;
+    let data;
+    if (!state.current) {
+      // 新建：还没有服务器上的文章，先创建
+      data = await apiJson('/api/posts', 'POST', collectForm());
+    } else {
+      data = await apiJson(
+        '/api/posts/' + encodeURIComponent(state.current.year) + '/' + encodeURIComponent(state.current.slug),
+        'PUT',
+        collectForm()
+      );
+    }
+    const moved = state.current && (data.post.year !== state.current.year || data.post.slug !== state.current.slug);
     state.current = { year: data.post.year, slug: data.post.slug };
     state.draftKey = DRAFT_PREFIX + data.post.year + '/' + data.post.slug;
     setDirty(false);
@@ -527,16 +535,23 @@ async function createPost() {
   if (state.dirty && !confirm('当前文章未保存，确定新建？')) return;
 
   try {
-    const data = await apiJson('/api/posts', 'POST', {
-      title: '未命名文章',
-      date: todayStr(),
-      tags: [],
-      body: '在这里写正文。段落之间空一行。\n',
+    // 先打开空白编辑器，等到首次「保存」时再在服务器创建文章。
+    // 这样就不会留下一篇默认名为「未命名文章」的占位文章，
+    // 用户输入的标题必定被写回。
+    state.current = null;
+    state.draftKey = DRAFT_PREFIX + '__new__';
+    state.lastRendered = null;
+    els.emptyState.hidden = true;
+    els.editorForm.hidden = false;
+    animEditorIn();
+    fillForm({
+      title: '', date: todayStr(), slug: '', dateTag: '', tags: [], excerpt: '', body: '',
     });
-    log('已新建 ' + data.post.year + '/' + data.post.slug + '.md', 'ok');
-    await loadPosts();
-    await openPost(data.post.year, data.post.slug);
+    renderList();
+    renderPreview(true);
+    els.fTitle.focus();
     els.fTitle.select();
+    log('已新建空白文章，填写后点保存', 'ok');
   } catch (e) {
     log('新建失败: ' + e.message, 'err');
   }
@@ -1055,6 +1070,14 @@ function bind() {
   // 编辑器
   els.btnSave.addEventListener('click', savePost);
   els.btnDelete.addEventListener('click', deletePost);
+
+  // 拦截编辑器表单的默认提交：在单行输入框（标题/日期等）按 Enter 会触发隐式提交，
+  // 导致整页重新加载、未保存内容丢失（新建的文章会一直停在「未命名文章」）。
+  // 改为：Enter = 保存当前文章。多行正文（textarea）中的 Enter 仍插入换行，不受影响。
+  els.editorForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    savePost();
+  });
 
   ['fTitle', 'fDate', 'fSlug', 'fDateTag', 'fExcerpt', 'fBody'].forEach(function (id) {
     els[id].addEventListener('input', function () {
