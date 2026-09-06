@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未命名文章 - My Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Serif SC', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        display: ['ZCOOL KuaiLe', 'cursive'],
+                    },
+                    colors: {
+                        accent: '#f97316',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="../article.css">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+</head>
+<body class="min-h-screen">
+    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
+        <div class="h-full flex items-center justify-between px-6">
+            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white" target="_blank" rel="noopener noreferrer">My Blog</a>
+            <div class="flex items-center gap-3">
+                <div class="music-player music-player--top">
+                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"></iframe>
+                </div>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-16">
+        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
+            <article>
+                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">未命名文章</h1>
+
+                <p class="article-meta">
+
+                    <span class="meta-date">9月6日</span>
+                </p>
+
+            <div class="article-body prose text-gray-700 dark:text-gray-300">
+                    <p>How to begin this blog is a bit hard for me,i just wanna describe my mini thinking in my second day in university.SO, LTS'S GO!<br>The njtech is extremly big and grious .And it's difficult for others to understand the size of my university.(i promise i have try myself to correct my scentence errors ,and you can C the errors in many place)<br>According to the distance of my home and university ,i have to spend 2 hous to get there.And i wish that it will be a wonderful starter for my new life!<br>PLEASE FORGIVE MY POOR ENGLISH,I AM LEARNING ...</p>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <div class="giscus"></div>
+                </div>
+                <div class="mt-8">
+                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium" target="_blank" rel="noopener noreferrer">
+                        <span>目录</span>
+                        <span class="font-semibold">Go!</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <script src="../article.js" defer></script>
+
+
+</body>
+</html>
