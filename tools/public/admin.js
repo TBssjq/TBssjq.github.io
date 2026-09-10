@@ -953,8 +953,28 @@ async function loadGitLog() {
   } catch (e) { /* 忽略 */ }
 }
 
+// 编辑器里是否还有没落盘的文章（新建了没保存 / 改了没保存）
+function hasUnsavedWork() {
+  return !!state.dirty && !!els.editorForm && !els.editorForm.hidden;
+}
+
 async function runGitSync(mode) {
   // mode: 'commit' = 只本地提交；'push' = 提交并推送
+
+  // 提交 / 推送前先确认文章已保存，避免把编辑器里的改动漏在工作区之外
+  if (hasUnsavedWork()) {
+    const action = mode === 'push' ? '推送' : '提交';
+    if (!confirm('当前编辑器有未保存的修改，是否先保存再' + action + '？')) {
+      log('已取消' + action + '：请先保存文章', 'warn');
+      return;
+    }
+    await savePost();
+    if (hasUnsavedWork()) {
+      log('文章尚未保存成功，已取消' + action, 'err');
+      return;
+    }
+  }
+
   const message = els.gitMessage.value.trim();
   const payload = {
     message: message,

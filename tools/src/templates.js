@@ -8,10 +8,14 @@ const md = require('./markdown');
 //   - 块与块之间用空行分隔
 // 因此这里统一使用带缩进的模板字符串，不做任何压缩。
 
+const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap';
 const FONTS = [
   '    <link rel="preconnect" href="https://fonts.googleapis.com">',
   '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
-  '    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">',
+  // preload 让字体 CSS 以高优先级尽早下载，缩短「后备字体 → Noto Serif SC」的
+  // 切换窗口，减少目录页在字体到位时的回流抖动（排版时好时坏）。
+  '    <link rel="preload" as="style" href="' + FONT_HREF + '">',
+  '    <link href="' + FONT_HREF + '" rel="stylesheet">',
 ].join('\n');
 
 // GSAP 动效库（核心 + 插件）。CDN 加载，JS 中均做 typeof gsap 防御，
