@@ -135,20 +135,27 @@ function sendFile(req, res, file, extraHeaders) {
 function readBody(req, limit) {
   return new Promise(function (resolve, reject) {
     let size = 0;
+    let done = false;
     const chunks = [];
     req.on('data', function (chunk) {
+      if (done) return;
       size += chunk.length;
       if (size > limit) {
-        const err = new Error('请求体超过上限');
+        done = true;
+        chunks.length = 0;
+        const err = new Error('请求体超过上限 ' + Math.round(limit / 1024 / 1024) + 'MB');
         err.status = 413;
         reject(err);
-        req.destroy();
+        // 关键：这里不能 req.destroy()。销毁连接会让浏览器只拿到网络层错误
+        // （Failed to fetch），看不到这条 413 文案。改为丢弃剩余数据，
+        // 让上面的错误响应能正常发回前端。
+        req.resume();
         return;
       }
       chunks.push(chunk);
     });
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
+    req.on('end', function () { if (!done) resolve(Buffer.concat(chunks)); });
+    req.on('error', function (e) { if (!done) reject(e); });
   });
 }
 

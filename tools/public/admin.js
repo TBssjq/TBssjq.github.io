@@ -834,6 +834,63 @@ function toBase64(file) {
   });
 }
 
+// 上传前压缩：大图（如手机照片）base64 会撞上服务端请求体上限，既避免该错误，
+// 也让博客体积与加载更快。
+const UPLOAD_MAX_DIM = 1920;             // 最长边像素上限
+const UPLOAD_TARGET = 4 * 1024 * 1024;   // 目标体积
+
+function loadImageEl(file) {
+  return new Promise(function (resolve, reject) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('图片解码失败')); };
+    img.src = url;
+  });
+}
+
+function canvasBlob(canvas, mime, quality) {
+  return new Promise(function (resolve) { canvas.toBlob(resolve, mime, quality); });
+}
+
+async function prepareImage(file) {
+  const type = (file.type || '').toLowerCase();
+  // gif（动图）与 svg（矢量）不重编码，否则会丢动画 / 变位图
+  if (type === 'image/gif' || type === 'image/svg+xml') {
+    return { name: file.name, data: await toBase64(file) };
+  }
+
+  const img = await loadImageEl(file);
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  const scale = Math.min(1, UPLOAD_MAX_DIM / Math.max(w, h));
+
+  // 已经是够小的 webp、且无需缩放，直接原样上传
+  if (type === 'image/webp' && scale === 1 && file.size <= UPLOAD_TARGET) {
+    return { name: file.name, data: await toBase64(file) };
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(w * scale));
+  canvas.height = Math.max(1, Math.round(h * scale));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  // 统一转成 WebP：同样画质下体积明显小于 JPEG / PNG，且支持透明通道
+  let quality = 0.9;
+  let blob = await canvasBlob(canvas, 'image/webp', quality);
+  if (blob && blob.type !== 'image/webp') blob = null;   // 浏览器不支持 WebP 编码
+  while (blob && blob.size > UPLOAD_TARGET && quality > 0.4) {
+    quality -= 0.12;
+    blob = await canvasBlob(canvas, 'image/webp', quality);
+  }
+
+  // 浏览器不支持 WebP 编码时退回原图，避免产出其它格式
+  if (!blob) return { name: file.name, data: await toBase64(file) };
+
+  const stem = file.name.replace(/\.[^.]+$/, '') || 'image';
+  return { name: stem + '.webp', data: await toBase64(blob) };
+}
+
 async function uploadImages(files) {
   if (!state.current) { log('请先打开一篇文章再插入图片', 'err'); return; }
   const year = (els.fDate.value || '').slice(0, 4) || String(new Date().getFullYear());
@@ -841,10 +898,11 @@ async function uploadImages(files) {
   for (const file of files) {
     if (!/^image\//.test(file.type)) continue;
     try {
+      const prepared = await prepareImage(file);
       const data = await apiJson('/api/images', 'POST', {
         year: year,
-        name: file.name,
-        data: await toBase64(file),
+        name: prepared.name,
+        data: prepared.data,
       });
       const ta = els.fBody;
       const snippet = '![](' + data.image.path + ')\n';
