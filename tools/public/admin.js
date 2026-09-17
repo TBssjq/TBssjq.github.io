@@ -892,7 +892,9 @@ async function prepareImage(file) {
 }
 
 async function uploadImages(files) {
-  if (!state.current) { log('请先打开一篇文章再插入图片', 'err'); return; }
+  // 编辑器打开即可上传。新建的文章在首次保存前 state.current 仍为 null，
+  // 图片会先按日期年份落盘，保存后与文章处于同一 images 目录，所以这里不该拦。
+  if (!els.editorForm || els.editorForm.hidden) { log('请先打开一篇文章再插入图片', 'err'); return; }
   const year = (els.fDate.value || '').slice(0, 4) || String(new Date().getFullYear());
 
   for (const file of files) {
