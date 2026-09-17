@@ -1018,6 +1018,13 @@ function hasUnsavedWork() {
   return !!state.dirty && !!els.editorForm && !els.editorForm.hidden;
 }
 
+// 快捷推送前补上默认提交信息（面板里手动改过就保留）
+function prefillGitMessage() {
+  els.gitMessage.value = els.gitMessage.value.trim() ||
+    (state.session && state.session.git ? state.session.git.defaultMessage : '') ||
+    'chore(blog): 更新文章';
+}
+
 async function runGitSync(mode) {
   // mode: 'commit' = 只本地提交；'push' = 提交并推送
 
@@ -1115,6 +1122,7 @@ async function boot() {
     els.gitMessage.placeholder = session.git.defaultMessage || 'chore(blog): 更新文章';
   } else {
     els.btnGit.disabled = true;
+    els.btnGitPushTop.disabled = true;
     els.btnGitPush.disabled = true;
     els.btnGitCommit.disabled = true;
     log('Git 功能已关闭（ADMIN_GIT=0）', 'warn');
@@ -1132,10 +1140,14 @@ function bind() {
   // 顶部操作
   els.btnNew.addEventListener('click', createPost);
   els.btnBuild.addEventListener('click', function () { runBuild(false); });
+  els.btnGitPushTop.addEventListener('click', function () {
+    prefillGitMessage();
+    openGitPanel();
+    runGitSync('push');
+  });
   els.btnGit.addEventListener('click', function () {
     openGitPanel();
-    els.gitMessage.value = els.gitMessage.value.trim() ||
-      (state.session && state.session.git ? state.session.git.defaultMessage : '') || 'chore(blog): 更新文章';
+    prefillGitMessage();
   });
   els.btnTheme.addEventListener('click', function () {
     applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
@@ -1268,6 +1280,50 @@ function bind() {
     if (!files.length) return;
     e.preventDefault();
     uploadImages(files);
+  });
+
+  // 正文里 Tab / Shift+Tab 用来缩进，拦截浏览器默认的「切换焦点」
+  els.fBody.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab') return;
+    e.preventDefault();
+
+    const ta = els.fBody;
+    const value = ta.value;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const INDENT = '    ';                       // 4 个空格
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+
+    // ① 无选区：插入 / 删除一个缩进
+    if (start === end) {
+      if (!e.shiftKey) { replaceRange(start, end, INDENT); return; }
+      let lineEnd = value.indexOf('\n', start);
+      if (lineEnd === -1) lineEnd = value.length;
+      const m = /^(\t| {1,4})/.exec(value.slice(lineStart, lineEnd));
+      if (!m) return;
+      const cut = m[0].length;
+      const caret = start - Math.min(cut, start - lineStart);
+      replaceRange(lineStart, lineStart + cut, '', caret, caret);
+      return;
+    }
+
+    // ② 有选区：作用于选区覆盖到的整行
+    let blockEnd;
+    if (value[end - 1] === '\n') blockEnd = end - 1;   // 选区恰好停在行首则不带上该行
+    else {
+      blockEnd = value.indexOf('\n', end);
+      if (blockEnd === -1) blockEnd = value.length;
+    }
+    const block = value.slice(lineStart, blockEnd);
+
+    if (!e.shiftKey) {
+      const next = block.replace(/^/gm, INDENT);
+      replaceRange(lineStart, blockEnd, next, lineStart, lineStart + next.length);
+      return;
+    }
+    const outdented = block.replace(/^(\t| {1,4})/gm, '');
+    if (outdented === block) return;                   // 已经没有缩进可去掉
+    replaceRange(lineStart, blockEnd, outdented, lineStart, lineStart + outdented.length);
   });
 
   // 底部面板
@@ -1430,7 +1486,7 @@ function initDockResizer() {
 
 function cacheEls() {
   const ids = [
-    'appView', 'btnNew', 'btnBuild', 'btnGit', 'btnPreview', 'btnTheme',
+    'appView', 'btnNew', 'btnBuild', 'btnGit', 'btnGitPushTop', 'btnPreview', 'btnTheme',
     'searchInput', 'tagFilter', 'postCount', 'postList',
     'emptyState', 'editorForm', 'fTitle', 'postLoc', 'btnDelete', 'btnSave',
     'draftBar', 'draftText', 'btnRestoreDraft', 'btnDropDraft',
