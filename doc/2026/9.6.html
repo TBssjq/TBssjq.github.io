@@ -26,6 +26,7 @@
         }
     </script>
     <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
@@ -52,8 +53,8 @@
     </header>
 
     <main class="pt-16">
-        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
-            <article>
+        <div class="article-shell">
+            <article class="article-main">
                 <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">My first blog after colleage extrance exam</h1>
 
                 <p class="article-meta">
@@ -61,7 +62,7 @@
                     <span class="meta-date">9月6日</span>
                 </p>
 
-            <div class="article-body prose text-gray-700 dark:text-gray-300">
+            <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
                     <p>Starting this blog is a bit hard for me. I just want to describe a few little thoughts from my second day at university. So, let’s go!</p>
 
                     <p>NJTech is extremely big and impressive. It’s hard for other people to understand how big my university really is. (I promise I’ve tried to correct my sentence mistakes myself, and you can still see mistakes in many places.)</p>
@@ -84,10 +85,13 @@
                     </a>
                 </div>
             </article>
+
+            <aside class="article-toc" data-toc aria-label="文章目录"></aside>
         </div>
     </main>
 
     <script src="../article.js" defer></script>
+    <script src="../toc.js" defer></script>
 
 
 </body>

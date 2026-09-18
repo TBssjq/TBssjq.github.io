@@ -74,7 +74,8 @@ tools/
 │   └── admin-theme.js    # 首屏前置脚本，避免主题闪烁
 ├── theme/                # 静态主题资源（构建时复制到 doc/）
 │   ├── article.css / article.js
-│   ├── index.css / index.js   # 目录页样式 + 分类筛选交互
+│   ├── index.css / index.js   # 目录页样式 + 标签筛选交互
+│   ├── toc.css / toc.js       # 可复用文章目录组件（右侧导航）
 └── posts/                # 文章源文件（Markdown + frontmatter）
     └── 2026/*.md
 ```
@@ -262,9 +263,47 @@ console.log('代码块');
 
 保存后运行 `npm run build`（或直接在后台点「构建」）。
 
-**支持的语法**：`#`~`###` 标题、`**粗体**`、`*斜体*`、`` `行内代码` ``、
-`-` / `1.` 列表、`>` 引用、`---` 分隔线、```` ``` ```` 代码块、
-`[链接](url)`、`![图片](src "图注")`。
+**支持的语法**：`#`~`######` 标题（自动生成锚点 id）、`**粗体**`、`*斜体*`、`~~删除线~~`、
+`` `行内代码` ``、`-` / `1.` / 嵌套 / 任务列表、`>` 引用、GFM 表格（含 `:--:` 对齐）、
+`---` 分隔线、```` ``` ```` 代码块（含语言标签、列表内缩进代码块）、
+`[链接](url)`、自动链接 `<https://…>`、`![图片](src "图注")`。
+行尾两个空格或 `\` 表示硬换行。
+
+---
+
+## 可复用模块
+
+工具链里有两个与博客解耦、可单独取用的模块。
+
+### Markdown 渲染器 `src/markdown.js`
+
+```js
+const md = require('./src/markdown');
+
+md.render(markdownText);   // → HTML 字符串（对齐 .prose 排版）
+md.inline('**粗体**');      // → 行内 HTML
+md.slugify('一、标题');     // → 锚点 id
+```
+
+零依赖、纯函数，可在任意 Node 脚本里复用（例如自定义生成器）。
+
+### 文章目录 `theme/toc.js` + `theme/toc.css`
+
+```html
+<aside data-toc></aside>                          <!-- 挂载点 -->
+<div class="article-body" data-toc-content>…</div> <!-- 内容容器 -->
+<script src="toc.js" defer></script>
+```
+
+```js
+// 需要自定义时：
+BlogTOC.init({ mount: '#myToc', content: '#myContent',
+               levels: [2, 3, 4], min: 2, title: '文章目录' });
+```
+
+自动为缺失锚点的标题补 id（重复自动去重）、生成缩进导航、滚动高亮当前小节、
+点击平滑定位；桌面端在右侧吸顶常驻，窄屏折叠为可点开的块。
+不写任何配置也能用（自动查找 `[data-toc]` / `[data-toc-content]`），可挂到任意页面。
 
 ---
 

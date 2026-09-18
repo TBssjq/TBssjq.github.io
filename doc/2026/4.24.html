@@ -26,6 +26,7 @@
         }
     </script>
     <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
@@ -52,8 +53,8 @@
     </header>
 
     <main class="pt-16">
-        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
-            <article>
+        <div class="article-shell">
+            <article class="article-main">
                 <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">无题</h1>
 
                 <p class="article-meta">
@@ -61,7 +62,7 @@
                     <span class="meta-date">4月24日</span>
                 </p>
 
-            <div class="article-body prose text-gray-700 dark:text-gray-300">
+            <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
                     <p>放学路上，几个初三的学生在准备中考体育，一句句"还剩三天"很响，很清。我站在路边，停住了脚步。现在我站在墙的另一边了。</p>
 
                     <p>可现在我有点不确定了。我想，我们究其一生追求的是什么呢？不过是一个巨大的围墙罢了，脱离了现实，纯粹的抽象，才是理想的样子。倘若硬要融进去，也算是一件庆事。</p>
@@ -72,10 +73,10 @@
 
                     <p>但没关系，这种不懂，才是这个年纪最宝贵的东西。</p>
 
-                    <div class="my-8">
-                        <img src="4.24.png" alt="AI生成图片" class="w-full rounded-xl shadow-lg" loading="lazy">
-                        <p class="text-center text-sm text-gray-400 mt-2 no-dropcap">（图片由AI生成）</p>
-                    </div>
+                    <figure class="md-figure">
+                        <img src="4.24.png" alt="AI生成图片" loading="lazy">
+                        <figcaption>（图片由AI生成）</figcaption>
+                    </figure>
                 </div>
 
                 <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
@@ -91,10 +92,13 @@
                     </a>
                 </div>
             </article>
+
+            <aside class="article-toc" data-toc aria-label="文章目录"></aside>
         </div>
     </main>
 
     <script src="../article.js" defer></script>
+    <script src="../toc.js" defer></script>
 
 
 </body>

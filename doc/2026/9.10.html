@@ -26,6 +26,7 @@
         }
     </script>
     <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
@@ -52,8 +53,8 @@
     </header>
 
     <main class="pt-16">
-        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
-            <article>
+        <div class="article-shell">
+            <article class="article-main">
                 <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">浦口怀古</h1>
 
                 <p class="article-meta">
@@ -61,13 +62,16 @@
                     <span class="meta-date">9月10日</span>
                 </p>
 
-            <div class="article-body prose text-gray-700 dark:text-gray-300">
-                    <p>本是匆匆理中客，<br>背影柑橘月上钩。<br>形形色色是路人，<br>蓦地空唱余音消。</p>
+            <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
+                    <p>本是匆匆理中客，
+                    背影柑橘月上钩。
+                    形形色色是路人，
+                    蓦地空唱余音消。</p>
 
                     <blockquote>
-                        <p>我和父亲的关系很不好</p>
-                        <p>这一次我独自来到南京上大学，高考考砸了，来了一所双非的烂专业</p>
-                        <p>再读《背影》，我已潸然泪下</p>
+                        <p>我和父亲的关系很不好
+                        这一次我独自来到南京上大学，高考考砸了，来了一所双非的烂专业
+                        再读《背影》，我已潸然泪下</p>
                     </blockquote>
 
                     <p>作于浦口火车站（旧址）</p>
@@ -86,10 +90,13 @@
                     </a>
                 </div>
             </article>
+
+            <aside class="article-toc" data-toc aria-label="文章目录"></aside>
         </div>
     </main>
 
     <script src="../article.js" defer></script>
+    <script src="../toc.js" defer></script>
 
 
 </body>

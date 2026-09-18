@@ -524,3 +524,115 @@
         @media (prefers-reduced-motion: reduce) {
             .article-body { animation: none; }
         }
+
+        /* ═══════════════════════════════════════════
+           文章布局：正文 + 右侧目录
+           ═══════════════════════════════════════════ */
+        .article-shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 4rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (min-width: 1100px) {
+            .article-shell { grid-template-columns: minmax(0, 1fr) 268px; }
+        }
+        .article-main { min-width: 0; }
+
+        /* ═══════════════════════════════════════════
+           Markdown 全量元素样式
+           ═══════════════════════════════════════════ */
+        .article-title, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { scroll-margin-top: 5.5rem; }
+
+        .prose h4 {
+            font-size: 1.1rem; font-weight: 600;
+            margin: 1.7rem 0 .8rem; color: var(--text-primary);
+        }
+        .prose h5 {
+            font-size: 1rem; font-weight: 600;
+            margin: 1.4rem 0 .6rem; color: var(--text-primary);
+        }
+        .prose h6 {
+            font-size: .95rem; font-weight: 600;
+            margin: 1.2rem 0 .5rem; color: var(--text-secondary);
+        }
+
+        /* 有序 / 无序列表：简单嵌套缩进更紧凑 */
+        .prose ul ul, .prose ul ol, .prose ol ul, .prose ol ol { margin: .45rem 0 .25rem; }
+        .prose li > p { text-indent: 0; margin-bottom: .5rem; }
+        .prose li::marker { color: var(--accent); }
+
+        /* 任务列表 */
+        .prose .task-list { list-style: none; padding-left: .25rem; }
+        .prose .task-list li { display: flex; align-items: flex-start; gap: .55rem; }
+        .prose .task-check { margin-top: .5em; accent-color: var(--accent); }
+
+        /* 分隔线 */
+        .prose hr {
+            border: none; height: 2px; width: 60%;
+            margin: 2.75rem auto;
+            border-radius: 2px;
+            background: linear-gradient(90deg, transparent, rgba(249,115,22,.55), transparent);
+        }
+
+        /* 表格 */
+        .prose .table-wrap {
+            margin: 2rem 0;
+            overflow-x: auto;
+            border-radius: 16px;
+            padding: 4px;
+            box-shadow:
+                inset 4px 4px 12px rgba(163, 177, 198, 0.35),
+                inset -4px -4px 12px rgba(255, 255, 255, 0.6);
+        }
+        .dark .prose .table-wrap {
+            box-shadow:
+                inset 4px 4px 12px rgba(0, 0, 0, 0.28),
+                inset -4px -4px 12px rgba(40, 52, 76, 0.2);
+        }
+        .prose table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 420px; }
+        .prose thead th {
+            padding: 12px 14px; text-align: left; white-space: nowrap;
+            font-weight: 700; color: var(--text-primary);
+            background: rgba(148, 163, 184, 0.16);
+        }
+        .prose tbody td {
+            padding: 11px 14px; vertical-align: top;
+            border-top: 1px solid rgba(163, 177, 198, 0.35);
+        }
+        .dark .prose thead th { background: rgba(148, 163, 184, 0.1); }
+        .dark .prose tbody td { border-top-color: rgba(50, 60, 80, 0.55); }
+        .prose tbody tr:hover { background: rgba(249, 115, 22, 0.06); }
+        .prose th.is-center, .prose td.is-center { text-align: center; }
+        .prose th.is-right, .prose td.is-right { text-align: right; }
+
+        /* 图片与图注 */
+        .prose .md-figure { margin: 2rem 0; }
+        .prose .md-figure img { width: 100%; }
+        .prose .md-figure figcaption {
+            margin-top: .6rem; text-align: center;
+            font-size: .82rem; color: var(--text-muted);
+        }
+
+        /* 行内补充元素 */
+        .prose del { color: var(--text-muted); }
+        .prose mark { background: rgba(249, 115, 22, 0.18); color: inherit; padding: 0 .2em; border-radius: 4px; }
+        .prose kbd {
+            font-family: 'Fira Code', ui-monospace, monospace;
+            font-size: .82em; padding: .15rem .45rem; border-radius: 6px;
+            background: #e0e5ec;
+            box-shadow: inset 2px 2px 5px rgba(163,177,198,.35), inset -2px -2px 5px rgba(255,255,255,.55);
+        }
+        .dark .prose kbd {
+            background: #242e42; color: #e2e8f0;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,.25), inset -2px -2px 5px rgba(40,52,76,.18);
+        }
+        .prose a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(249,115,22,.4); }
+        .prose a:hover { border-bottom-color: var(--accent); }
+
+        @media (max-width: 1099px) {
+            .article-shell { padding-top: 1.25rem; }
+        }

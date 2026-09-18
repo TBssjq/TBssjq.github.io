@@ -24,6 +24,7 @@
         }
     </script>
     <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
@@ -50,8 +51,8 @@
     </header>
 
     <main class="pt-16">
-        <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
-            <article>
+        <div class="article-shell">
+            <article class="article-main">
                 <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">最佳损友2026年7月21日</h1>
 
                 <p class="article-meta">
@@ -59,7 +60,7 @@
                     <span class="meta-date">7月21日</span>
                 </p>
 
-            <div class="article-body prose text-gray-700 dark:text-gray-300">
+            <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
                     <p>这个吧(指百度贴吧 最佳损友吧)是我在高中时微机课上刷到的，当时也比较感慨，现在也是。</p>
 
                     <p>在我的生活中我认识了好多好多好多人，好多好多好多人，我之所以说两遍，是因为，我感觉有些后悔认识这么多人，又后悔认识的那么多人没能一直保持联系。我的朋友是以损友居多的，我能称得上是好兄弟的没几个，他们也许能够成为为好兄弟吧哈哈</p>
@@ -94,10 +95,13 @@
                     </a>
                 </div>
             </article>
+
+            <aside class="article-toc" data-toc aria-label="文章目录"></aside>
         </div>
     </main>
 
     <script src="../article.js" defer></script>
+    <script src="../toc.js" defer></script>
 
 
 </body>

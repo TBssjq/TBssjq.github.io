@@ -1,0 +1,83 @@
+/* ══ 文章目录组件样式（配合 toc.js，可复用）══════════════════════════ */
+
+.article-toc { min-width: 0; }
+
+.toc-box {
+    background: #e0e5ec;
+    border-radius: 20px;
+    box-shadow:
+        8px 8px 20px rgba(163, 177, 198, 0.45),
+        -5px -5px 15px rgba(255, 255, 255, 0.7);
+    overflow: hidden;
+}
+
+.dark .toc-box {
+    background: #1a2030;
+    box-shadow:
+        8px 8px 20px rgba(0, 0, 0, 0.32),
+        -5px -5px 15px rgba(40, 52, 76, 0.18);
+}
+
+.toc-summary {
+    display: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    font-weight: 700;
+    color: var(--accent);
+    list-style: none;
+    user-select: none;
+}
+.toc-summary::-webkit-details-marker { display: none; }
+.toc-summary::before {
+    content: '≡';
+    margin-right: 8px;
+    font-weight: 400;
+}
+
+.toc-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 16px 12px;
+    max-height: calc(100vh - 9rem);
+    overflow-y: auto;
+}
+
+.toc-link {
+    display: block;
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.toc-link:hover { color: var(--text-primary); background: rgba(148, 163, 184, 0.14); }
+
+.toc-link--h2 { font-weight: 600; }
+.toc-link--h3 { padding-left: 22px; font-size: 0.82rem; }
+.toc-link--h4 { padding-left: 34px; font-size: 0.78rem; color: var(--text-muted); }
+
+.toc-link.is-active {
+    color: var(--accent);
+    background: rgba(249, 115, 22, 0.1);
+    border-left-color: var(--accent);
+}
+
+/* ── 桌面：右侧吸顶常驻 ── */
+@media (min-width: 1100px) {
+    .article-toc { position: sticky; top: 5.5rem; }
+}
+
+/* ── 窄屏：折叠块，置于正文之前 ── */
+@media (max-width: 1099px) {
+    .article-toc { order: -1; }
+    .toc-summary { display: block; }
+    .toc-nav { max-height: 45vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toc-link { transition: none; }
+}

@@ -136,7 +136,7 @@ document.querySelectorAll('.code-block .copy-btn').forEach((b) => {
 
     // ── 正文逐块进入视口浮现 ──
     const blocks = Array.prototype.slice.call(
-        document.querySelectorAll('.article-body > p, .article-body > h2, .article-body > h3, .article-body > blockquote, .article-body > ul, .article-body > ol, .article-body > pre, .article-body > .code-block, .article-body > table, .article-body > hr')
+        document.querySelectorAll('.article-body > p, .article-body > h2, .article-body > h3, .article-body > h4, .article-body > h5, .article-body > h6, .article-body > blockquote, .article-body > ul, .article-body > ol, .article-body > pre, .article-body > .code-block, .article-body > .table-wrap, .article-body > .md-figure, .article-body > hr')
     );
 
     if (reduced || !('IntersectionObserver' in window)) {
