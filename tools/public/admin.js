@@ -670,7 +670,48 @@ function setView(view) {
   Array.prototype.forEach.call(els.viewSwitch.children, function (b) {
     b.classList.toggle('is-active', b.dataset.view === view);
   });
+  // 切换视图时让新出现的分栏淡入，避免生硬跳变
+  if (ANIM_ON && !REDUCED) {
+    const visible = Array.prototype.filter.call(els.panes.querySelectorAll('.pane'), function (p) {
+      return p.offsetParent !== null;
+    });
+    if (visible.length) {
+      gsap.fromTo(visible, { autoAlpha: 0 }, {
+        autoAlpha: 1, duration: 0.25, ease: 'power1.out',
+        overwrite: 'auto', clearProps: 'opacity,visibility',
+      });
+    }
+  }
   if (view !== 'edit') renderPreview(true);
+}
+
+/* ── 沉浸模式：左编辑 · 右预览，铺满全屏 ── */
+let immersive = false;
+let viewBeforeImmersive = null;
+
+function setImmersive(on) {
+  on = !!on;
+  if (on === immersive) return;
+  immersive = on;
+  document.body.classList.toggle('is-immersive', on);
+
+  if (on) {
+    viewBeforeImmersive = els.panes.dataset.view;
+    if (els.panes.dataset.view !== 'split') setView('split');
+    document.body.classList.add('meta-hidden');   // 默认收起元信息，最大化书写区
+    els.btnMeta.classList.remove('is-active');
+  } else {
+    if (viewBeforeImmersive && viewBeforeImmersive !== els.panes.dataset.view) setView(viewBeforeImmersive);
+    document.body.classList.remove('meta-hidden');
+  }
+  els.btnImmersive.classList.toggle('is-active', on);
+
+  const pane = document.querySelector('.editor-pane');
+  if (ANIM_ON && !REDUCED && pane) {
+    gsap.fromTo(pane, { autoAlpha: 0, scale: on ? 0.985 : 1.012 },
+      { autoAlpha: 1, scale: 1, duration: 0.36, ease: 'power2.out', clearProps: 'transform,opacity,visibility' });
+  }
+  log(on ? '已进入沉浸模式（左编辑 / 右预览，Esc 退出）' : '已退出沉浸模式');
 }
 
 /* ── 滚动同步 ── */
@@ -1087,9 +1128,35 @@ async function runGitSync(mode) {
   }
 }
 
+// ── 底部面板：各标签页记住自己的高度（Git 内容多，默认更高）──
+const DOCK_H_KEY = 'admin.dockHeights';
+const DOCK_DEFAULT = { log: 190, git: 340 };
+let currentDock = 'log';
+
+const dockHeights = Object.assign({}, DOCK_DEFAULT);
+try {
+  const raw = localStorage.getItem(DOCK_H_KEY);
+  if (raw) Object.assign(dockHeights, JSON.parse(raw));
+} catch (e) { /* 忽略 */ }
+
+function saveDockHeights() {
+  try { localStorage.setItem(DOCK_H_KEY, JSON.stringify(dockHeights)); } catch (e) { /* 忽略 */ }
+}
+
+function setDockHeight(name) {
+  if (name) currentDock = name;
+  const collapsed = els.dock.classList.contains('is-collapsed');
+  const h = collapsed ? 36 : (dockHeights[currentDock] || DOCK_DEFAULT[currentDock] || 190);
+  if (ANIM_ON && !REDUCED) {
+    gsap.to(els.dock, { height: h, duration: 0.32, ease: 'power2.out', overwrite: 'auto' });
+  } else {
+    els.dock.style.height = h + 'px';
+  }
+}
+
 function openGitPanel() {
-  selectDock('git');
   els.dock.classList.remove('is-collapsed');
+  selectDock('git');
   loadGitStatus();
   loadGitLog();
 }
@@ -1100,6 +1167,7 @@ function selectDock(name) {
   });
   els.log.hidden = name !== 'log';
   els.gitPanel.hidden = name !== 'git';
+  setDockHeight(name);
 }
 
 /* ══════════════════════════════════════════
@@ -1335,8 +1403,9 @@ function bind() {
   // 底部面板
   document.querySelectorAll('.dock-tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
-      selectDock(tab.dataset.dock);
       els.dock.classList.remove('is-collapsed');
+      els.btnToggleDock.textContent = '收起';
+      selectDock(tab.dataset.dock);
       if (tab.dataset.dock === 'git') { loadGitStatus(); loadGitLog(); }
     });
   });
@@ -1344,6 +1413,14 @@ function bind() {
   els.btnToggleDock.addEventListener('click', function () {
     const collapsed = els.dock.classList.toggle('is-collapsed');
     els.btnToggleDock.textContent = collapsed ? '展开' : '收起';
+    setDockHeight();
+  });
+
+  // 沉浸模式 / 元信息显隐
+  els.btnImmersive.addEventListener('click', function () { setImmersive(!immersive); });
+  els.btnMeta.addEventListener('click', function () {
+    const hidden = document.body.classList.toggle('meta-hidden');
+    els.btnMeta.classList.toggle('is-active', !hidden);
   });
 
   // Git 操作
@@ -1392,12 +1469,22 @@ function bind() {
       runGitSync('push');
       return;
     }
+    if (e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+      e.preventDefault();
+      setImmersive(!immersive);
+      return;
+    }
     // 编辑器内快捷键
     if (document.activeElement === els.fBody) {
       if (e.key === 'b' || e.key === 'B') { e.preventDefault(); MD_ACTIONS.bold(); return; }
       if (e.key === 'i' || e.key === 'I') { e.preventDefault(); MD_ACTIONS.italic(); return; }
       if (e.key === 'k' || e.key === 'K') { e.preventDefault(); MD_ACTIONS.link(); return; }
     }
+  });
+
+  // Esc 退出沉浸模式
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && immersive) { e.preventDefault(); setImmersive(false); }
   });
 
   window.addEventListener('beforeunload', function (e) {
@@ -1469,12 +1556,16 @@ function initDockResizer() {
     document.body.style.cursor = '';
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
+    // 记住当前标签页的高度，之后切回时沿用
+    dockHeights[currentDock] = Math.round(dock.getBoundingClientRect().height);
+    saveDockHeights();
   };
 
   resizer.addEventListener('mousedown', function (e) {
     if (dock.classList.contains('is-collapsed')) {
       dock.classList.remove('is-collapsed');
-      dock.style.height = '190px';
+      els.btnToggleDock.textContent = '收起';
+      dock.style.height = (dockHeights[currentDock] || 190) + 'px';
     }
     dragging = true;
     startY = e.clientY;
@@ -1494,7 +1585,7 @@ function cacheEls() {
   const ids = [
     'appView', 'btnNew', 'btnBuild', 'btnGit', 'btnGitPushTop', 'btnPreview', 'btnTheme',
     'searchInput', 'tagFilter', 'postCount', 'postList',
-    'emptyState', 'editorForm', 'fTitle', 'postLoc', 'btnDelete', 'btnSave',
+    'emptyState', 'editorForm', 'fTitle', 'postLoc', 'btnDelete', 'btnSave', 'btnImmersive', 'btnMeta',
     'draftBar', 'draftText', 'btnRestoreDraft', 'btnDropDraft',
     'fDate', 'fSlug', 'fDateTag', 'fExcerpt', 'fBody',
     'fTagInput', 'tagChips', 'tagManager', 'tagManagerList', 'tagAddForm', 'tagAddInput', 'btnTagManage',

@@ -177,20 +177,29 @@
         .prose pre {
             background: linear-gradient(135deg, #1e1e2e, #1a1a2e);
             color: #cdd6f4;
-            padding: 2rem 1.5rem 1.25rem;
+            padding: 2.25rem 1.4rem 1.25rem;
             border-radius: 12px;
-            overflow-x: auto;
             margin: 2rem 0;
             font-size: 0.875rem;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             position: relative;
+            /* 代码不折行、整块横向滚动：长行不会被压扁，也不撑破卡片 */
+            white-space: pre;
+            tab-size: 4;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
         }
+        /* 代码块外层统一控制外边距，避免 pre 与 .code-block 叠加 */
+        .prose .code-block { margin: 2rem 0; }
+        .prose .code-block > pre { margin: 0; }
         /* data-lang 由编辑器注入，用 ::before 标在右上角 */
         .prose pre[data-lang]::before {
             content: attr(data-lang);
             position: absolute;
-            top: 8px;
-            right: 14px;
+            top: 9px;
+            left: 14px;
             font-size: 0.7rem;
             color: rgba(205,214,244,0.45);
             padding: 2px 10px;
@@ -211,10 +220,26 @@
             background: transparent;
             padding: 0;
             color: inherit;
+            white-space: pre;
+            font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.86em;
+            line-height: 1.75;
         }
+        /* 行内代码允许换行，避免长标识符撑破段落 */
+        .prose code:not(pre code) { word-break: break-word; }
         .code-block { position: relative; }
-        .copy-btn { transition: transform 0.2s, opacity 0.2s; }
-        .copy-btn:hover { transform: scale(1.1); }
+        /* 复制按钮必须绝对定位到右上角：否则它会作为普通块级元素排在 <pre> 之前，
+           把代码整体顶下去、还多出一块空白 —— 这正是代码块“显示不佳”的原因。 */
+        .copy-btn {
+            position: absolute;
+            top: 10px; right: 10px; z-index: 2;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px;
+            border: none; cursor: pointer;
+            color: #94a3b8;
+            transition: transform 0.2s, opacity 0.2s, color 0.2s;
+        }
+        .copy-btn:hover { transform: scale(1.12); color: var(--accent); }
         .btn-back {
             background: linear-gradient(135deg, var(--accent), #fb923c);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -356,7 +381,7 @@
         .prose pre {
             background: #d8dde6 !important;
             color: #334155 !important;
-            padding: 1.5rem 1.5rem 1.25rem !important;
+            padding: 2.35rem 1.4rem 1.25rem !important;
             border-radius: 16px !important;
             border: none !important;
             box-shadow:

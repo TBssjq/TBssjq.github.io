@@ -603,7 +603,7 @@ html[data-theme='dark'] .btn-primary {
     height: 190px;
     background: var(--surface);
     box-shadow: 0 -6px 18px rgba(163, 177, 198, .28);
-    transition: height .28s var(--ease);
+    /* 高度由 JS（GSAP）统一驱动，避免与 CSS 过渡互相打架 */
 }
 html[data-theme='dark'] .dock { box-shadow: 0 -6px 18px rgba(0, 0, 0, .32); }
 .dock.is-collapsed { height: 36px; }
@@ -700,6 +700,92 @@ html[data-theme='dark'] .dock { box-shadow: 0 -6px 18px rgba(0, 0, 0, .32); }
 .git-commit__hash { flex: none; color: var(--accent-ink); }
 .git-commit__msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .git-empty { color: var(--muted); font-family: var(--serif); }
+
+/* ═══════════════════════════════════════════
+   预览：代码块 / 表格 / 任务列表（对齐文章页）
+   ═══════════════════════════════════════════ */
+.preview, .body-input, .post-list, .log, .git-panel, .git-files, .git-log {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.preview .code-block { position: relative; margin: 0 0 1.25rem; }
+.preview .copy-btn {
+    position: absolute; top: 8px; right: 8px; z-index: 2;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px;
+    border: none; border-radius: 8px;
+    background: var(--surface); color: var(--dim);
+    cursor: pointer; box-shadow: var(--sh-out-sm);
+}
+.preview .copy-btn:hover { color: var(--accent); }
+.preview .copy-btn .w-4 { width: 14px; height: 14px; }
+
+.preview pre {
+    position: relative;
+    white-space: pre; tab-size: 4;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    padding: 32px 14px 12px;
+}
+.preview pre code { white-space: pre; font-size: 12.5px; line-height: 1.75; }
+.preview pre[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: 9px; left: 12px;
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: .06em; text-transform: lowercase;
+    color: var(--muted);
+}
+.preview code:not(pre code) { white-space: break-spaces; word-break: break-word; }
+
+.preview .table-wrap {
+    margin: 0 0 1.25rem;
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: var(--sh-in-sm);
+}
+.preview table { width: 100%; border-collapse: collapse; font-family: var(--serif); font-size: .84rem; }
+.preview th, .preview td {
+    padding: 8px 10px; text-align: left; text-indent: 0;
+    border-bottom: 1px solid var(--line);
+}
+.preview th { background: var(--surface-2); color: var(--text); font-weight: 700; white-space: nowrap; }
+.preview tbody tr:last-child td { border-bottom: none; }
+.preview th.is-center, .preview td.is-center { text-align: center; }
+.preview th.is-right, .preview td.is-right { text-align: right; }
+
+.preview .task-list { list-style: none; padding-left: .25rem; }
+.preview .task-check { margin-right: .4rem; accent-color: var(--accent); }
+.preview .md-figure { margin: 0 0 1.25rem; text-align: center; }
+.preview .md-figure figcaption { margin-top: .5rem; font-size: .8rem; color: var(--muted); text-indent: 0; }
+.preview h2, .preview h3, .preview h4, .preview h5, .preview h6 { text-indent: 0; }
+.preview h4, .preview h5, .preview h6 { color: var(--text); margin: 1.2rem 0 .6rem; }
+.preview li > p { text-indent: 0; }
+.preview del { color: var(--muted); }
+
+/* ═══════════════════════════════════════════
+   沉浸模式：左编辑 · 右预览，铺满全屏
+   ═══════════════════════════════════════════ */
+#btnMeta { display: none; }
+body.is-immersive #btnMeta { display: inline-flex; }
+
+body.is-immersive .topbar,
+body.is-immersive .sidebar,
+body.is-immersive .dock { display: none; }
+
+body.is-immersive .layout { display: block; }
+
+body.is-immersive .editor-pane {
+    position: fixed; inset: 0; z-index: 80;
+    background: var(--bg, var(--surface));
+}
+
+body.is-immersive .editor { padding: 16px 20px 12px; gap: 12px; }
+body.is-immersive .panes { min-height: 0; }
+body.is-immersive .pane-edit, body.is-immersive .pane-preview { min-height: 0; }
+body.is-immersive.meta-hidden .meta-grid,
+body.is-immersive.meta-hidden .draft-bar { display: none; }
+
+.btn.is-active { color: var(--accent-ink); box-shadow: var(--sh-in-sm); }
 
 /* ── 响应式 ── */
 @media (max-width: 1180px) {
