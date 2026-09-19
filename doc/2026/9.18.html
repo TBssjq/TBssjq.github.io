@@ -129,14 +129,14 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void f(int x) {
-                        x = 99;
-                    }
+    x = 99;
+}
 
-                    int main() {
-                        int a = 1;
-                        f(a);
-                        printf("%d\n", a); // 输出 1
-                    }</code></pre>
+int main() {
+    int a = 1;
+    f(a);
+    printf("%d\n", a); // 输出 1
+}</code></pre>
                     </div>
 
                     <p>调用 <code>f(a)</code> 时，只是把 <code>a</code> 的值 <code>1</code> 拷贝给形参 <code>x</code>。<br><code>x</code> 是函数内部的局部变量，改它不影响 <code>a</code>。</p>
@@ -152,23 +152,23 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void set(int *p) {
-                        *p = 99;
-                    }
+    *p = 99;
+}
 
-                    void reset(int *p) {
-                        p = NULL;
-                    }
+void reset(int *p) {
+    p = NULL;
+}
 
-                    int main() {
-                        int a = 1;
-                        int *q = &amp;a;
+int main() {
+    int a = 1;
+    int *q = &amp;a;
 
-                        set(q);
-                        printf("%d\n", a); // 输出 99
+    set(q);
+    printf("%d\n", a); // 输出 99
 
-                        reset(q);
-                        printf("%p\n", (void*)q); // q 仍然指向 a，没有被改成 NULL
-                    }</code></pre>
+    reset(q);
+    printf("%p\n", (void*)q); // q 仍然指向 a，没有被改成 NULL
+}</code></pre>
                     </div>
 
                     <p><code>set(q)</code> 时，<code>q</code> 的地址值被拷贝给 <code>p</code>。<br>所以 <code>p</code> 和 <code>q</code> 指向同一个 <code>a</code>，<code>*p = 99</code> 能改 <code>a</code>。</p>
@@ -186,14 +186,14 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void f(int x) {
-                        x = 99;
-                    }
+    x = 99;
+}
 
-                    int main() {
-                        int a = 1;
-                        f(a);
-                        // a 仍然是 1
-                    }</code></pre>
+int main() {
+    int a = 1;
+    f(a);
+    // a 仍然是 1
+}</code></pre>
                     </div>
 
                     <p>对象也一样：</p>
@@ -205,12 +205,12 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void g(std::string s) {
-                        s += "!";
-                    }
+    s += "!";
+}
 
-                    std::string t = "hi";
-                    g(t);
-                    // t 仍然是 "hi"，因为 s 是 t 的拷贝</code></pre>
+std::string t = "hi";
+g(t);
+// t 仍然是 "hi"，因为 s 是 t 的拷贝</code></pre>
                     </div>
 
                     <hr>
@@ -224,14 +224,14 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void f(int&amp; x) {
-                        x = 99;
-                    }
+    x = 99;
+}
 
-                    int main() {
-                        int a = 1;
-                        f(a);
-                        // a 变成 99
-                    }</code></pre>
+int main() {
+    int a = 1;
+    f(a);
+    // a 变成 99
+}</code></pre>
                     </div>
 
                     <p>调用时不用写 <code>&amp;a</code>，函数定义里也不用写 <code>*x</code>：</p>
@@ -243,12 +243,12 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void g(std::string&amp; s) {
-                        s += "!";
-                    }
+    s += "!";
+}
 
-                    std::string t = "hi";
-                    g(t);
-                    // t 变成 "hi!"</code></pre>
+std::string t = "hi";
+g(t);
+// t 变成 "hi!"</code></pre>
                     </div>
 
                     <p>语法上 <code>x</code>、<code>s</code> 就像普通变量，但语义上它们是实参的别名。<br>底层通常还是通过地址实现，但这是编译器实现细节。</p>
@@ -264,12 +264,12 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void print(const std::string&amp; s) {
-                        std::cout &lt;&lt; s &lt;&lt; std::endl;
-                        // s += "!"; // 不行，const 不能改
-                    }
+    std::cout &lt;&lt; s &lt;&lt; std::endl;
+    // s += "!"; // 不行，const 不能改
+}
 
-                    std::string t = "hello";
-                    print(t);</code></pre>
+std::string t = "hello";
+print(t);</code></pre>
                     </div>
 
                     <p><code>const std::string&amp;</code> 常用于大对象传参：<br>不拷贝对象，同时保证函数内部不能修改它。</p>
@@ -287,10 +287,10 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void swap(int *a, int *b) {
-                        int t = *a;
-                        *a = *b;
-                        *b = t;
-                    }</code></pre>
+    int t = *a;
+    *a = *b;
+    *b = t;
+}</code></pre>
                     </div>
 
                     <p>问题：中间的 <code>int t</code> 可不可以换成 <code>int *t</code>？</p>
@@ -314,8 +314,8 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int *t = *a;     // 左边指针，右边 int，类型不匹配
-                    int *t; *t = *a; // t 未初始化，野指针，UB
-                    int *t = a;      // 类型匹配，但 t 保存地址，不是旧值</code></pre>
+int *t; *t = *a; // t 未初始化，野指针，UB
+int *t = a;      // 类型匹配，但 t 保存地址，不是旧值</code></pre>
                     </div>
 
                     <p>如果写成 <code>int *t = a;</code>，那么 <code>t</code> 和 <code>a</code> 指向同一块内存。后面执行 <code>*a = *b;</code> 时，<code>*t</code> 也会跟着变，无法保存原来的值。</p>
@@ -329,10 +329,10 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void swap(int *a, int *b) {
-                        int t = *a;
-                        *a = *b;
-                        *b = t;
-                    }</code></pre>
+    int t = *a;
+    *a = *b;
+    *b = t;
+}</code></pre>
                     </div>
 
                     <p>这里的 <code>t</code> 保存的是“值”，所以必须是 <code>int</code>，不是 <code>int *</code>。</p>
@@ -388,18 +388,18 @@
                         </button>
                         <pre data-lang="c"><code>#include &lt;stdio.h&gt;
 
-                    void swap(int *a, int *b) {
-                        int t = *a;
-                        *a = *b;
-                        *b = t;
-                    }
+void swap(int *a, int *b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
 
-                    int main() {
-                        int x = 3, y = 5;
-                        swap(&amp;x, &amp;y);   // 传地址
-                        printf("x=%d, y=%d\n", x, y); // x=5, y=3
-                        return 0;
-                    }</code></pre>
+int main() {
+    int x = 3, y = 5;
+    swap(&amp;x, &amp;y);   // 传地址
+    printf("x=%d, y=%d\n", x, y); // x=5, y=3
+    return 0;
+}</code></pre>
                     </div>
 
                     <p>关键点：</p>
@@ -423,38 +423,38 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code># int f(int x) { return x + 1; }
-                    f:
-                        pushq %rbp
-                        movq %rsp, %rbp
-                        movl %edi, -4(%rbp)      # 形参 x 是实参的拷贝
-                        movl -4(%rbp), %eax
-                        addl $1, %eax
-                        popq %rbp
-                        ret
+f:
+    pushq %rbp
+    movq %rsp, %rbp
+    movl %edi, -4(%rbp)      # 形参 x 是实参的拷贝
+    movl -4(%rbp), %eax
+    addl $1, %eax
+    popq %rbp
+    ret
 
-                    # void swap(int *a, int *b)
-                    swap:
-                        pushq %rbp
-                        movq %rsp, %rbp
-                        movq %rdi, -8(%rbp)      # a
-                        movq %rsi, -16(%rbp)     # b
-                        movq -8(%rbp), %rax
-                        movl (%rax), %eax        # *a
-                        movl %eax, -20(%rbp)     # t = *a
-                        movq -16(%rbp), %rax
-                        movl (%rax), %eax        # *b
-                        movq -8(%rbp), %rdx
-                        movl %eax, (%rdx)        # *a = *b
-                        movq -16(%rbp), %rax
-                        movl -20(%rbp), %edx
-                        movl %edx, (%rax)        # *b = t
-                        popq %rbp
-                        ret
+# void swap(int *a, int *b)
+swap:
+    pushq %rbp
+    movq %rsp, %rbp
+    movq %rdi, -8(%rbp)      # a
+    movq %rsi, -16(%rbp)     # b
+    movq -8(%rbp), %rax
+    movl (%rax), %eax        # *a
+    movl %eax, -20(%rbp)     # t = *a
+    movq -16(%rbp), %rax
+    movl (%rax), %eax        # *b
+    movq -8(%rbp), %rdx
+    movl %eax, (%rdx)        # *a = *b
+    movq -16(%rbp), %rax
+    movl -20(%rbp), %edx
+    movl %edx, (%rax)        # *b = t
+    popq %rbp
+    ret
 
-                    # 调用 swap(&amp;x, &amp;y)
-                        leaq x(%rip), %rdi
-                        leaq y(%rip), %rsi
-                        call swap</code></pre>
+# 调用 swap(&amp;x, &amp;y)
+    leaq x(%rip), %rdi
+    leaq y(%rip), %rsi
+    call swap</code></pre>
                     </div>
 
                     <hr>
@@ -503,9 +503,9 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int x = 10;
-                    int *p = &amp;x;      // p 存的是 x 的地址
-                    printf("%d", *p); // *p 就是 x，输出 10
-                    *p = 20;          // 通过 p 修改 x</code></pre>
+int *p = &amp;x;      // p 存的是 x 的地址
+printf("%d", *p); // *p 就是 x，输出 10
+*p = 20;          // 通过 p 修改 x</code></pre>
                     </div>
 
                     <p><code>*</code> 和 <code>&amp;</code> 有点像反操作：</p>
@@ -524,7 +524,7 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int x = 10;
-                    int *a = &amp;x;</code></pre>
+int *a = &amp;x;</code></pre>
                     </div>
 
                     <div class="table-wrap">
@@ -572,10 +572,10 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void swap(int *a, int *b) {
-                        int t = *a;
-                        *a = *b;
-                        *b = t;
-                    }</code></pre>
+    int t = *a;
+    *a = *b;
+    *b = t;
+}</code></pre>
                     </div>
 
                     <ul>
@@ -612,8 +612,8 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>int *p{arr};          // 指向首元素
-                    int *p{&amp;arr[0]};      // 指向首元素
-                    int (*p)[6]{&amp;arr};    // 指向整个数组</code></pre>
+int *p{&amp;arr[0]};      // 指向首元素
+int (*p)[6]{&amp;arr};    // 指向整个数组</code></pre>
                     </div>
 
                     <h4 id="34-所有指针的大小都一样吗">3.4 所有指针的大小都一样吗</h4>
@@ -662,16 +662,16 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code># int x = 10; int *p = &amp;x; int y = *p; *p = 20;
-                        movl $10, x(%rip)
-                        leaq x(%rip), %rax
-                        movq %rax, p(%rip)
+    movl $10, x(%rip)
+    leaq x(%rip), %rax
+    movq %rax, p(%rip)
 
-                        movq p(%rip), %rax
-                        movl (%rax), %eax        # y = *p
-                        movl %eax, y(%rip)
+    movq p(%rip), %rax
+    movl (%rax), %eax        # y = *p
+    movl %eax, y(%rip)
 
-                        movq p(%rip), %rax
-                        movl $20, (%rax)         # *p = 20</code></pre>
+    movq p(%rip), %rax
+    movl $20, (%rax)         # *p = 20</code></pre>
                     </div>
 
                     <hr>
@@ -792,8 +792,8 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void func(int arr[]);
-                    void func(int *arr);
-                    void func(int arr[10]); // 10 会被忽略</code></pre>
+void func(int *arr);
+void func(int arr[10]); // 10 会被忽略</code></pre>
                     </div>
 
                     <h4 id="44-但数组不是指针">4.4 但数组不是指针</h4>
@@ -807,7 +807,7 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int arr[5];
-                    int *p = arr;   // arr 退化成 int *</code></pre>
+int *p = arr;   // arr 退化成 int *</code></pre>
                     </div>
 
                     <p>但是：</p>
@@ -819,7 +819,7 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>sizeof(arr)   // 整个数组大小，比如 5 * sizeof(int)
-                    sizeof(p)     // 指针大小，比如 8 字节</code></pre>
+sizeof(p)     // 指针大小，比如 8 字节</code></pre>
                     </div>
 
                     <p><code>&amp;arr</code> 的类型是 <code>int (*)[5]</code>，指向整个数组；<br><code>&amp;p</code> 的类型是 <code>int **</code>，指向指针变量。</p>
@@ -837,7 +837,7 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int m[2][3] = { {1,2,3}, {4,5,6} };
-                    int *q[2] = { m[0], m[1] };</code></pre>
+int *q[2] = { m[0], m[1] };</code></pre>
                     </div>
 
                     <ul>
@@ -859,7 +859,7 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int (*p)[3] = m;
-                    p[1][2]; // 输出 6</code></pre>
+p[1][2]; // 输出 6</code></pre>
                     </div>
 
                     <ul>
@@ -982,11 +982,11 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>int arr[3] = {10, 20, 30};
-                    int *p = arr;
+int *p = arr;
 
-                    int a = arr[1];
-                    int b = p[1];
-                    int c = *arr;</code></pre>
+int a = arr[1];
+int b = p[1];
+int c = *arr;</code></pre>
                     </div>
 
                     <p>数据段：</p>
@@ -998,12 +998,12 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code>    .data
-                    arr:
-                        .long 10          # arr[0]
-                        .long 20          # arr[1]
-                        .long 30          # arr[2]
-                    p:
-                        .quad arr         # p 是一个指针变量，里面存的是 arr 的地址</code></pre>
+arr:
+    .long 10          # arr[0]
+    .long 20          # arr[1]
+    .long 30          # arr[2]
+p:
+    .quad arr         # p 是一个指针变量，里面存的是 arr 的地址</code></pre>
                     </div>
 
                     <p>访问：</p>
@@ -1015,9 +1015,9 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code>    movl arr+4(%rip), %eax    # a = arr[1]
-                        movq p(%rip), %rax        # 把 p 的值加载到 rax
-                        movl 4(%rax), %eax        # b = *(p + 1)
-                        movl arr(%rip), %eax      # c = *arr</code></pre>
+    movq p(%rip), %rax        # 把 p 的值加载到 rax
+    movl 4(%rax), %eax        # b = *(p + 1)
+    movl arr(%rip), %eax      # c = *arr</code></pre>
                     </div>
 
                     <p>关键区别：</p>
@@ -1036,13 +1036,13 @@
                             </svg>
                         </button>
                         <pre data-lang="c"><code>void func(int arr[], int n) {
-                        arr[0] = 100;
-                    }
+    arr[0] = 100;
+}
 
-                    int main() {
-                        int myarr[3] = {1, 2, 3};
-                        func(myarr, 3);
-                    }</code></pre>
+int main() {
+    int myarr[3] = {1, 2, 3};
+    func(myarr, 3);
+}</code></pre>
                     </div>
 
                     <p>汇编：</p>
@@ -1054,18 +1054,18 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code>    leaq myarr(%rip), %rdi    # 把 myarr 的地址放入第一个参数寄存器
-                        movl $3, %esi             # 第二个参数 n = 3
-                        call func
+    movl $3, %esi             # 第二个参数 n = 3
+    call func
 
-                    func:
-                        pushq %rbp
-                        movq %rsp, %rbp
-                        movq %rdi, -8(%rbp)       # arr 指针
-                        movl %esi, -12(%rbp)      # n
-                        movq -8(%rbp), %rax
-                        movl $100, (%rax)         # arr[0] = 100
-                        popq %rbp
-                        ret</code></pre>
+func:
+    pushq %rbp
+    movq %rsp, %rbp
+    movq %rdi, -8(%rbp)       # arr 指针
+    movl %esi, -12(%rbp)      # n
+    movq -8(%rbp), %rax
+    movl $100, (%rax)         # arr[0] = 100
+    popq %rbp
+    ret</code></pre>
                     </div>
 
                     <p>指针加法汇编：</p>
@@ -1077,11 +1077,11 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code># int *p 在 %rax
-                    movl 4(%rax), %eax      # p[1]，偏移 4
-                    # char *p 在 %rax
-                    movzbl 1(%rax), %eax    # p[1]，偏移 1
-                    # double *p 在 %rax
-                    movsd 8(%rax), %xmm0    # p[1]，偏移 8</code></pre>
+movl 4(%rax), %eax      # p[1]，偏移 4
+# char *p 在 %rax
+movzbl 1(%rax), %eax    # p[1]，偏移 1
+# double *p 在 %rax
+movsd 8(%rax), %xmm0    # p[1]，偏移 8</code></pre>
                     </div>
 
                     <hr>
@@ -1154,7 +1154,7 @@
                                     </svg>
                                 </button>
                                 <pre data-lang="cpp"><code>int *p = (int*)6;
-                            int *p = reinterpret_cast&lt;int*&gt;(6);</code></pre>
+int *p = reinterpret_cast&lt;int*&gt;(6);</code></pre>
                             </div>
                             <p>仍然极度危险。</p>
                         </li>
@@ -1175,8 +1175,8 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>int a{10};
-                    int &amp;b{a};
-                    int *c{&amp;a};</code></pre>
+int &amp;b{a};
+int *c{&amp;a};</code></pre>
                     </div>
 
                     <div class="table-wrap">
@@ -1247,17 +1247,17 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code># void inc_ref(int &amp;r) { ++r; }
-                    inc_ref:
-                        pushq %rbp
-                        movq %rsp, %rbp
-                        movq %rdi, -8(%rbp)      # 引用底层通常也是地址
-                        movq -8(%rbp), %rax
-                        movl (%rax), %eax
-                        addl $1, %eax
-                        movq -8(%rbp), %rdx
-                        movl %eax, (%rdx)
-                        popq %rbp
-                        ret</code></pre>
+inc_ref:
+    pushq %rbp
+    movq %rsp, %rbp
+    movq %rdi, -8(%rbp)      # 引用底层通常也是地址
+    movq -8(%rbp), %rax
+    movl (%rax), %eax
+    addl $1, %eax
+    movq -8(%rbp), %rdx
+    movl %eax, (%rdx)
+    popq %rbp
+    ret</code></pre>
                     </div>
 
                     <hr>
@@ -1290,13 +1290,13 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>int main() {
-                        int *p{nullptr};
-                        {
-                            int a = 5;
-                            p = &amp;a;
-                        } // a 生命周期结束，内存被回收
-                        print(p); // p 成为悬空指针
-                    }</code></pre>
+    int *p{nullptr};
+    {
+        int a = 5;
+        p = &amp;a;
+    } // a 生命周期结束，内存被回收
+    print(p); // p 成为悬空指针
+}</code></pre>
                     </div>
 
                     <p>花括号创建局部作用域。执行到 <code>}</code> 时 <code>a</code> 被销毁，但 <code>p</code> 仍保存旧地址。此时 <code>p</code> 是<strong>悬空指针</strong>，不等于 <code>nullptr</code>。</p>
@@ -1308,9 +1308,9 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void print(int(*p)) {
-                        if (p == nullptr) { /* ... */ return; } // 无法拦截悬空指针
-                        std::cout &lt;&lt; (*p) &lt;&lt; std::endl;          // 访问已销毁内存，UB
-                    }</code></pre>
+    if (p == nullptr) { /* ... */ return; } // 无法拦截悬空指针
+    std::cout &lt;&lt; (*p) &lt;&lt; std::endl;          // 访问已销毁内存，UB
+}</code></pre>
                     </div>
 
                     <p>因此，<code>p == nullptr</code> 只能判断空指针，不能判断悬空指针。</p>
@@ -1344,14 +1344,14 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code># int* dangle() { int a = 5; return &amp;a; }
-                    dangle:
-                        pushq %rbp
-                        movq %rsp, %rbp
-                        subq $16, %rsp
-                        movl $5, -4(%rbp)
-                        leaq -4(%rbp), %rax      # 返回局部变量地址
-                        leave
-                        ret                       # 返回后该栈帧失效，rax 成悬空地址</code></pre>
+dangle:
+    pushq %rbp
+    movq %rsp, %rbp
+    subq $16, %rsp
+    movl $5, -4(%rbp)
+    leaq -4(%rbp), %rax      # 返回局部变量地址
+    leave
+    ret                       # 返回后该栈帧失效，rax 成悬空地址</code></pre>
                     </div>
 
                     <hr>
@@ -1369,10 +1369,10 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>int n;
-                    std::cin &gt;&gt; n;
-                    int* array = new int[n];
-                    // 输入、逆序输出
-                    delete[] array;</code></pre>
+std::cin &gt;&gt; n;
+int* array = new int[n];
+// 输入、逆序输出
+delete[] array;</code></pre>
                     </div>
 
                     <p>问题是数组大小固定，无法自动扩容，且必须手动释放内存。</p>
@@ -1398,13 +1398,13 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>void reserve(size_t new_capacity) {
-                        if (new_capacity &lt;= capacity) return;
-                        int* new_data = new int[new_capacity];
-                        std::copy(data, data + size, new_data);
-                        delete[] data;
-                        data = new_data;
-                        capacity = new_capacity;
-                    }</code></pre>
+    if (new_capacity &lt;= capacity) return;
+    int* new_data = new int[new_capacity];
+    std::copy(data, data + size, new_data);
+    delete[] data;
+    data = new_data;
+    capacity = new_capacity;
+}</code></pre>
                     </div>
 
                     <ul>
@@ -1423,14 +1423,14 @@
                             </svg>
                         </button>
                         <pre data-lang="cpp"><code>DynamicArray array;
-                    for (int i = 0; i &lt; n; ++i) {
-                        int val;
-                        std::cin &gt;&gt; val;
-                        array.push_back(val);
-                    }
-                    for (int i = array.getSize() - 1; i &gt;= 0; --i) {
-                        std::cout &lt;&lt; array[i] &lt;&lt; ' ';
-                    }</code></pre>
+for (int i = 0; i &lt; n; ++i) {
+    int val;
+    std::cin &gt;&gt; val;
+    array.push_back(val);
+}
+for (int i = array.getSize() - 1; i &gt;= 0; --i) {
+    std::cout &lt;&lt; array[i] &lt;&lt; ' ';
+}</code></pre>
                     </div>
 
                     <p>不需要手动 <code>delete[]</code>，析构函数自动释放。</p>
@@ -1453,21 +1453,21 @@
                             </svg>
                         </button>
                         <pre data-lang="asm"><code># reserve 扩容关键动作示意
-                        movq new_capacity(%rip), %rdi
-                        shlq $2, %rdi              # new_capacity * sizeof(int)
-                        call _Znam                 # operator new[](unsigned long)
-                        movq %rax, new_data(%rip)
+    movq new_capacity(%rip), %rdi
+    shlq $2, %rdi              # new_capacity * sizeof(int)
+    call _Znam                 # operator new[](unsigned long)
+    movq %rax, new_data(%rip)
 
-                        # std::copy(data, data + size, new_data)
-                        # ... 逐元素拷贝循环 ...
+    # std::copy(data, data + size, new_data)
+    # ... 逐元素拷贝循环 ...
 
-                        movq data(%rip), %rdi
-                        call _ZdaPv                # operator delete[](void*)
+    movq data(%rip), %rdi
+    call _ZdaPv                # operator delete[](void*)
 
-                        movq new_data(%rip), %rax
-                        movq %rax, data(%rip)
-                        movq new_capacity(%rip), %rax
-                        movq %rax, capacity(%rip)</code></pre>
+    movq new_data(%rip), %rax
+    movq %rax, data(%rip)
+    movq new_capacity(%rip), %rax
+    movq %rax, capacity(%rip)</code></pre>
                     </div>
 
                     <hr>

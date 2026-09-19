@@ -26,6 +26,12 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
+// escapeHtml 不处理引号；URL / alt 里出现 " 就会跳出属性、破坏结构。
+// 值若已过 escapeHtml，这里只补引号，避免 & 被二次转义。
+function escapeAttr(s) {
+  return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // 按 n 个空格整体缩进（空行保持为空）
 function indentText(text, n) {
   const pad = new Array(n + 1).join(' ');
@@ -67,14 +73,14 @@ function inline(text) {
   // 图片 ![alt](src "title")
   text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
     function (_, alt, src, title) {
-      return '<img src="' + src + '" alt="' + alt + '"' +
-        (title ? ' title="' + title + '"' : '') + ' loading="lazy">';
+      return '<img src="' + escapeAttr(src) + '" alt="' + escapeAttr(alt) + '"' +
+        (title ? ' title="' + escapeAttr(title) + '"' : '') + ' loading="lazy">';
     });
 
   // 链接 [text](url)（URL 允许成对括号）
   text = text.replace(/\[([^\]]+)\]\(((?:\([^)]*\)|[^()])+)\)/g,
     function (_, t, url) {
-      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + t + '</a>';
+      return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener noreferrer">' + t + '</a>';
     });
 
   // 自动链接 <https://…>
@@ -97,7 +103,7 @@ function inline(text) {
 
 /* ── 块级识别 ── */
 
-const FENCE = /^(\s*)```(\S*)\s*$/;
+const FENCE = /^(\s*)(`{3,}|~{3,})\s*(.*?)\s*$/;
 const HEADING = /^(\s*)(#{1,6})\s+(.*?)\s*$/;
 const HR = /^\s*([-*_])(\s*\1){2,}\s*$/;
 const QUOTE = /^\s*>\s?(.*)$/;
@@ -149,7 +155,13 @@ function isBlockStart(line, next) {
 
 /* ── 各类块渲染 ── */
 
+// 代码正文先寄存，等整体缩进结束后再替换回来。
+// 否则 indentText 会把代码里的每个换行都当成「新行」并加上基准缩进，
+// 而 white-space: pre 会把这些空格原样显示 —— 页面上代码就会整体右移。
+const codeBodies = [];
+
 function codeBlock(lang, code) {
+  const token = '\u0000CODE' + (codeBodies.push(escapeHtml(code)) - 1) + '\u0000';
   return [
     '<div class="code-block">',
     '    <button class="copy-btn" aria-label="复制代码">',
@@ -157,7 +169,7 @@ function codeBlock(lang, code) {
     '            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
     '        </svg>',
     '    </button>',
-    '    <pre' + (lang ? ' data-lang="' + escapeHtml(lang) + '"' : '') + '><code>' + escapeHtml(code) + '</code></pre>',
+    '    <pre' + (lang ? ' data-lang="' + escapeAttr(escapeHtml(lang)) + '"' : '') + '><code>' + token + '</code></pre>',
     '</div>',
   ].join('\n');
 }
@@ -170,7 +182,7 @@ function heading(level, text) {
 function figure(alt, src, cap) {
   const body = [
     '<figure class="md-figure">',
-    '    <img src="' + src + '" alt="' + alt + '" loading="lazy">',
+    '    <img src="' + escapeAttr(src) + '" alt="' + escapeAttr(alt) + '" loading="lazy">',
   ];
   if (cap) body.push('    <figcaption>' + inline(cap) + '</figcaption>');
   body.push('</figure>');
@@ -318,11 +330,15 @@ function parseBlocks(lines, start, end) {
     const fence = FENCE.exec(line);
     if (fence) {
       const fenceIndent = fence[1].length;
-      const lang = fence[2] || '';
+      const marker = fence[2];
+      const ch = marker.charAt(0);
+      const lang = fence[3] || '';
+      // 闭合围栏必须是同一种字符、且长度不少于开启围栏（CommonMark）
+      const closeRe = new RegExp('^\\s*' + (ch === '~' ? '~' : '`') + '{' + marker.length + ',}\\s*$');
       const body = [];
       i++;
       while (i < end) {
-        if (/^\s*```\s*$/.test(lines[i])) { i++; break; }
+        if (closeRe.test(lines[i])) { i++; break; }
         const lead = /^\s*/.exec(lines[i])[0].length;
         body.push(lines[i].slice(Math.min(fenceIndent, lead)));
         i++;
@@ -389,15 +405,20 @@ function parseBlocks(lines, start, end) {
 
 function render(mdText) {
   slugCount.clear();
+  codeBodies.length = 0;
   const lines = String(mdText == null ? '' : mdText).replace(/\r\n?/g, '\n').split('\n');
   const blocks = parseBlocks(lines, 0, lines.length);
-  return blocks.map(function (b) { return indentText(b, PAD.length); }).join('\n\n');
+  return blocks
+    .map(function (b) { return indentText(b, PAD.length); })
+    .join('\n\n')
+    .replace(/\u0000CODE(\d+)\u0000/g, function (_, i) { return codeBodies[+i]; });
 }
 
 module.exports = {
   render: render,
   inline: inline,
   escapeHtml: escapeHtml,
+  escapeAttr: escapeAttr,
   slugify: slugify,
   PAD: PAD,
 };

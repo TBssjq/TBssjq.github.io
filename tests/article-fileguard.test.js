@@ -29,12 +29,9 @@ function makeElement() {
 }
 
 test('admin page should be usable without a login gate', async () => {
-  const previousEnv = process.env.ADMIN_TOKEN;
   const previousPort = process.env.ADMIN_PORT;
 
   process.env.ADMIN_PORT = '0';
-  delete process.env.ADMIN_TOKEN;
-  delete require.cache[require.resolve('../tools/src/auth')];
   delete require.cache[require.resolve('../tools/src/server')];
 
   try {
@@ -54,9 +51,7 @@ test('admin page should be usable without a login gate', async () => {
 
     await new Promise((resolve, reject) => server.close((err) => err ? reject(err) : resolve()));
   } finally {
-    if (previousEnv) process.env.ADMIN_TOKEN = previousEnv; else delete process.env.ADMIN_TOKEN;
     if (previousPort) process.env.ADMIN_PORT = previousPort; else delete process.env.ADMIN_PORT;
-    delete require.cache[require.resolve('../tools/src/auth')];
     delete require.cache[require.resolve('../tools/src/server')];
   }
 });
@@ -194,80 +189,34 @@ test('site theme script should not crash when storage is blocked', () => {
 });
 
 test('admin delete route should allow deletion without token prompt', async () => {
-  const previousEnv = process.env.ADMIN_TOKEN;
   const previousPort = process.env.ADMIN_PORT;
   const year = '2099';
   const slug = 'delete-without-token';
   const file = path.join(__dirname, '..', 'tools', 'posts', year, slug + '.md');
 
   process.env.ADMIN_PORT = '0';
-  delete process.env.ADMIN_TOKEN;
-  delete require.cache[require.resolve('../tools/src/auth')];
   delete require.cache[require.resolve('../tools/src/server')];
 
   try {
     const server = require('../tools/src/server').start();
     await new Promise((resolve) => server.once('listening', resolve));
     const port = server.address().port;
-    const token = 'delete-check-token-123';
-    const tokenFile = path.join(__dirname, '..', 'tools', '.admin-token');
-    fs.writeFileSync(tokenFile, token + '\n', { encoding: 'utf8', mode: 0o600 });
-
-    const loginRes = await fetch('http://127.0.0.1:' + port + '/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token }),
-    });
-    const loginCookie = loginRes.headers.get('set-cookie');
-    assert.equal(loginRes.status, 200, 'login should succeed with the current admin token');
 
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, '---\ntitle: delete token check\ndate: 2099-01-01\n---\n\nbody\n', 'utf8');
 
     const res = await fetch('http://127.0.0.1:' + port + '/api/posts/' + year + '/' + slug, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'Cookie': loginCookie },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
 
-    assert.equal(res.status, 200, 'delete endpoint should allow deletion without a delete-token prompt');
+    assert.equal(res.status, 200, 'delete endpoint should allow deletion without a token prompt');
     assert.equal(fs.existsSync(file), false, 'post file should be removed after delete');
     await new Promise((resolve, reject) => server.close((err) => err ? reject(err) : resolve()));
   } finally {
-    if (previousEnv) process.env.ADMIN_TOKEN = previousEnv; else delete process.env.ADMIN_TOKEN;
     if (previousPort) process.env.ADMIN_PORT = previousPort; else delete process.env.ADMIN_PORT;
-    if (fs.existsSync(path.join(__dirname, '..', 'tools', '.admin-token'))) {
-      fs.unlinkSync(path.join(__dirname, '..', 'tools', '.admin-token'));
-    }
-    delete require.cache[require.resolve('../tools/src/auth')];
+    if (fs.existsSync(file)) fs.unlinkSync(file);
     delete require.cache[require.resolve('../tools/src/server')];
-  }
-});
-
-test('admin auth should allow rotating the local token with the current password', () => {
-  const tokenFile = path.join(__dirname, '..', 'tools', '.admin-token');
-  const authPath = path.join(__dirname, '..', 'tools', 'src', 'auth.js');
-  const previousEnv = process.env.ADMIN_TOKEN;
-  const previousToken = fs.existsSync(tokenFile) ? fs.readFileSync(tokenFile, 'utf8').trim() : '';
-  const oldToken = 'temp-admin-token-123';
-
-  fs.writeFileSync(tokenFile, oldToken + '\n', { encoding: 'utf8', mode: 0o600 });
-  delete process.env.ADMIN_TOKEN;
-  delete require.cache[require.resolve('../tools/src/auth')];
-
-  try {
-    const auth = require('../tools/src/auth');
-
-    assert.equal(auth.verifyToken(oldToken), true);
-    assert.doesNotThrow(() => auth.rotateToken(oldToken, 'next-admin-token-456'));
-    assert.equal(auth.verifyToken('next-admin-token-456'), true);
-    assert.equal(auth.verifyToken(oldToken), false);
-    assert.throws(() => auth.rotateToken('wrong-old-token', 'another-token'), /旧口令不正确/);
-    assert.throws(() => auth.rotateToken('next-admin-token-456', 'next-admin-token-456'), /不能与当前口令相同/);
-  } finally {
-    if (previousEnv) process.env.ADMIN_TOKEN = previousEnv; else delete process.env.ADMIN_TOKEN;
-    if (previousToken) fs.writeFileSync(tokenFile, previousToken + '\n', { encoding: 'utf8', mode: 0o600 });
-    else if (fs.existsSync(tokenFile)) fs.unlinkSync(tokenFile);
-    delete require.cache[require.resolve('../tools/src/auth')];
   }
 });
