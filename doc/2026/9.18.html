@@ -120,6 +120,162 @@
 
                     <p>C++ 默认同样是值传递，但额外支持<strong>引用传递</strong>：<code>void f(int&amp; x)</code>。语法上不写 <code>*</code>，但底层通常仍用地址实现。</p>
 
+                    <h4 id="1-c值传递改形参不影响实参">1. C：值传递，改形参不影响实参</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>void f(int x) {
+                        x = 99;
+                    }
+
+                    int main() {
+                        int a = 1;
+                        f(a);
+                        printf("%d\n", a); // 输出 1
+                    }</code></pre>
+                    </div>
+
+                    <p>调用 <code>f(a)</code> 时，只是把 <code>a</code> 的值 <code>1</code> 拷贝给形参 <code>x</code>。<br><code>x</code> 是函数内部的局部变量，改它不影响 <code>a</code>。</p>
+
+                    <hr>
+
+                    <h4 id="2-c传指针本质还是值传递">2. C：传指针，本质还是值传递</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>void set(int *p) {
+                        *p = 99;
+                    }
+
+                    void reset(int *p) {
+                        p = NULL;
+                    }
+
+                    int main() {
+                        int a = 1;
+                        int *q = &amp;a;
+
+                        set(q);
+                        printf("%d\n", a); // 输出 99
+
+                        reset(q);
+                        printf("%p\n", (void*)q); // q 仍然指向 a，没有被改成 NULL
+                    }</code></pre>
+                    </div>
+
+                    <p><code>set(q)</code> 时，<code>q</code> 的地址值被拷贝给 <code>p</code>。<br>所以 <code>p</code> 和 <code>q</code> 指向同一个 <code>a</code>，<code>*p = 99</code> 能改 <code>a</code>。</p>
+
+                    <p>但 <code>reset(q)</code> 里改的是 <code>p</code> 这个副本，不影响外面的 <code>q</code>。<br>这说明：传指针也是值传递，只不过拷贝的是地址值。</p>
+
+                    <hr>
+
+                    <h4 id="3-c默认也是值传递">3. C++：默认也是值传递</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void f(int x) {
+                        x = 99;
+                    }
+
+                    int main() {
+                        int a = 1;
+                        f(a);
+                        // a 仍然是 1
+                    }</code></pre>
+                    </div>
+
+                    <p>对象也一样：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void g(std::string s) {
+                        s += "!";
+                    }
+
+                    std::string t = "hi";
+                    g(t);
+                    // t 仍然是 "hi"，因为 s 是 t 的拷贝</code></pre>
+                    </div>
+
+                    <hr>
+
+                    <h4 id="4-c引用传递形参是实参的别名">4. C++：引用传递，形参是实参的别名</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void f(int&amp; x) {
+                        x = 99;
+                    }
+
+                    int main() {
+                        int a = 1;
+                        f(a);
+                        // a 变成 99
+                    }</code></pre>
+                    </div>
+
+                    <p>调用时不用写 <code>&amp;a</code>，函数定义里也不用写 <code>*x</code>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void g(std::string&amp; s) {
+                        s += "!";
+                    }
+
+                    std::string t = "hi";
+                    g(t);
+                    // t 变成 "hi!"</code></pre>
+                    </div>
+
+                    <p>语法上 <code>x</code>、<code>s</code> 就像普通变量，但语义上它们是实参的别名。<br>底层通常还是通过地址实现，但这是编译器实现细节。</p>
+
+                    <hr>
+
+                    <h4 id="5-cconst-引用避免拷贝又能只读">5. C++：<code>const</code> 引用，避免拷贝又能只读</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void print(const std::string&amp; s) {
+                        std::cout &lt;&lt; s &lt;&lt; std::endl;
+                        // s += "!"; // 不行，const 不能改
+                    }
+
+                    std::string t = "hello";
+                    print(t);</code></pre>
+                    </div>
+
+                    <p><code>const std::string&amp;</code> 常用于大对象传参：<br>不拷贝对象，同时保证函数内部不能修改它。</p>
+
+                    <hr>
+
                     <h4 id="22-swap-函数int-t-能否换成-int-t">2.2 <code>swap</code> 函数：<code>int t</code> 能否换成 <code>int *t</code></h4>
 
                     <p>原始代码：</p>
