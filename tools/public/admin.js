@@ -523,6 +523,7 @@ async function savePost() {
     clearDraft();
     els.draftBar.hidden = true;
     log('已保存 ' + data.post.year + '/' + data.post.slug + '.md' + (moved ? '（已移动到新位置）' : ''), 'ok');
+    renderPreview(true);   // 保存后强制刷新，确保预览与正文完全一致
     await Promise.all([loadPosts(), loadTags()]);
   } catch (e) {
     log('保存失败: ' + e.message, 'err');
@@ -629,21 +630,26 @@ function setPreview(html) {
 
 async function renderPreview(force) {
   if (els.panes.dataset.view === 'edit') return;
-  const body = els.fBody.value;
-  if (!force && body === state.lastRendered) return;
 
-  if (previewCache.has(body)) {
+  const body = els.fBody.value;
+
+  // 每次调用都先作废「在途请求」。否则在命中缓存 / 内容未变而直接 return 时，
+  // 更早发出、更晚返回的请求会把旧结果盖回来 —— 表现为预览偶尔不更新。
+  const seq = ++previewSeq;
+  if (previewAbort) { previewAbort.abort(); previewAbort = null; }
+
+  if (!force && body === state.lastRendered) return;   // 已是当前内容的最新渲染
+
+  if (previewCache.has(body)) {                        // 命中本地缓存，立即呈现
     setPreview(previewCache.get(body));
     state.lastRendered = body;
     return;
   }
 
-  const seq = ++previewSeq;
-  if (previewAbort) previewAbort.abort();
-  previewAbort = new AbortController();
-
+  const ctrl = new AbortController();
+  previewAbort = ctrl;
   try {
-    const data = await apiJson('/api/preview', 'POST', { body: body }, previewAbort.signal);
+    const data = await apiJson('/api/preview', 'POST', { body: body }, ctrl.signal);
     if (seq !== previewSeq) return;              // 已有更新的请求发出，丢弃这次结果
     cachePreview(body, data.html || '');
     setPreview(data.html || '');

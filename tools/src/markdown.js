@@ -379,6 +379,7 @@ function parseBlocks(lines, start, end) {
       i++;
     }
     if (para.length) out.push(paragraph(para));
+    else i++;   // 防御：任何情况下都保证指针前进，避免死循环
   }
 
   return out;
