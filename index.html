@@ -88,6 +88,15 @@
                                 </span>
                             </a>
                         </li>
+                        <li role="none">
+                            <a role="menuitem" href="forget-me-not/index.html" class="pill">
+                                <span class="hover-circle" aria-hidden="true"></span>
+                                <span class="label-stack">
+                                    <span class="pill-label">勿忘我</span>
+                                    <span class="pill-label-hover" aria-hidden="true">勿忘我</span>
+                                </span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -154,6 +163,7 @@
             <li role="menuitem" data-action="refresh">刷新主页</li>
             <li role="menuitem" data-action="bilibili">去我的 B 站</li>
             <li role="menuitem" data-action="email">给我发邮件</li>
+            <li role="menuitem" data-action="forget">勿忘我</li>
             <li role="menuitem" data-action="top">返回顶部</li>
         </ul>
     </nav>
@@ -444,6 +454,7 @@
         refresh: () => location.reload(),
         bilibili: () => window.open('https://space.bilibili.com/439038862', '_blank', 'noopener'),
         email: () => { location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！'; },
+        forget: () => { window.location.href = 'forget-me-not/index.html'; },
         top: () => window.scrollTo({ top: 0, behavior: 'smooth' })
     });
 

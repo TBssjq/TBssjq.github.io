@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="水神崛起 · 一封没写完的自我介绍 —— 写给还在等、还在期待的你。请不要忘记我。">
+<meta name="author" content="水神崛起">
+<title>勿忘我 · Forget Me Not</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Caveat:wght@400;600&family=Noto+Serif+SC:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   一张纸。所有元素长在同一张纸上。
+   ══════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#243040;
+  --ink-soft:#5a6270;
+  --blue:#5b7fa6;
+  --blue-deep:#2f4f6f;
+  --blue-pale:#8fb0d0;
+  --gold:#a08356;
+  --gold-deep:#7a6845;
+  --red:#a5432f;
+}
+html{scroll-behavior:smooth}
+body{
+  background:#f6f1e6;
+  color:var(--ink);
+  font-family:'Cormorant Garamond','Noto Serif SC',serif;
+  overflow-x:hidden;
+}
+
+/* ── 水彩晕染：整页的呼吸 ── */
+.washfield{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.wash{position:absolute;border-radius:50%;filter:blur(60px);mix-blend-mode:multiply;
+  opacity:.5;animation:drift 24s ease-in-out infinite alternate}
+.w1{width:520px;height:470px;background:#7aa6d6;top:-8%;left:-6%}
+.w2{width:440px;height:420px;background:#c4a6d0;top:18%;right:-8%;animation-delay:-6s}
+.w3{width:480px;height:420px;background:#8cc4b2;top:44%;left:10%;animation-delay:-12s}
+.w4{width:420px;height:380px;background:#eecf96;top:72%;right:8%;animation-delay:-18s}
+.w5{width:360px;height:340px;background:#a8c4e8;top:88%;left:-4%;animation-delay:-22s}
+@keyframes drift{
+  from{transform:translate(0,0) scale(1)}
+  to{transform:translate(56px,-44px) scale(1.18)}
+}
+
+/* ── 纸：整页唯一的容器，无分栏硬切 ── */
+.sheet{
+  position:relative;z-index:3;
+  max-width:1180px;margin:0 auto;
+  padding:0 5vw 100px;
+}
+/* 纸纹 + 竖向纤维，贯穿全页 */
+.sheet::before{
+  content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.36;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23p)' opacity='.22'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg, rgba(160,150,132,.05) 0 1px, transparent 1px 8px);
+  mix-blend-mode:multiply;
+}
+/* 纸的左右裁切边 */
+.sheet::after{
+  content:"";position:absolute;top:0;bottom:0;left:0;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(122,104,69,.3) 6%,rgba(122,104,69,.3) 94%,transparent);
+}
+
+/* ═══════ 3D 标题：浮在纸面上，花枝穿过它 ═══════ */
+.masthead{
+  position:relative;
+  min-height:92vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding-top:8vh;
+}
+/* conic 光晕（09）柔和化，作为标题的光源 */
+.conic{
+  position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+  width:min(820px,130vw);aspect-ratio:1;border-radius:50%;
+  background:conic-gradient(from 0deg at 50% 50%,
+    rgba(30,58,138,.2),rgba(6,182,212,.17),rgba(124,58,237,.15),
+    rgba(219,39,119,.13),rgba(245,158,11,.15),rgba(30,58,138,.2));
+  filter:blur(76px) saturate(135%);
+  animation:spin 32s linear infinite;opacity:.8;pointer-events:none;z-index:0;
+}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.kicker{
+  font-size:10.5px;letter-spacing:.5em;font-weight:300;color:rgba(36,48,64,.55);
+  display:flex;align-items:center;gap:14px;margin-bottom:22px;position:relative;z-index:4;
+}
+.kicker::after{content:"";flex:1;height:1px;background:rgba(36,48,64,.2);max-width:260px}
+
+.title3d{
+  perspective:1100px;perspective-origin:50% 45%;
+  position:relative;z-index:4;
+}
+.title3d h1{
+  font-family:'Playfair Display','Noto Serif SC',serif;
+  font-weight:900;
+  font-size:clamp(72px,19vw,250px);
+  line-height:.88;letter-spacing:.03em;
+  transform-style:preserve-3d;
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  animation:floaty 8s ease-in-out infinite;
+  white-space:nowrap;
+}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -16px}}
+.title3d h1 span{
+  display:inline-block;transform-style:preserve-3d;
+  transform:translateZ(var(--z,34px));
+  background:linear-gradient(140deg,#fff 8%,#a5d4f2 30%,#5b7fa6 50%,#b8a8e8 68%,#fff 92%);
+  background-size:220% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 16px 30px rgba(30,50,80,.2));
+  animation:rise3d 1.15s cubic-bezier(.2,.9,.2,1) backwards, sheen 6.5s linear infinite;
+  text-shadow:
+    1px 1px 0 rgba(120,150,190,.5),2px 2px 0 rgba(105,135,175,.45),
+    3px 3px 0 rgba(90,120,160,.4),4px 4px 0 rgba(78,105,142,.35),
+    5px 5px 0 rgba(66,90,124,.3),6px 6px 0 rgba(55,75,105,.24),
+    8px 10px 24px rgba(30,50,80,.26);
+}
+.title3d h1 span:nth-child(1){animation-delay:.12s,.6s;--z:52px}
+.title3d h1 span:nth-child(2){animation-delay:.26s,1.2s;--z:38px}
+.title3d h1 span:nth-child(3){animation-delay:.40s,1.8s;--z:24px}
+@keyframes rise3d{
+  from{transform:translateZ(0) translateY(96px) rotateX(-58deg) scale(.85);opacity:0}
+  to{transform:translateZ(var(--z,34px)) translateY(0) rotateX(0) scale(1);opacity:1}
+}
+@keyframes sheen{to{background-position:220% 0}}
+.title3d h1 span.outline{
+  background:none;-webkit-text-stroke:2px rgba(91,127,166,.8);color:transparent;
+  text-shadow:0 20px 38px rgba(30,50,80,.16);
+}
+
+/* 标题右侧：拉丁学名（01）＋ 手写日期（04）并排共生 */
+.mast-meta{
+  display:flex;align-items:baseline;gap:26px;flex-wrap:wrap;
+  margin-top:20px;position:relative;z-index:4;
+  opacity:0;animation:fade 1.4s 1.1s ease forwards;
+}
+.latin{font-size:12.5px;letter-spacing:.42em;text-transform:uppercase;color:rgba(36,48,64,.5)}
+.hand-date{font-family:'Caveat';font-size:22px;color:var(--blue);letter-spacing:.04em;transform:rotate(-2deg)}
+@keyframes fade{to{opacity:1}}
+
+/* 线描花（01）：从纸的下缘穿过标题区域生长上来 */
+.lineflower{
+  position:absolute;right:2%;bottom:-6%;width:200px;z-index:2;pointer-events:none;
+  opacity:0;animation:fade 2.2s 1.5s ease forwards;
+}
+.lineflower svg{width:100%;overflow:visible}
+.stem{stroke-dasharray:240;stroke-dashoffset:240;animation:draw 2.2s 1.7s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.petal{transform-origin:center;transform-box:fill-box;opacity:0;transform:scale(.4);
+  animation:bloom .9s cubic-bezier(.34,1.56,.64,1) forwards}
+.petal:nth-of-type(1){animation-delay:2.5s}
+.petal:nth-of-type(2){animation-delay:2.65s}
+.petal:nth-of-type(3){animation-delay:2.8s}
+.petal:nth-of-type(4){animation-delay:2.95s}
+.petal:nth-of-type(5){animation-delay:3.1s}
+@keyframes bloom{to{opacity:1;transform:scale(1)}}
+.core{opacity:0;animation:fade .8s 3.3s ease forwards}
+
+/* 手写引导（04）：指向下方的箭头批注 */
+.hand-cue{
+  position:absolute;left:1%;bottom:10%;z-index:4;
+  font-family:'Caveat';font-size:23px;color:var(--gold-deep);
+  transform:rotate(-5deg);opacity:0;animation:fade 1.4s 2.4s ease forwards;
+}
+.hand-cue svg{display:block;margin-top:4px;margin-left:22px}
+
+/* ═══════ 正文流：多栏报纸式，插画与文字互相缠绕 ═══════ */
+.flow{
+  position:relative;
+  column-count:3;column-gap:38px;column-rule:1px solid rgba(122,104,69,.22);
+  font-size:15.5px;line-height:2.15;font-weight:300;color:#3d4658;
+  text-align:justify;
+  margin-top:2vh;
+}
+@media(max-width:1000px){.flow{column-count:2}}
+@media(max-width:680px){.flow{column-count:1}}
+
+.flow p{margin-bottom:16px;break-inside:avoid-column}
+
+/* 首字下沉（图鉴式的编辑感） */
+.dropcap{
+  float:left;
+  font-family:'Playfair Display','Noto Serif SC',serif;font-weight:900;
+  font-size:76px;line-height:.78;color:var(--blue-deep);
+  margin:6px 14px 0 0;
+  text-shadow:2px 2px 0 rgba(91,127,166,.22);
+}
+
+/* 图鉴插画（02）：浮在文字流里，文字环绕它 */
+.specimen{
+  float:left;width:210px;margin:8px 22px 12px 0;
+  break-inside:avoid;
+  position:relative;
+}
+.specimen .frame{
+  border:1px solid #b9a883;outline:3px double #cbb894;outline-offset:4px;
+  padding:12px;background:rgba(242,234,214,.72);
+  box-shadow:0 12px 28px rgba(90,74,50,.16);
+}
+.specimen svg{width:100%;display:block}
+.specimen figcaption{
+  margin-top:16px;font-size:9.5px;letter-spacing:.2em;color:var(--gold);
+  text-transform:uppercase;text-align:center;
+}
+@media(max-width:680px){.specimen{float:none;width:72%;margin:0 auto 20px}}
+
+/* 第二枚插画：反方向浮动，制造穿插 */
+.specimen.alt{float:right;margin:8px 0 12px 22px;width:170px}
+
+/* 元数据表（02）：嵌在文字流中的虚线小表 */
+.dl-inline{
+  break-inside:avoid;
+  margin:6px 0 18px;padding:14px 16px;
+  background:rgba(242,234,214,.55);
+  border:1px solid rgba(185,168,131,.5);
+}
+.dl-inline dl{display:grid;grid-template-columns:74px 1fr;gap:5px 14px;font-size:13.5px;line-height:1.7}
+.dl-inline dt{font-size:9.5px;letter-spacing:.18em;color:var(--gold-deep);
+  text-transform:uppercase;padding-top:5px;font-family:sans-serif}
+.dl-inline dd{border-bottom:1px dotted rgba(140,120,90,.5);padding-bottom:4px;color:#4a4132}
+
+/* 手写旁注（04）：斜插在栏缝里 */
+.margin-note{
+  break-inside:avoid;
+  font-family:'Caveat';font-size:21px;line-height:1.5;
+  color:var(--blue);
+  margin:6px 0 18px;padding:10px 0 10px 16px;
+  border-left:2px solid rgba(91,127,166,.4);
+  transform:rotate(-1.2deg);
+}
+.margin-note em{font-style:normal;color:var(--gold-deep)}
+
+/* 划线强调：手写下划线的波浪 */
+.underline-hand{
+  position:relative;white-space:nowrap;color:var(--blue-deep);font-weight:500;
+}
+.underline-hand::after{
+  content:"";position:absolute;left:-2px;right:-2px;bottom:-4px;height:6px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='6' viewBox='0 0 60 6'%3E%3Cpath d='M0 4 Q7.5 0 15 4 T30 4 T45 4 T60 4' fill='none' stroke='%235b7fa6' stroke-width='1.6' opacity='.65'/%3E%3C/svg%3E") repeat-x;
+  background-size:60px 6px;
+}
+
+/* 竖排日文小注（和风元素，作为栏中点缀） */
+.tate{
+  float:right;writing-mode:vertical-rl;text-orientation:upright;
+  font-size:12.5px;letter-spacing:.26em;line-height:2;
+  color:rgba(36,48,64,.5);font-weight:300;
+  border-left:1px solid rgba(122,104,69,.28);padding-left:12px;
+  margin:6px 0 14px 18px;height:190px;break-inside:avoid;
+}
+
+/* 斜体引文（02）：在栏流中打断，制造节奏 */
+.pull-inline{
+  break-inside:avoid;margin:8px 0 20px;padding:16px 18px;
+  background:linear-gradient(120deg,rgba(122,166,214,.16),rgba(196,166,208,.16));
+  border-left:3px solid var(--blue);
+  font-family:'Playfair Display','Noto Serif SC',serif;
+  font-style:italic;font-size:17px;line-height:1.8;color:var(--blue-deep);
+}
+
+/* 极简诗（01）：在栏流中作为独立节奏块 */
+.verse{
+  break-inside:avoid;margin:8px 0 20px;
+  font-size:15.5px;line-height:2.4;font-weight:300;letter-spacing:.1em;
+  color:rgba(36,48,64,.82);
+  padding-left:2px;
+}
+
+/* 小标题：栏内的分节标记 */
+.sub-mark{
+  break-inside:avoid;display:block;margin:2px 0 12px;
+  font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--gold-deep);font-family:sans-serif;font-weight:600;
+}
+
+/* ═══════ 页面上的散落装饰：压在文字层之上/之间 ═══════ */
+
+/* 朱红印章（02）：盖在正文右下 */
+.seal-big{
+  position:absolute;right:1%;top:52%;z-index:5;
+  width:86px;height:86px;border:2.5px solid var(--red);color:var(--red);
+  border-radius:8px;display:grid;grid-template-columns:1fr 1fr;place-items:center;
+  font-size:21px;font-weight:600;line-height:1;transform:rotate(-8deg);
+  opacity:.72;box-shadow:0 0 0 1px rgba(165,67,47,.2) inset;
+  animation:sealIn .8s 2.2s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+@keyframes sealIn{from{transform:rotate(-8deg) scale(1.7);opacity:0}to{transform:rotate(-8deg) scale(1);opacity:.72}}
+.seal-big span{display:block}
+@media(max-width:1180px){.seal-big{right:2%;top:auto;bottom:2%}}
+
+/* 水彩花束（04）：从左下缘探入页面 */
+.bouquet{
+  position:absolute;left:-3%;bottom:-2%;width:250px;z-index:4;pointer-events:none;opacity:.9;
+}
+.bouquet svg{width:100%;overflow:visible}
+.bstem{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 2.6s .4s ease forwards}
+.bl{transform-box:fill-box;transform-origin:center;opacity:0;transform:scale(.3);
+  animation:bloom 1s cubic-bezier(.34,1.56,.64,1) forwards}
+.bl:nth-of-type(1){animation-delay:1.6s}
+.bl:nth-of-type(2){animation-delay:1.85s}
+.bl:nth-of-type(3){animation-delay:2.1s}
+.bl:nth-of-type(4){animation-delay:2.35s}
+.bl:nth-of-type(5){animation-delay:2.6s}
+@media(max-width:760px){.bouquet{width:150px;opacity:.5}}
+
+/* 虚线圆角标签（04）：贴在页面边缘 */
+.tag-dash{
+  position:absolute;font-size:9.5px;letter-spacing:.26em;color:#8a93a2;
+  border:1px dashed rgba(140,150,165,.7);padding:6px 13px;border-radius:22px;
+  z-index:5;white-space:nowrap;
+}
+.tag-dash.t1{right:3%;top:34%;transform:rotate(6deg)}
+.tag-dash.t2{left:2%;top:26%;transform:rotate(-4deg)}
+@media(max-width:1180px){.tag-dash.t1,.tag-dash.t2{display:none}}
+
+/* 手写箭头批注（04）：指向印章 */
+.hand-arrow{
+  position:absolute;right:11%;top:47%;z-index:5;
+  font-family:'Caveat';font-size:20px;color:var(--gold-deep);
+  transform:rotate(-12deg);opacity:.85;
+}
+@media(max-width:1180px){.hand-arrow{display:none}}
+
+/* 生长细线（01）：横贯正文流 */
+.grow-rule{
+  position:relative;height:1px;margin:34px 0;
+  background:linear-gradient(90deg,transparent,rgba(122,104,69,.45) 12%,rgba(122,104,69,.45) 88%,transparent);
+  transform:scaleX(0);transform-origin:left;
+  animation:grow 1.8s 2.6s cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes grow{to{transform:scaleX(1)}}
+.grow-rule::after{
+  content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%);
+  width:9px;height:9px;border-radius:50%;background:var(--blue-pale);
+  box-shadow:0 0 0 4px rgba(246,241,230,.9);
+}
+
+/* ═══════ 结尾：手写签名 + 页脚线 ═══════ */
+.colophon{
+  position:relative;margin-top:70px;padding-top:34px;z-index:4;
+  border-top:1px solid rgba(122,104,69,.35);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap;
+}
+.colophon .sig{
+  font-family:'Caveat';font-size:30px;color:var(--blue);
+  transform:rotate(-2deg);
+}
+.colophon .fine{
+  font-size:10px;letter-spacing:.3em;color:rgba(36,48,64,.45);
+  text-align:right;line-height:2;
+}
+
+/* ═══════ 页眉左上：回到主页 ═══════ */
+.back-home{
+  position:absolute;left:0;top:0;z-index:6;
+  font-size:10.5px;letter-spacing:.28em;color:rgba(36,48,64,.5);
+  text-decoration:none;padding-bottom:3px;
+  border-bottom:1px solid rgba(36,48,64,.18);
+  transition:color .3s ease,border-color .3s ease;
+}
+.back-home:hover{color:var(--blue-deep);border-color:var(--blue-pale)}
+
+/* ═══════ 引自主页的自述（信件块） ═══════ */
+.letter{
+  break-inside:avoid;margin:10px 0 20px;padding:20px 22px;
+  background:rgba(242,234,214,.6);
+  border:1px solid rgba(185,168,131,.55);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);
+}
+.letter p{
+  margin:0 0 6px;font-family:'Cormorant Garamond',serif;
+  font-size:16px;line-height:1.95;font-style:italic;color:#3a4457;
+  text-indent:0;text-align:left;
+}
+.letter p:last-child{margin-bottom:0}
+.letter p:nth-child(even){padding-left:14px;color:#4d5a70}
+
+/* 三颗心：呼应主页 hero 的心跳 */
+.hearts{
+  break-inside:avoid;margin:6px 0 18px;
+  font-size:13px;letter-spacing:.5em;color:rgba(181,86,86,.62);
+}
+
+/* ═══════ 回音区块：如果你也记得 ═══════ */
+.echo{
+  position:relative;z-index:4;
+  margin-top:44px;padding-top:30px;
+  border-top:1px dashed rgba(122,104,69,.4);
+}
+.echo-lead{
+  max-width:44em;margin:10px 0 22px;
+  font-size:15px;line-height:2.1;font-weight:300;color:#3d4658;
+}
+.echo-links{display:flex;flex-wrap:wrap;gap:10px}
+.echo-links a{
+  font-size:11px;letter-spacing:.22em;text-decoration:none;
+  color:var(--blue-deep);
+  border:1px dashed rgba(140,150,165,.75);border-radius:22px;
+  padding:7px 15px;
+  transition:color .3s ease,border-color .3s ease,transform .3s ease;
+}
+.echo-links a:hover{color:var(--red);border-color:rgba(165,67,47,.55);transform:translateY(-2px)}
+
+@media(max-width:680px){
+  .letter p{font-size:14.5px}
+  .echo-links a{font-size:10px;padding:6px 12px}
+}
+
+/* 滚动淡入 */
+.reveal{opacity:0;transform:translateY(26px);
+  transition:opacity 1s ease,transform 1s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- 水彩：整页的底色呼吸 -->
+<div class="washfield">
+  <div class="wash w1"></div><div class="wash w2"></div><div class="wash w3"></div>
+  <div class="wash w4"></div><div class="wash w5"></div>
+</div>
+
+<div class="sheet">
+
+  <!-- ══════ 报头：3D 标题 + 线描花 + 手写引导 ══════ -->
+  <header class="masthead">
+    <div class="conic"></div>
+
+    <a class="back-home" href="../index.html">← 回到主页</a>
+
+    <div class="kicker">SHUI SHEN JUE QI · 一封没写完的自我介绍</div>
+
+    <div class="title3d">
+      <h1 id="t3d"><span>勿</span><span>忘</span><span class="outline">我</span></h1>
+    </div>
+
+    <div class="mast-meta">
+      <span class="latin">FRONT-END DEV · GAMER · VFX</span>
+      <span class="hand-date">— a blue afternoon, September</span>
+    </div>
+
+    <!-- 01 线描花：纸面上生长 -->
+    <svg class="lineflower" viewBox="0 0 120 210" fill="none" stroke="#5b7fa6" stroke-width="1.2">
+      <path class="stem" d="M60 200 C60 158 55 126 58 92" stroke-linecap="round"/>
+      <path class="stem" d="M58 126 C44 124 36 114 34 102 C48 102 56 112 58 126Z" fill="#5b7fa6" fill-opacity=".12"/>
+      <path class="stem" d="M59 148 C72 146 80 136 82 124 C68 124 61 134 59 148Z" fill="#5b7fa6" fill-opacity=".12"/>
+      <g transform="translate(58,70)">
+        <ellipse class="petal" cx="0" cy="-16" rx="9" ry="14" fill="#5b7fa6" fill-opacity=".22"/>
+        <ellipse class="petal" cx="15" cy="-5" rx="9" ry="14" transform="rotate(72 15 -5)" fill="#5b7fa6" fill-opacity=".22"/>
+        <ellipse class="petal" cx="9" cy="13" rx="9" ry="14" transform="rotate(144 9 13)" fill="#5b7fa6" fill-opacity=".22"/>
+        <ellipse class="petal" cx="-9" cy="13" rx="9" ry="14" transform="rotate(216 -9 13)" fill="#5b7fa6" fill-opacity=".22"/>
+        <ellipse class="petal" cx="-15" cy="-5" rx="9" ry="14" transform="rotate(288 -15 -5)" fill="#5b7fa6" fill-opacity=".22"/>
+        <circle class="core" r="4.5" fill="#e8c15a"/>
+      </g>
+    </svg>
+
+    <!-- 04 手写引导 -->
+    <div class="hand-cue">
+      往下读 ↓
+      <svg width="52" height="34" viewBox="0 0 52 34" fill="none" stroke="#7a6845" stroke-width="1.8" stroke-linecap="round">
+        <path d="M4 4 C22 10 34 20 40 30"/>
+        <path d="M32 26 L40 30 L36 21"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- ══════ 正文流：所有元素在同一片文字里交织 ══════ -->
+  <div class="flow reveal">
+
+    <span class="sub-mark">I · 我是谁</span>
+
+    <p><span class="dropcap">我</span>叫水神崛起——一个写前端、打游戏、并且自封为「动态视觉魔法师」的人。白天和浏览器、坐标系、关键帧打交道；晚上在脑子里排练那些又酷、却 unreal 的白日梦。</p>
+
+    <p>如果非要用一句话介绍自己，那就是：<span class="underline-hand">把代码变成会动、会发光、会让人「哇」一声的东西</span>。前端开发、游戏、动态视觉，在我这儿常常就是同一件事。</p>
+
+    <!-- 个人属性小表：复用原图鉴表的样式 -->
+    <div class="dl-inline">
+      <dl>
+        <dt>主业</dt><dd>前端开发 · 交互与动效</dd>
+        <dt>热爱</dt><dd>游戏 · 关卡、数值与手感</dd>
+        <dt>自称</dt><dd>动态视觉魔法师</dd>
+        <dt>武器</dt><dd>HTML · CSS · JS · 一点点想象力</dd>
+      </dl>
+    </div>
+
+    <p>我做的东西大多长这样——页面会跟着你的鼠标呼吸，标题能在三维里轻轻转，连一朵花都能从纸面缓缓长出来。比起「做完」，我更在意「做出来时，我自己有没有先被惊艳到」。</p>
+
+    <span class="sub-mark">II · 我大概是哪种人</span>
+
+    <p>我有许多白日梦，cool，却不真实。我花了很久想找一个能并肩的同类，却什么也没找到。也许我真的是个 loser，到最后，证明自己不过是 losers 里的其中一个。</p>
+
+    <div class="margin-note">
+      可我仍然希望，<br>
+      <em>在某个地方，有一个 cool 的朋友在等我。</em>
+    </div>
+
+    <p>他最好高一点、结实一点、外向一点，最好还有那么一点，像我想象中的那个我。在这么大的宇宙里，值得去追的东西很多，而其中之一就是你——<span class="underline-hand">真实的你，还在期待、还在等待的你</span>。</p>
+
+    <span class="sub-mark">III · 海内存知己</span>
+
+    <div class="pull-inline">
+      「海内存知己，天涯若比邻。」<br>
+      —— 我主页的开场白，也是这朵花想说的话。
+    </div>
+
+    <p>这一节不是植物志。它是我在主页上写了很久、却始终没写完的那半句话，换一朵花来说完。</p>
+
+    <div class="letter">
+      <p>I am an ordinary man.</p>
+      <p>I have many daydreams — cool, yet unreal.</p>
+      <p>I spent long years trying to find a comrade, but I found nothing.</p>
+      <p>I may be a loser, and in the end, I proved to be a loser among losers.</p>
+      <p>Somewhere out there, I hope a cool friend is waiting for me —</p>
+      <p>tall, robust, outgoing, and maybe just a little like the me I imagine.</p>
+      <p>In this wide universe, there are many things worth pursuing.</p>
+      <p>And one of them is you — the real you, still hoping, still waiting.</p>
+    </div>
+
+    <div class="hearts">❤ ❤ ❤</div>
+
+    <div class="margin-note">
+      主页上那三颗心，<br>
+      <em>其实是留给还没出现的人。</em>
+    </div>
+
+    <p>这些话原本挂在主页的自我介绍里。搬到这里，是因为它们本来就该长在一朵花旁边——一个前端开发者、游戏爱好者、自封的「动态视觉魔法师」，白天写代码，晚上等一个还没出现的同类。</p>
+
+    <p>所以这朵花是给他的：<span class="underline-hand">如果你就是那个人，你早该认出这句话</span>。</p>
+  </div>
+
+  <!-- 01 生长细线 -->
+  <div class="grow-rule"></div>
+
+  <!-- ══════ 回音：如果你也记得 ══════ -->
+  <section class="echo reveal">
+    <span class="sub-mark">Echo · 如果你也记得</span>
+    <p class="echo-lead">
+      花是给所有人的，话是说给一个人的。若你也在主页上读过那半句「天涯若比邻」，
+      就当这朵花是给你的——不必回信，只要别把我忘得太干净。
+    </p>
+    <div class="echo-links">
+      <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://space.bilibili.com/439038862" target="_blank" rel="noopener noreferrer">B 站</a>
+      <a href="mailto:653294795@qq.com?subject=你好！&body=你好！" rel="nofollow">写封信</a>
+      <a href="../doc/index.html">我的随笔</a>
+      <a href="../index.html">回到主页</a>
+    </div>
+  </section>
+
+  <!-- ══════ 收尾 ══════ -->
+  <div class="colophon reveal">
+    <div class="sig">— 水神崛起</div>
+    <div class="fine">
+      —— 请不要忘记我<br>
+      前端开发者 · 游戏爱好者 · 动态视觉魔法师<br>
+      海内存知己，天涯若比邻
+    </div>
+  </div>
+
+  <!-- ══════ 压在页面上的散落元素 ══════ -->
+  <div class="seal-big"><span>水</span><span>神</span><span>崛</span><span>起</span></div>
+  <div class="hand-arrow">盖个章 ✦</div>
+  <div class="tag-dash t1">FRONT-END · GAME</div>
+  <div class="tag-dash t2">MOTION MAGIC</div>
+
+  <!-- 04 水彩花束：从左下缘探入 -->
+  <svg class="bouquet" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#7d9c74" stroke-width="3" fill="none" stroke-linecap="round" class="bstem">
+      <path d="M100 225 C96 178 92 146 96 112"/>
+      <path d="M100 225 C108 184 114 154 112 124"/>
+      <path d="M100 225 C88 188 78 164 74 144"/>
+    </g>
+    <g class="bl" transform="translate(96,92)">
+      <g fill="#7aa6d6" fill-opacity=".72">
+        <ellipse cx="0" cy="-14" rx="8" ry="13"/><ellipse cx="13" cy="-4" rx="8" ry="13" transform="rotate(72 13 -4)"/>
+        <ellipse cx="8" cy="11" rx="8" ry="13" transform="rotate(144 8 11)"/><ellipse cx="-8" cy="11" rx="8" ry="13" transform="rotate(216 -8 11)"/>
+        <ellipse cx="-13" cy="-4" rx="8" ry="13" transform="rotate(288 -13 -4)"/>
+      </g><circle r="4" fill="#f0c86a"/>
+    </g>
+    <g class="bl" transform="translate(124,108) scale(.8)">
+      <g fill="#8ab0d8" fill-opacity=".66">
+        <ellipse cx="0" cy="-14" rx="8" ry="13"/><ellipse cx="13" cy="-4" rx="8" ry="13" transform="rotate(72 13 -4)"/>
+        <ellipse cx="8" cy="11" rx="8" ry="13" transform="rotate(144 8 11)"/><ellipse cx="-8" cy="11" rx="8" ry="13" transform="rotate(216 -8 11)"/>
+        <ellipse cx="-13" cy="-4" rx="8" ry="13" transform="rotate(288 -13 -4)"/>
+      </g><circle r="4" fill="#f0c86a"/>
+    </g>
+    <g class="bl" transform="translate(70,130) scale(.68)">
+      <g fill="#9dbbdd" fill-opacity=".62">
+        <ellipse cx="0" cy="-14" rx="8" ry="13"/><ellipse cx="13" cy="-4" rx="8" ry="13" transform="rotate(72 13 -4)"/>
+        <ellipse cx="8" cy="11" rx="8" ry="13" transform="rotate(144 8 11)"/><ellipse cx="-8" cy="11" rx="8" ry="13" transform="rotate(216 -8 11)"/>
+        <ellipse cx="-13" cy="-4" rx="8" ry="13" transform="rotate(288 -13 -4)"/>
+      </g><circle r="4" fill="#f0c86a"/>
+    </g>
+    <g class="bl" transform="translate(114,68) scale(.58)">
+      <g fill="#c4a6d0" fill-opacity=".58">
+        <ellipse cx="0" cy="-14" rx="8" ry="13"/><ellipse cx="13" cy="-4" rx="8" ry="13" transform="rotate(72 13 -4)"/>
+        <ellipse cx="8" cy="11" rx="8" ry="13" transform="rotate(144 8 11)"/><ellipse cx="-8" cy="11" rx="8" ry="13" transform="rotate(216 -8 11)"/>
+        <ellipse cx="-13" cy="-4" rx="8" ry="13" transform="rotate(288 -13 -4)"/>
+      </g><circle r="4" fill="#f0c86a"/>
+    </g>
+    <g class="bl" transform="translate(62,92) scale(.52)">
+      <g fill="#eecf96" fill-opacity=".6">
+        <ellipse cx="0" cy="-14" rx="8" ry="13"/><ellipse cx="13" cy="-4" rx="8" ry="13" transform="rotate(72 13 -4)"/>
+        <ellipse cx="8" cy="11" rx="8" ry="13" transform="rotate(144 8 11)"/><ellipse cx="-8" cy="11" rx="8" ry="13" transform="rotate(216 -8 11)"/>
+        <ellipse cx="-13" cy="-4" rx="8" ry="13" transform="rotate(288 -13 -4)"/>
+      </g><circle r="4" fill="#f0c86a"/>
+    </g>
+  </svg>
+</div>
+
+<script>
+/* ══════ 09 的 3D 标题动态 ══════ */
+const t3d=document.getElementById('t3d');
+const chars=t3d.querySelectorAll('span');
+let idle=true,t=0;
+
+document.addEventListener('mousemove',e=>{
+  idle=false;
+  const nx=(e.clientX/innerWidth-.5), ny=(e.clientY/innerHeight-.5);
+  t3d.style.setProperty('--rx',(-ny*14).toFixed(2)+'deg');
+  t3d.style.setProperty('--ry',(nx*22).toFixed(2)+'deg');
+  chars.forEach((c,i)=>{
+    const depth=1-i*0.3;
+    c.style.setProperty('--z',(38+nx*30*depth).toFixed(1)+'px');
+    c.style.transform=`translateZ(var(--z)) rotateY(${(nx*8*depth).toFixed(2)}deg)`;
+  });
+});
+
+setInterval(()=>{
+  t+=0.02;
+  if(idle){
+    t3d.style.setProperty('--rx',(-Math.cos(t*0.7)*13*0.35).toFixed(2)+'deg');
+    t3d.style.setProperty('--ry',(Math.sin(t)*9).toFixed(2)+'deg');
+  }
+},60);
+
+document.addEventListener('mouseleave',()=>{idle=true});
+window.addEventListener('scroll',()=>{
+  if(idle) t3d.style.setProperty('--rx',(-(scrollY/innerHeight)*7).toFixed(2)+'deg');
+},{passive:true});
+
+/* 滚动淡入 */
+const io=new IntersectionObserver(es=>{
+  es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}});
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
