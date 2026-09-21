@@ -196,3 +196,67 @@ document.querySelectorAll('.code-block .copy-btn').forEach((b) => {
         });
     }, { passive: true });
 })();
+
+/* ══ 3D 立体标题：把文章标题拆成逐字 span，并跟随鼠标倾斜（「勿忘我」同款）══ */
+(function initTitle3D() {
+    'use strict';
+    const reduced = safeMatchMedia('(prefers-reduced-motion: reduce)');
+    const SELECTOR = '[data-t3d], .article-title';
+    const items = [];
+
+    const makeChar = (ch) => {
+        const span = document.createElement('span');
+        span.className = 't3d-char';
+        span.textContent = ch === ' ' ? '\u00A0' : ch;
+        return span;
+    };
+
+    const split = (el) => {
+        const text = el.textContent;
+        if (!text.trim()) return;
+        const inner = document.createElement('span');
+        inner.className = 't3d-inner';
+        Array.from(text).forEach((ch, i) => {
+            if (ch === '\n') return;
+            const span = makeChar(ch);
+            // 逐字给不同的 Z 深度，制造立体层次
+            span.style.setProperty('--z', `${40 - (i % 3) * 9}px`);
+            inner.appendChild(span);
+        });
+        el.textContent = '';
+        el.appendChild(inner);
+    };
+
+    const register = (el) => {
+        if (!el || el.__t3d) return;
+        el.__t3d = true;
+        el.classList.add('t3d');
+        let inner = el.querySelector('.t3d-inner');
+        if (!inner) { split(el); inner = el.querySelector('.t3d-inner'); }
+        if (inner) items.push({ el, inner, rect: null });
+    };
+
+    const invalidate = () => items.forEach((it) => { it.rect = null; });
+    window.addEventListener('scroll', invalidate, { passive: true });
+    window.addEventListener('resize', invalidate);
+
+    if (!reduced) {
+        window.addEventListener('mousemove', (e) => {
+            items.forEach((it) => {
+                if (!it.rect) it.rect = it.el.getBoundingClientRect();
+                const r = it.rect;
+                if (!r.width || !r.height) return;
+                const nx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width / 2)));
+                const ny = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (r.height / 2)));
+                it.inner.style.setProperty('--rx', (-ny * 12).toFixed(2) + 'deg');
+                it.inner.style.setProperty('--ry', (nx * 18).toFixed(2) + 'deg');
+            });
+        }, { passive: true });
+    }
+
+    const init = () => document.querySelectorAll(SELECTOR).forEach(register);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+
+    window.T3D = { enhance: register, split };
+})();

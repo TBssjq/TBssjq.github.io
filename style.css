@@ -391,21 +391,81 @@ main {
     position: relative;
 }
 
+/* 字色 / 渐变 / 立体感都交给每个字符（.t3d-char），容器只负责排版 */
 .typewriter-text {
     color: var(--color-text);
     display: inline-block;
     position: relative;
-    background: linear-gradient(135deg, var(--color-text) 0%, var(--color-accent-light) 50%, var(--color-text) 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: textShimmer 6s linear infinite;
 }
 
-@keyframes textShimmer {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
+/* ══════════════════════════════════════════════════════════
+   3D 立体标题（「勿忘我」同款）
+   渐变金属字 + 层叠挤出阴影 + 鼠标倾斜 + 缓慢浮动（配合 T3D 脚本）。
+   配色通过 --t3d-* 变量按页面主题覆盖。
+   ══════════════════════════════════════════════════════════ */
+.t3d {
+    perspective: 1100px;
+    perspective-origin: 50% 45%;
+    background: none;
+}
+
+.t3d-inner {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: t3dFloat 8s ease-in-out infinite;
+}
+
+.t3d-char {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transform: translateZ(var(--z, 30px));
+    background-image: linear-gradient(140deg,
+        var(--t3d-g1, #ffffff) 8%,
+        var(--t3d-g2, #a5d4f2) 32%,
+        var(--t3d-g3, #5b7fa6) 52%,
+        var(--t3d-g4, #b8a8e8) 70%,
+        var(--t3d-g1, #ffffff) 92%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 10px 18px rgba(30, 50, 80, 0.14));
+    text-shadow:
+        1px 1px 0 var(--t3d-sh1, rgba(120, 150, 190, 0.5)),
+        2px 2px 0 var(--t3d-sh1, rgba(120, 150, 190, 0.5)),
+        3px 3px 0 var(--t3d-sh2, rgba(90, 120, 160, 0.4)),
+        4px 4px 0 var(--t3d-sh2, rgba(90, 120, 160, 0.4)),
+        5px 5px 0 var(--t3d-sh3, rgba(60, 85, 120, 0.3)),
+        6px 6px 0 var(--t3d-sh3, rgba(60, 85, 120, 0.3)),
+        8px 10px 22px var(--t3d-sh4, rgba(30, 50, 80, 0.26));
+    animation: t3dSheen 6.5s linear infinite;
+}
+
+@keyframes t3dSheen { to { background-position: 220% 0; } }
+
+@keyframes t3dFloat {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -12px; }
+}
+
+/* 主页 hero：沿用站点青绿主色 */
+.hero-title.t3d {
+    --t3d-g1: #ffffff;
+    --t3d-g2: #a8f0e6;
+    --t3d-g3: #009e8e;
+    --t3d-g4: #5ec9c0;
+    --t3d-sh1: rgba(0, 158, 142, 0.45);
+    --t3d-sh2: rgba(0, 122, 109, 0.38);
+    --t3d-sh3: rgba(0, 96, 86, 0.3);
+    --t3d-sh4: rgba(0, 60, 55, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .t3d-inner { animation: none; }
+    .t3d-char { animation: none; }
 }
 
 /* 标题光晕效果 */
