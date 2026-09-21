@@ -63,10 +63,10 @@
                 </p>
 
             <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
-                    <h2 id="cc-指针数组参数传递引用ub-与动态数组详细合集最终版">C/C++ 指针、数组、参数传递、引用、UB 与动态数组详细合集（最终版）</h2>
+                    <h2 id="cc-指针数组参数传递引用ub-与动态数组详细合集nasm-汇编完善版">C/C++ 指针、数组、参数传递、引用、UB 与动态数组详细合集（NASM 汇编完善版）</h2>
 
                     <blockquote>
-                        <p><strong>汇编约定</strong>：x86-64 System V ABI，AT&amp;T 语法，GCC/Clang <code>-O0</code> 风格示意。汇编用于理解底层，不保证与实际编译结果逐字节相同。</p>
+                        <p><strong>汇编约定</strong>：x86-64 System V ABI，NASM 语法（Intel 风格），GCC/Clang <code>-O0</code> 风格示意。汇编用于理解底层，不保证与实际编译结果逐字节相同。</p>
                     </blockquote>
 
                     <hr>
@@ -77,10 +77,11 @@
 
                     <ul>
                         <li>平台：x86-64 System V。</li>
-                        <li>语法：AT&amp;T。</li>
-                        <li>参数寄存器：<code>%rdi, %rsi, %rdx, %rcx, %r8, %r9</code>。</li>
-                        <li>返回值：<code>%rax</code>。</li>
-                        <li>栈帧：<code>pushq %rbp; movq %rsp, %rbp; ...; popq %rbp; ret</code>。</li>
+                        <li>语法：NASM，Intel 风格。</li>
+                        <li>参数寄存器：<code>rdi, rsi, rdx, rcx, r8, r9</code>。</li>
+                        <li>返回值：<code>rax</code>。</li>
+                        <li>栈帧：<code>push rbp; mov rbp, rsp; ...; pop rbp; ret</code>。</li>
+                        <li>全局变量访问常用 <code>[rel 符号]</code>。</li>
                     </ul>
 
                     <h4 id="12-关键结论">1.2 关键结论</h4>
@@ -107,6 +108,7 @@
                                 <pre data-lang="c"><code>ptr + i 等价于 (char *)ptr + i * sizeof(*ptr)</code></pre>
                             </div>
                         </li>
+                        <li>指针自增、自减按所指向类型大小缩放。</li>
                         <li>修改字符串字面量：C 中 <code>char *s = "hello"; s[0] = 'H';</code> 是 UB；C++11 起 <code>char *s = "hello";</code> 本身已非法或弃用。</li>
                     </ul>
 
@@ -120,7 +122,7 @@
 
                     <p>C++ 默认同样是值传递，但额外支持<strong>引用传递</strong>：<code>void f(int&amp; x)</code>。语法上不写 <code>*</code>，但底层通常仍用地址实现。</p>
 
-                    <h4 id="1-c值传递改形参不影响实参">1. C：值传递，改形参不影响实参</h4>
+                    <h4 id="22-c值传递改形参不影响实参">2.2 C：值传递，改形参不影响实参</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -141,9 +143,7 @@ int main() {
 
                     <p>调用 <code>f(a)</code> 时，只是把 <code>a</code> 的值 <code>1</code> 拷贝给形参 <code>x</code>。<br><code>x</code> 是函数内部的局部变量，改它不影响 <code>a</code>。</p>
 
-                    <hr>
-
-                    <h4 id="2-c传指针本质还是值传递">2. C：传指针，本质还是值传递</h4>
+                    <h4 id="23-c传指针本质还是值传递">2.3 C：传指针，本质还是值传递</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -175,9 +175,7 @@ int main() {
 
                     <p>但 <code>reset(q)</code> 里改的是 <code>p</code> 这个副本，不影响外面的 <code>q</code>。<br>这说明：传指针也是值传递，只不过拷贝的是地址值。</p>
 
-                    <hr>
-
-                    <h4 id="3-c默认也是值传递">3. C++：默认也是值传递</h4>
+                    <h4 id="24-c默认也是值传递">2.4 C++：默认也是值传递</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -213,9 +211,7 @@ g(t);
 // t 仍然是 "hi"，因为 s 是 t 的拷贝</code></pre>
                     </div>
 
-                    <hr>
-
-                    <h4 id="4-c引用传递形参是实参的别名">4. C++：引用传递，形参是实参的别名</h4>
+                    <h4 id="25-c引用传递形参是实参的别名">2.5 C++：引用传递，形参是实参的别名</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -253,9 +249,7 @@ g(t);
 
                     <p>语法上 <code>x</code>、<code>s</code> 就像普通变量，但语义上它们是实参的别名。<br>底层通常还是通过地址实现，但这是编译器实现细节。</p>
 
-                    <hr>
-
-                    <h4 id="5-cconst-引用避免拷贝又能只读">5. C++：<code>const</code> 引用，避免拷贝又能只读</h4>
+                    <h4 id="26-cconst-引用避免拷贝又能只读">2.6 C++：<code>const</code> 引用，避免拷贝又能只读</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -274,9 +268,7 @@ print(t);</code></pre>
 
                     <p><code>const std::string&amp;</code> 常用于大对象传参：<br>不拷贝对象，同时保证函数内部不能修改它。</p>
 
-                    <hr>
-
-                    <h4 id="22-swap-函数int-t-能否换成-int-t">2.2 <code>swap</code> 函数：<code>int t</code> 能否换成 <code>int *t</code></h4>
+                    <h4 id="27-swap-函数int-t-能否换成-int-t">2.7 <code>swap</code> 函数：<code>int t</code> 能否换成 <code>int *t</code></h4>
 
                     <p>原始代码：</p>
 
@@ -337,7 +329,7 @@ int *t = a;      // 类型匹配，但 t 保存地址，不是旧值</code></pre
 
                     <p>这里的 <code>t</code> 保存的是“值”，所以必须是 <code>int</code>，不是 <code>int *</code>。</p>
 
-                    <h4 id="23-不同场景">2.3 不同场景</h4>
+                    <h4 id="28-不同场景">2.8 不同场景</h4>
 
                     <ul>
                         <li><strong>基本类型</strong>：<code>void f(int x)</code>，修改 <code>x</code> 不影响外部实参。</li>
@@ -378,7 +370,7 @@ int *t = a;      // 类型匹配，但 t 保存地址，不是旧值</code></pre
 
                     <p><strong>一句话：C 只有值传递。想改外面的值，传地址；想改外面的指针，传二级指针或指针引用。</strong></p>
 
-                    <h4 id="24-swap-函数怎么使用">2.4 <code>swap</code> 函数怎么使用</h4>
+                    <h4 id="29-swap-函数怎么使用">2.9 <code>swap</code> 函数怎么使用</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -414,7 +406,7 @@ int main() {
 
                     <p>不能写 <code>swap(x, y);</code>，因为类型不匹配。</p>
 
-                    <h4 id="25-汇编视角值传递指针传递swap">2.5 汇编视角：值传递、指针传递、<code>swap</code></h4>
+                    <h4 id="210-汇编视角值传递指针传递swapnasm">2.10 汇编视角：值传递、指针传递、<code>swap</code>（NASM）</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -422,38 +414,38 @@ int main() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code># int f(int x) { return x + 1; }
+                        <pre data-lang="nasm"><code>; int f(int x) { return x + 1; }
 f:
-    pushq %rbp
-    movq %rsp, %rbp
-    movl %edi, -4(%rbp)      # 形参 x 是实参的拷贝
-    movl -4(%rbp), %eax
-    addl $1, %eax
-    popq %rbp
+    push rbp
+    mov rbp, rsp
+    mov dword [rbp-4], edi      ; 形参 x 是实参的拷贝
+    mov eax, dword [rbp-4]
+    add eax, 1
+    pop rbp
     ret
 
-# void swap(int *a, int *b)
+; void swap(int *a, int *b)
 swap:
-    pushq %rbp
-    movq %rsp, %rbp
-    movq %rdi, -8(%rbp)      # a
-    movq %rsi, -16(%rbp)     # b
-    movq -8(%rbp), %rax
-    movl (%rax), %eax        # *a
-    movl %eax, -20(%rbp)     # t = *a
-    movq -16(%rbp), %rax
-    movl (%rax), %eax        # *b
-    movq -8(%rbp), %rdx
-    movl %eax, (%rdx)        # *a = *b
-    movq -16(%rbp), %rax
-    movl -20(%rbp), %edx
-    movl %edx, (%rax)        # *b = t
-    popq %rbp
+    push rbp
+    mov rbp, rsp
+    mov qword [rbp-8], rdi      ; a
+    mov qword [rbp-16], rsi     ; b
+    mov rax, qword [rbp-8]
+    mov eax, dword [rax]        ; *a
+    mov dword [rbp-20], eax     ; t = *a
+    mov rax, qword [rbp-16]
+    mov eax, dword [rax]        ; *b
+    mov rdx, qword [rbp-8]
+    mov dword [rdx], eax        ; *a = *b
+    mov rax, qword [rbp-16]
+    mov edx, dword [rbp-20]
+    mov dword [rax], edx        ; *b = t
+    pop rbp
     ret
 
-# 调用 swap(&amp;x, &amp;y)
-    leaq x(%rip), %rdi
-    leaq y(%rip), %rsi
+; 调用 swap(&amp;x, &amp;y)
+    lea rdi, [rel x]
+    lea rsi, [rel y]
     call swap</code></pre>
                     </div>
 
@@ -653,7 +645,7 @@ int (*p)[6]{&amp;arr};    // 指向整个数组</code></pre>
 
                     <p>最安全的是用 <code>sizeof(指针类型)</code>，不要硬编码假设。</p>
 
-                    <h4 id="35-汇编视角解引用">3.5 汇编视角：解引用</h4>
+                    <h4 id="35-汇编视角解引用nasm">3.5 汇编视角：解引用（NASM）</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -661,24 +653,241 @@ int (*p)[6]{&amp;arr};    // 指向整个数组</code></pre>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code># int x = 10; int *p = &amp;x; int y = *p; *p = 20;
-    movl $10, x(%rip)
-    leaq x(%rip), %rax
-    movq %rax, p(%rip)
+                        <pre data-lang="nasm"><code>; int x = 10; int *p = &amp;x; int y = *p; *p = 20;
+    mov dword [rel x], 10
+    lea rax, [rel x]
+    mov qword [rel p], rax
 
-    movq p(%rip), %rax
-    movl (%rax), %eax        # y = *p
-    movl %eax, y(%rip)
+    mov rax, qword [rel p]
+    mov eax, dword [rax]        ; y = *p
+    mov dword [rel y], eax
 
-    movq p(%rip), %rax
-    movl $20, (%rax)         # *p = 20</code></pre>
+    mov rax, qword [rel p]
+    mov dword [rax], 20         ; *p = 20</code></pre>
                     </div>
 
                     <hr>
 
-                    <h3 id="4-数组与指针">4. 数组与指针</h3>
+                    <h3 id="4-指针自增与自减">4. 指针自增与自减</h3>
 
-                    <h4 id="41-数组名-arr-与-arr-的区别">4.1 数组名 <code>arr</code> 与 <code>&amp;arr</code> 的区别</h4>
+                    <h4 id="41-基本规则">4.1 基本规则</h4>
+
+                    <p>指针自增、自减不是简单地址加 1，而是按所指向类型的大小缩放：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>p + 1 等价于 (char *)p + sizeof(*p)
+p++   使 p 指向下一个元素
+p--   使 p 指向上一个元素</code></pre>
+                    </div>
+
+                    <p>例如：</p>
+
+                    <ul>
+                        <li><code>int *p; p++;</code> 地址增加 <code>sizeof(int)</code>，常见为 4。</li>
+                        <li><code>char *p; p++;</code> 地址增加 1。</li>
+                        <li><code>double *p; p++;</code> 地址增加 <code>sizeof(double)</code>，常见为 8。</li>
+                        <li><code>int **p; p++;</code> 地址增加 <code>sizeof(int *)</code>，64 位常见为 8。</li>
+                    </ul>
+
+                    <h4 id="42-常见表达式区别">4.2 常见表达式区别</h4>
+
+                    <p>设：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int arr[3] = {10, 20, 30};
+int *p = arr;</code></pre>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>表达式</th>
+                                    <th>含义</th>
+                                    <th>指针是否移动</th>
+                                    <th>值变化</th>
+                                    <th>表达式结果</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>p++</code></td>
+                                    <td>后缀自增</td>
+                                    <td>是，指向下一个</td>
+                                    <td>不改值</td>
+                                    <td>旧指针</td>
+                                </tr>
+                                <tr>
+                                    <td><code>++p</code></td>
+                                    <td>前缀自增</td>
+                                    <td>是，指向下一个</td>
+                                    <td>不改值</td>
+                                    <td>新指针</td>
+                                </tr>
+                                <tr>
+                                    <td><code>p--</code></td>
+                                    <td>后缀自减</td>
+                                    <td>是，指向上一个</td>
+                                    <td>不改值</td>
+                                    <td>旧指针</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--p</code></td>
+                                    <td>前缀自减</td>
+                                    <td>是，指向上一个</td>
+                                    <td>不改值</td>
+                                    <td>新指针</td>
+                                </tr>
+                                <tr>
+                                    <td><code>*p++</code></td>
+                                    <td>等价 <code>*(p++)</code></td>
+                                    <td>是</td>
+                                    <td>取旧位置值</td>
+                                    <td>旧位置的值</td>
+                                </tr>
+                                <tr>
+                                    <td><code>*++p</code></td>
+                                    <td>等价 <code>*(++p)</code></td>
+                                    <td>是</td>
+                                    <td>取新位置值</td>
+                                    <td>新位置的值</td>
+                                </tr>
+                                <tr>
+                                    <td><code>(*p)++</code></td>
+                                    <td>对 <code>*p</code> 做后缀加</td>
+                                    <td>否</td>
+                                    <td>值加 1</td>
+                                    <td>旧值</td>
+                                </tr>
+                                <tr>
+                                    <td><code>++*p</code></td>
+                                    <td>等价 <code>++(*p)</code></td>
+                                    <td>否</td>
+                                    <td>值加 1</td>
+                                    <td>新值</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>重点：</p>
+
+                    <ul>
+                        <li><code>*p++</code> 和 <code>(*p)++</code> 完全不同。</li>
+                        <li><code>*p++</code> 先取当前 <code>p</code> 指向的值，然后 <code>p</code> 自增。</li>
+                        <li><code>(*p)++</code> 不移动 <code>p</code>，只把 <code>p</code> 指向的值加 1。</li>
+                        <li><code>*++p</code> 先移动 <code>p</code>，再取新位置的值。</li>
+                        <li><code>++*p</code> 不移动 <code>p</code>，只把 <code>p</code> 指向的值加 1。</li>
+                    </ul>
+
+                    <h4 id="43-示例">4.3 示例</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int arr[3] = {10, 20, 30};
+int *p = arr;
+
+int a = *p++;   // a = 10，p 指向 arr[1]
+int b = *p;     // b = 20
+
+p = arr;
+int c = (*p)++; // c = 10，arr[0] 变成 11，p 仍指向 arr[0]
+int d = *p;     // d = 11
+
+p = arr;
+int e = *++p;   // p 指向 arr[1]，e = 20
+
+p = arr;
+int f = ++*p;   // arr[0] 变成 11，f = 11，p 不变</code></pre>
+                    </div>
+
+                    <h4 id="44-常见陷阱">4.4 常见陷阱</h4>
+
+                    <ul>
+                        <li><code>*p++</code> 不是 <code>(*p)++</code>。</li>
+                        <li><code>p++</code> 作为表达式返回旧指针，<code>++p</code> 返回新指针。</li>
+                        <li>
+                            <p>函数内部对指针形参自增，只改变局部副本，不影响调用者。</p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="c"><code>void f(int *p) {
+    p++;      // 只改局部 p
+    *p = 99;  // 可能写到原 p 的下一个位置
+}</code></pre>
+                            </div>
+                        </li>
+                        <li>空指针、悬空指针、越界指针做自增或解引用通常是 UB。</li>
+                        <li>指针可以指向数组末尾后一个位置，但不能解引用该位置。</li>
+                        <li><code>p + i</code> 不修改 <code>p</code>；<code>p += i</code> 和 <code>p++</code> 会修改 <code>p</code>。</li>
+                    </ul>
+
+                    <h4 id="45-汇编视角指针自增nasm">4.5 汇编视角：指针自增（NASM）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="nasm"><code>; int *p; p++;
+    mov rax, qword [rel p]
+    add rax, 4                  ; sizeof(int)
+    mov qword [rel p], rax
+
+; ++p;
+    mov rax, qword [rel p]
+    add rax, 4
+    mov qword [rel p], rax
+
+; (*p)++;
+    mov rax, qword [rel p]
+    mov ecx, dword [rax]
+    add ecx, 1
+    mov dword [rax], ecx        ; p 不变，值加 1
+
+; *p++;
+    mov rax, qword [rel p]      ; 旧 p
+    mov ecx, dword [rax]        ; 取旧位置的值
+    add rax, 4
+    mov qword [rel p], rax      ; p 自增
+    ; ecx 保存取出的旧值
+
+; *++p;
+    mov rax, qword [rel p]
+    add rax, 4
+    mov qword [rel p], rax      ; 先自增
+    mov ecx, dword [rax]        ; 再取新位置的值
+
+; ++*p;
+    mov rax, qword [rel p]
+    mov ecx, dword [rax]
+    add ecx, 1
+    mov dword [rax], ecx        ; p 不变，值加 1</code></pre>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="5-数组与指针">5. 数组与指针</h3>
+
+                    <h4 id="51-数组名-arr-与-arr-的区别">5.1 数组名 <code>arr</code> 与 <code>&amp;arr</code> 的区别</h4>
 
                     <p>定义：</p>
 
@@ -722,7 +931,7 @@ int (*p)[6]{&amp;arr};    // 指向整个数组</code></pre>
 
                     <p>三者地址值通常相同，但<strong>类型完全不同</strong>，能做的事情也不同。</p>
 
-                    <h4 id="42-arr0-和-arr-为什么一样">4.2 <code>arr[0]</code> 和 <code>*arr</code> 为什么一样</h4>
+                    <h4 id="52-arr0-和-arr-为什么一样">5.2 <code>arr[0]</code> 和 <code>*arr</code> 为什么一样</h4>
 
                     <p>C 语言规定：</p>
 
@@ -759,7 +968,7 @@ int (*p)[6]{&amp;arr};    // 指向整个数组</code></pre>
 
                     <p>这里 <code>arr</code> 在表达式中会变成“指向首元素的指针”，也就是 <code>int *</code>，指向 <code>arr[0]</code>。</p>
 
-                    <h4 id="43-函数参数-int-arr-和-int-arr-为什么一样">4.3 函数参数 <code>int arr[]</code> 和 <code>int *arr</code> 为什么一样</h4>
+                    <h4 id="53-函数参数-int-arr-和-int-arr-为什么一样">5.3 函数参数 <code>int arr[]</code> 和 <code>int *arr</code> 为什么一样</h4>
 
                     <p>当你写：</p>
 
@@ -796,7 +1005,7 @@ void func(int *arr);
 void func(int arr[10]); // 10 会被忽略</code></pre>
                     </div>
 
-                    <h4 id="44-但数组不是指针">4.4 但数组不是指针</h4>
+                    <h4 id="54-但数组不是指针">5.4 但数组不是指针</h4>
 
                     <p>虽然数组名在很多表达式中会变成指针，但数组本身和指针是不同类型。</p>
 
@@ -828,7 +1037,7 @@ sizeof(p)     // 指针大小，比如 8 字节</code></pre>
                         <p>数组名在表达式中会退化成指向首元素的指针，但数组本身不是指针。</p>
                     </blockquote>
 
-                    <h4 id="45-指针数组-vs-数组指针">4.5 指针数组 vs 数组指针</h4>
+                    <h4 id="55-指针数组-vs-数组指针">5.5 指针数组 vs 数组指针</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -869,7 +1078,7 @@ p[1][2]; // 输出 6</code></pre>
 
                     <p><strong>核心：<code>q[1][2]</code> 中的两个 <code>[]</code> 已经完成“先取指针，再解引用”的过程，所以 <code>q</code> 前不需要再加 <code>*</code>。</strong></p>
 
-                    <h4 id="46-pxpxpx">4.6 <code>p[x]</code>、<code>*p[x]</code>、<code>(*p)[x]</code></h4>
+                    <h4 id="56-pxpxpx">5.6 <code>p[x]</code>、<code>*p[x]</code>、<code>(*p)[x]</code></h4>
 
                     <ul>
                         <li><code>p[x]</code> 等价于 <code>*(p + x)</code>，只要指针有效且不越界就合法。</li>
@@ -891,7 +1100,7 @@ p[1][2]; // 输出 6</code></pre>
                         </li>
                     </ul>
 
-                    <h4 id="47-指针加法arr-i-如何相加">4.7 指针加法：<code>*(arr + i)</code> 如何相加</h4>
+                    <h4 id="57-指针加法arr-i-如何相加">5.7 指针加法：<code>*(arr + i)</code> 如何相加</h4>
 
                     <p>关键点：</p>
 
@@ -971,7 +1180,190 @@ p[1][2]; // 输出 6</code></pre>
                         <li><code>int **arr</code>，<code>arr + i</code> 实际加的是 <code>i * 8</code>（指针大小）。</li>
                     </ul>
 
-                    <h4 id="48-汇编解释数组和指针">4.8 汇编解释数组和指针</h4>
+                    <h4 id="58-指针和数组混合使用">5.8 指针和数组混合使用</h4>
+
+                    <p>数组和指针关系紧密，但要注意“退化”和“类型”。</p>
+
+                    <h5 id="1-下标与指针等价">1. 下标与指针等价</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int arr[5] = {10, 20, 30, 40, 50};
+int *p = arr;
+
+arr[2] == *(arr + 2);
+p[2]   == *(p + 2);
+*(p + 2) == p[2];</code></pre>
+                    </div>
+
+                    <p>当 <code>p = arr</code> 时：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>arr[i] == *(arr + i) == *(p + i) == p[i]</code></pre>
+                    </div>
+
+                    <p>甚至下面也合法，但不建议写：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>i[arr] 等价于 *(i + arr)，也等价于 arr[i]</code></pre>
+                    </div>
+
+                    <h5 id="2-用指针遍历数组">2. 用指针遍历数组</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int arr[5] = {10, 20, 30, 40, 50};
+int sum = 0;
+
+for (int *p = arr; p != arr + 5; ++p) {
+    sum += *p;
+}</code></pre>
+                    </div>
+
+                    <p>注意：</p>
+
+                    <ul>
+                        <li><code>arr + 5</code> 是数组末尾后一个位置，可以用于比较。</li>
+                        <li>不能解引用 <code>arr + 5</code>。</li>
+                        <li><code>++p</code> 让指针按 <code>sizeof(int)</code> 移动。</li>
+                    </ul>
+
+                    <h5 id="3-函数参数中的混合使用">3. 函数参数中的混合使用</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>void print(int *p, int n) {
+    for (int i = 0; i &lt; n; ++i) {
+        printf("%d ", p[i]);
+    }
+}
+
+int main() {
+    int arr[3] = {1, 2, 3};
+    print(arr, 3);  // arr 退化为 int*
+}</code></pre>
+                    </div>
+
+                    <p>下面几种函数参数写法等价：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>void f(int arr[]);
+void f(int arr[10]);
+void f(int *arr);</code></pre>
+                    </div>
+
+                    <p>但 <code>sizeof(arr)</code> 在函数内都是指针大小。</p>
+
+                    <h5 id="4-二维数组与指针">4. 二维数组与指针</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int a[2][3] = { {1, 2, 3}, {4, 5, 6} };</code></pre>
+                    </div>
+
+                    <ul>
+                        <li><code>a</code> 的类型是 <code>int[2][3]</code>，表达式中退化为 <code>int (*)[3]</code>。</li>
+                        <li><code>a + 1</code> 跳过一整行，偏移 <code>3 * sizeof(int)</code>。</li>
+                        <li><code>a[i]</code> 是 <code>int[3]</code>，表达式中退化为 <code>int*</code>。</li>
+                        <li><code>a[i][j]</code> 等价于 <code>*(*(a + i) + j)</code>。</li>
+                    </ul>
+
+                    <p>正确使用行指针：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int (*p)[3] = a;
+p[1][2];   // 6</code></pre>
+                    </div>
+
+                    <p>错误用法：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int **q = a;  // 类型不兼容</code></pre>
+                    </div>
+
+                    <p>二维数组不是 <code>int **</code>。<code>int **</code> 通常用于“指针数组”或动态分配的二级指针。</p>
+
+                    <p>线性遍历二维数组：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>int *p = &amp;a[0][0];
+for (int i = 0; i &lt; 6; ++i) {
+    printf("%d ", p[i]);
+}</code></pre>
+                    </div>
+
+                    <h5 id="5-字符串数组与-char">5. 字符串数组与 <code>char **</code></h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>char *argv[] = { "hello", "world", NULL };</code></pre>
+                    </div>
+
+                    <p>作为函数参数时：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>void f(char *argv[]);
+void f(char **argv);  // 等价</code></pre>
+                    </div>
+
+                    <p><code>argv[i]</code> 是 <code>char*</code>，<code>argv[i][j]</code> 是 <code>char</code>。</p>
+
+                    <h4 id="59-汇编解释数组和指针nasm">5.9 汇编解释数组和指针（NASM）</h4>
 
                     <p>C 代码：</p>
 
@@ -997,13 +1389,13 @@ int c = *arr;</code></pre>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code>    .data
+                        <pre data-lang="nasm"><code>section .data
 arr:
-    .long 10          # arr[0]
-    .long 20          # arr[1]
-    .long 30          # arr[2]
+    dd 10          ; arr[0]
+    dd 20          ; arr[1]
+    dd 30          ; arr[2]
 p:
-    .quad arr         # p 是一个指针变量，里面存的是 arr 的地址</code></pre>
+    dq arr         ; p 是一个指针变量，里面存的是 arr 的地址</code></pre>
                     </div>
 
                     <p>访问：</p>
@@ -1014,10 +1406,10 @@ p:
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code>    movl arr+4(%rip), %eax    # a = arr[1]
-    movq p(%rip), %rax        # 把 p 的值加载到 rax
-    movl 4(%rax), %eax        # b = *(p + 1)
-    movl arr(%rip), %eax      # c = *arr</code></pre>
+                        <pre data-lang="nasm"><code>    mov eax, dword [rel arr+4]    ; a = arr[1]
+    mov rax, qword [rel p]        ; 把 p 的值加载到 rax
+    mov eax, dword [rax+4]        ; b = *(p + 1)
+    mov eax, dword [rel arr]      ; c = *arr</code></pre>
                     </div>
 
                     <p>关键区别：</p>
@@ -1053,18 +1445,18 @@ int main() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code>    leaq myarr(%rip), %rdi    # 把 myarr 的地址放入第一个参数寄存器
-    movl $3, %esi             # 第二个参数 n = 3
+                        <pre data-lang="nasm"><code>    lea rdi, [rel myarr]    ; 把 myarr 的地址放入第一个参数寄存器
+    mov esi, 3              ; 第二个参数 n = 3
     call func
 
 func:
-    pushq %rbp
-    movq %rsp, %rbp
-    movq %rdi, -8(%rbp)       # arr 指针
-    movl %esi, -12(%rbp)      # n
-    movq -8(%rbp), %rax
-    movl $100, (%rax)         # arr[0] = 100
-    popq %rbp
+    push rbp
+    mov rbp, rsp
+    mov qword [rbp-8], rdi       ; arr 指针
+    mov dword [rbp-12], esi      ; n
+    mov rax, qword [rbp-8]
+    mov dword [rax], 100         ; arr[0] = 100
+    pop rbp
     ret</code></pre>
                     </div>
 
@@ -1076,23 +1468,25 @@ func:
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code># int *p 在 %rax
-movl 4(%rax), %eax      # p[1]，偏移 4
-# char *p 在 %rax
-movzbl 1(%rax), %eax    # p[1]，偏移 1
-# double *p 在 %rax
-movsd 8(%rax), %xmm0    # p[1]，偏移 8</code></pre>
+                        <pre data-lang="nasm"><code>; int *p 在 rax
+    mov eax, dword [rax+4]      ; p[1]，偏移 4
+
+; char *p 在 rax
+    movzx eax, byte [rax+1]     ; p[1]，偏移 1
+
+; double *p 在 rax
+    movsd xmm0, qword [rax+8]   ; p[1]，偏移 8</code></pre>
                     </div>
 
                     <hr>
 
-                    <h3 id="5-c-初始化窄化转换空指针">5. C++ 初始化、窄化转换、空指针</h3>
+                    <h3 id="6-c-初始化窄化转换空指针">6. C++ 初始化、窄化转换、空指针</h3>
 
-                    <h4 id="51-列表初始化">5.1 列表初始化 <code>{}</code></h4>
+                    <h4 id="61-列表初始化">6.1 列表初始化 <code>{}</code></h4>
 
                     <p><code>int a{5};</code> 是 <strong>C++11 及以后</strong>的列表初始化/统一初始化，C 和旧 C++ 不支持。<br>它等价于 <code>int a = 5;</code> 或 <code>int a(5);</code>，但优势是<strong>禁止窄化转换</strong>。</p>
 
-                    <h4 id="52-窄化转换">5.2 窄化转换</h4>
+                    <h4 id="62-窄化转换">6.2 窄化转换</h4>
 
                     <p>窄化转换：把值转换成范围更小或精度更低的类型，导致原值可能无法完整表示。</p>
 
@@ -1127,7 +1521,7 @@ movsd 8(%rax), %xmm0    # p[1]，偏移 8</code></pre>
 
                     <p>因此 <code>{}</code> 被称为“最安全的初始化方式”。</p>
 
-                    <h4 id="53-指针初始化陷阱">5.3 指针初始化陷阱</h4>
+                    <h4 id="63-指针初始化陷阱">6.3 指针初始化陷阱</h4>
 
                     <ul>
                         <li>
@@ -1160,13 +1554,13 @@ int *p = reinterpret_cast&lt;int*&gt;(6);</code></pre>
                         </li>
                     </ul>
 
-                    <h4 id="54-intp-和-int-p">5.4 <code>int(*p)</code> 和 <code>int* p</code></h4>
+                    <h4 id="64-intp-和-int-p">6.4 <code>int(*p)</code> 和 <code>int* p</code></h4>
 
                     <p>在函数参数中，<code>void print(int(*p))</code> 和 <code>void print(int* p)</code> <strong>完全等价</strong>。<br><code>*</code> 在语法上绑定变量 <code>p</code>，<code>int *p</code> 容易让人误以为 <code>int*</code> 是整体类型。<br>括号写法主要用于复杂声明，如数组指针 <code>int (*p)[10];</code>、函数指针 <code>int (*p)(int);</code>。统一加括号只是风格。</p>
 
                     <hr>
 
-                    <h3 id="6-引用与指针">6. 引用与指针</h3>
+                    <h3 id="7-引用与指针">7. 引用与指针</h3>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1238,7 +1632,7 @@ int *c{&amp;a};</code></pre>
                         <li>指针 <code>c</code>：写着房子地址的纸条，可以改地址，也可以为空。</li>
                     </ul>
 
-                    <h4 id="汇编视角引用通常按指针实现">汇编视角：引用通常按指针实现</h4>
+                    <h4 id="汇编视角引用通常按指针实现nasm">汇编视角：引用通常按指针实现（NASM）</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1246,29 +1640,29 @@ int *c{&amp;a};</code></pre>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code># void inc_ref(int &amp;r) { ++r; }
+                        <pre data-lang="nasm"><code>; void inc_ref(int &amp;r) { ++r; }
 inc_ref:
-    pushq %rbp
-    movq %rsp, %rbp
-    movq %rdi, -8(%rbp)      # 引用底层通常也是地址
-    movq -8(%rbp), %rax
-    movl (%rax), %eax
-    addl $1, %eax
-    movq -8(%rbp), %rdx
-    movl %eax, (%rdx)
-    popq %rbp
+    push rbp
+    mov rbp, rsp
+    mov qword [rbp-8], rdi      ; 引用底层通常也是地址
+    mov rax, qword [rbp-8]
+    mov eax, dword [rax]
+    add eax, 1
+    mov rdx, qword [rbp-8]
+    mov dword [rdx], eax
+    pop rbp
     ret</code></pre>
                     </div>
 
                     <hr>
 
-                    <h3 id="7-未定义行为-ub-与悬空指针">7. 未定义行为 UB 与悬空指针</h3>
+                    <h3 id="8-未定义行为-ub-与悬空指针">8. 未定义行为 UB 与悬空指针</h3>
 
-                    <h4 id="71-什么是-ub">7.1 什么是 UB</h4>
+                    <h4 id="81-什么是-ub">8.1 什么是 UB</h4>
 
                     <p>UB = Undefined Behavior，未定义行为。C++ 标准不规定其行为，编译器可任意处理。程序一旦执行到 UB，整体行为不再有任何保证：可能正常、崩溃、错误结果，甚至被优化成无法理解的代码。</p>
 
-                    <h4 id="72-常见-ub">7.2 常见 UB</h4>
+                    <h4 id="82-常见-ub">8.2 常见 UB</h4>
 
                     <ul>
                         <li>数组越界：<code>a[3] = 0;</code></li>
@@ -1279,9 +1673,10 @@ inc_ref:
                         <li>释放后使用：<code>delete q; *q = 2;</code></li>
                         <li>返回局部变量的引用或指针</li>
                         <li>修改字符串字面量：C 中 <code>char *s = "hello"; s[0] = 'H';</code> 是 UB；C++11 起 <code>char *s = "hello";</code> 本身已非法或弃用。</li>
+                        <li>对空指针、悬空指针、越界指针做自增或解引用。</li>
                     </ul>
 
-                    <h4 id="73-悬空指针案例">7.3 悬空指针案例</h4>
+                    <h4 id="83-悬空指针案例">8.3 悬空指针案例</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1315,7 +1710,7 @@ inc_ref:
 
                     <p>因此，<code>p == nullptr</code> 只能判断空指针，不能判断悬空指针。</p>
 
-                    <h4 id="74-ub-为什么危险">7.4 UB 为什么危险</h4>
+                    <h4 id="84-ub-为什么危险">8.4 UB 为什么危险</h4>
 
                     <p>编译器可以假设程序永远不会执行 UB，并据此优化。</p>
 
@@ -1325,7 +1720,7 @@ inc_ref:
                         <li>今天能跑 ≠ 换编译器还能跑</li>
                     </ul>
 
-                    <h4 id="75-如何避免-ub">7.5 如何避免 UB</h4>
+                    <h4 id="85-如何避免-ub">8.5 如何避免 UB</h4>
 
                     <ul>
                         <li>打开编译警告：<code>-Wall -Wextra -Wpedantic -Wconversion</code></li>
@@ -1335,7 +1730,7 @@ inc_ref:
                         <li>避免裸指针和手动 <code>new/delete</code></li>
                     </ul>
 
-                    <h4 id="76-汇编视角返回局部变量地址">7.6 汇编视角：返回局部变量地址</h4>
+                    <h4 id="86-汇编视角返回局部变量地址nasm">8.6 汇编视角：返回局部变量地址（NASM）</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1343,22 +1738,22 @@ inc_ref:
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code># int* dangle() { int a = 5; return &amp;a; }
+                        <pre data-lang="nasm"><code>; int* dangle() { int a = 5; return &amp;a; }
 dangle:
-    pushq %rbp
-    movq %rsp, %rbp
-    subq $16, %rsp
-    movl $5, -4(%rbp)
-    leaq -4(%rbp), %rax      # 返回局部变量地址
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov dword [rbp-4], 5
+    lea rax, [rbp-4]      ; 返回局部变量地址
     leave
-    ret                       # 返回后该栈帧失效，rax 成悬空地址</code></pre>
+    ret                   ; 返回后该栈帧失效，rax 成悬空地址</code></pre>
                     </div>
 
                     <hr>
 
-                    <h3 id="8-手写-c-动态数组">8. 手写 C++ 动态数组</h3>
+                    <h3 id="9-手写-c-动态数组">9. 手写 C++ 动态数组</h3>
 
-                    <h4 id="81-要解决的问题">8.1 要解决的问题</h4>
+                    <h4 id="91-要解决的问题">9.1 要解决的问题</h4>
 
                     <p>原始写法：</p>
 
@@ -1377,7 +1772,7 @@ delete[] array;</code></pre>
 
                     <p>问题是数组大小固定，无法自动扩容，且必须手动释放内存。</p>
 
-                    <h4 id="82-核心设计">8.2 核心设计</h4>
+                    <h4 id="92-核心设计">9.2 核心设计</h4>
 
                     <p>三个成员变量：</p>
 
@@ -1389,7 +1784,7 @@ delete[] array;</code></pre>
 
                     <p>扩容魔法：当 <code>size == capacity</code> 时，申请更大内存（通常两倍），搬旧数据，释放旧内存。</p>
 
-                    <h4 id="83-关键实现思想">8.3 关键实现思想</h4>
+                    <h4 id="93-关键实现思想">9.3 关键实现思想</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1414,7 +1809,7 @@ delete[] array;</code></pre>
                         <li><code>getSize()</code>、<code>getCapacity()</code> 获取状态。</li>
                     </ul>
 
-                    <h4 id="84-使用示例">8.4 使用示例</h4>
+                    <h4 id="94-使用示例">9.4 使用示例</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1435,7 +1830,7 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
 
                     <p>不需要手动 <code>delete[]</code>，析构函数自动释放。</p>
 
-                    <h4 id="85-进阶方向">8.5 进阶方向</h4>
+                    <h4 id="95-进阶方向">9.5 进阶方向</h4>
 
                     <ul>
                         <li>模板化：支持 <code>double</code>、<code>std::string</code> 等。</li>
@@ -1444,7 +1839,7 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                         <li>移动语义：移动构造、移动赋值，减少深拷贝。</li>
                     </ul>
 
-                    <h4 id="86-汇编视角扩容关键动作">8.6 汇编视角：扩容关键动作</h4>
+                    <h4 id="96-汇编视角扩容关键动作nasm">9.6 汇编视角：扩容关键动作（NASM）</h4>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1452,27 +1847,27 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="asm"><code># reserve 扩容关键动作示意
-    movq new_capacity(%rip), %rdi
-    shlq $2, %rdi              # new_capacity * sizeof(int)
-    call _Znam                 # operator new[](unsigned long)
-    movq %rax, new_data(%rip)
+                        <pre data-lang="nasm"><code>; reserve 扩容关键动作示意
+    mov rdi, qword [rel new_capacity]
+    shl rdi, 2                  ; new_capacity * sizeof(int)
+    call _Znam                  ; operator new[](unsigned long)
+    mov qword [rel new_data], rax
 
-    # std::copy(data, data + size, new_data)
-    # ... 逐元素拷贝循环 ...
+    ; std::copy(data, data + size, new_data)
+    ; ... 逐元素拷贝循环 ...
 
-    movq data(%rip), %rdi
-    call _ZdaPv                # operator delete[](void*)
+    mov rdi, qword [rel data]
+    call _ZdaPv                 ; operator delete[](void*)
 
-    movq new_data(%rip), %rax
-    movq %rax, data(%rip)
-    movq new_capacity(%rip), %rax
-    movq %rax, capacity(%rip)</code></pre>
+    mov rax, qword [rel new_data]
+    mov qword [rel data], rax
+    mov rax, qword [rel new_capacity]
+    mov qword [rel capacity], rax</code></pre>
                     </div>
 
                     <hr>
 
-                    <h3 id="9-综合总结表">9. 综合总结表</h3>
+                    <h3 id="10-综合总结表">10. 综合总结表</h3>
 
                     <div class="table-wrap">
                         <table>
@@ -1508,6 +1903,10 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                                     <td>常见平台上数据指针大小相同；但 C 标准不保证，函数指针可能不同</td>
                                 </tr>
                                 <tr>
+                                    <td>指针自增</td>
+                                    <td><code>p++</code> 按 <code>sizeof(*p)</code> 移动；<code>*p++</code> 先取值再移动；<code>(*p)++</code> 值加 1 指针不动</td>
+                                </tr>
+                                <tr>
                                     <td><code>arr[0]</code> 与 <code>*arr</code></td>
                                     <td><code>arr[i]</code> 等价于 <code>*(arr + i)</code>，所以 <code>arr[0]</code> 等价于 <code>*arr</code></td>
                                 </tr>
@@ -1536,6 +1935,10 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                                     <td><code>int *</code> 加 1 地址加 4；<code>char *</code> 加 1 地址加 1；<code>double *</code> 加 1 地址加 8</td>
                                 </tr>
                                 <tr>
+                                    <td>指针和数组混合</td>
+                                    <td><code>arr[i] == *(arr+i) == p[i]</code>；二维数组 <code>a[i][j] == *(*(a+i)+j)</code>；<code>int **</code> 不是二维数组</td>
+                                </tr>
+                                <tr>
                                     <td>C++ 列表初始化</td>
                                     <td><code>{}</code> 禁止窄化转换，更安全</td>
                                 </tr>
@@ -1561,7 +1964,7 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
 
                     <hr>
 
-                    <h3 id="10-常见错误速查">10. 常见错误速查</h3>
+                    <h3 id="11-常见错误速查">11. 常见错误速查</h3>
 
                     <div class="table-wrap">
                         <table>
@@ -1612,37 +2015,25 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                                     <td><code>p == nullptr</code> 判断悬空指针</td>
                                     <td>只能判断空指针，不能判断悬空指针</td>
                                 </tr>
+                                <tr>
+                                    <td><code>*p++</code> 当成 <code>(*p)++</code></td>
+                                    <td><code>*p++</code> 会移动指针，<code>(*p)++</code> 不会</td>
+                                </tr>
+                                <tr>
+                                    <td><code>int **q = a;</code></td>
+                                    <td>二维数组 <code>a</code> 不是 <code>int **</code>，类型不兼容</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <hr>
 
-                    <h3 id="11-记忆口诀">11. 记忆口诀</h3>
+                    <h3 id="12-记忆口诀">12. 记忆口诀</h3>
 
                     <blockquote>
-                        <p>数组名，多退化，首元素地址就是它。<br><code>&amp;数组</code>，类型变，指向整个数组的指针。<br>声明看括号，<code>(*p)[N]</code> 才指数组。<br>下标 <code>p[x]</code> 就是 <code>*(p+x)</code>。<br>优先级 <code>[]</code> 高于 <code>*</code>，<code>*p[x]</code> 是 <code>*(p[x])</code>。<br>C 只有值传递，改外面传地址。<br>C++ 用 <code>{}</code> 防窄化，能用引用就别用指针，能用智能指针就别用裸指针，远离 UB。<br><code>swap</code> 临时变量存值，<code>int t</code> 不能换 <code>int *t</code>。<br>指针加法按类型缩放：<code>int *</code> 加 4，<code>char *</code> 加 1，<code>double *</code> 加 8。<br>数组不是指针，指针不是数组；数组名会退化，但 <code>sizeof</code> 不退化。</p>
+                        <p>数组名，多退化，首元素地址就是它。<br><code>&amp;数组</code>，类型变，指向整个数组的指针。<br>声明看括号，<code>(*p)[N]</code> 才指数组。<br>下标 <code>p[x]</code> 就是 <code>*(p+x)</code>。<br>优先级 <code>[]</code> 高于 <code>*</code>，<code>*p[x]</code> 是 <code>*(p[x])</code>。<br>C 只有值传递，改外面传地址。<br>C++ 用 <code>{}</code> 防窄化，能用引用就别用指针，能用智能指针就别用裸指针，远离 UB。<br><code>swap</code> 临时变量存值，<code>int t</code> 不能换 <code>int *t</code>。<br>指针加法按类型缩放：<code>int *</code> 加 4，<code>char *</code> 加 1，<code>double *</code> 加 8。<br>数组不是指针，指针不是数组；数组名会退化，但 <code>sizeof</code> 不退化。<br><code>p++</code> 移指针，<code>(*p)++</code> 改值，<code>*p++</code> 先取值再移指针。</p>
                     </blockquote>
-
-                    <hr>
-
-                    <h3 id="12-一句话总览">12. 一句话总览</h3>
-
-                    <ul>
-                        <li>C 只有值传递；想改外面的值，传地址；想改外面的指针，传二级指针或指针引用。</li>
-                        <li><code>swap</code> 里临时变量要保存“值”，所以用 <code>int t</code>，不能用 <code>int *t</code>。</li>
-                        <li><code>*</code> 在不同位置含义不同：声明指针、解引用、乘法。</li>
-                        <li><code>int *a</code> 中 <code>a</code> 是指针，<code>*a</code> 是 <code>int</code>。</li>
-                        <li>指针大小常见平台相同，但标准不保证。</li>
-                        <li>数组名在表达式中退化为指针，但数组不是指针。</li>
-                        <li><code>arr[i]</code> 就是 <code>*(arr + i)</code>；指针加法按所指向类型大小缩放。</li>
-                        <li>指针数组 <code>q[1]</code> 已是 <code>int*</code>，<code>q[1][2]</code> 已包含解引用，不需要再加 <code>*</code>。</li>
-                        <li>C++ 列表初始化 <code>{}</code> 禁止窄化转换，更安全。</li>
-                        <li>引用是别名，不能为空、不能改绑；指针可空、可改绑，但更危险。</li>
-                        <li>悬空指针不等于 <code>nullptr</code>，解引用是 UB。</li>
-                        <li>远离 UB：多用容器、智能指针、现代 C++，少用裸指针和手动内存管理。</li>
-                        <li>手写动态数组的关键：<code>data/size/capacity</code>，满时两倍扩容，析构自动 <code>delete[]</code>。</li>
-                    </ul>
                 </div>
 
                 <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
