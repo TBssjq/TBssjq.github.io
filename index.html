@@ -215,6 +215,32 @@
     const prefersReducedMotion = () =>
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    /* ── 博客弹窗的「已看过」标记：写进 cookie，保证只弹第一次 ── */
+    const MODAL_SEEN_COOKIE = 'blogModalSeen';
+    const MODAL_SEEN_DAYS = 365;
+
+    // file:// 或隐私模式下 cookie 可能不可用，读写都兜一层：
+    // 读失败当没记录（多弹一次），写失败退化为「每次访问都弹」，但页面不会报错
+    function readCookie(name) {
+        try {
+            const hit = document.cookie.split(';')
+                .map(row => row.trim())
+                .find(row => row.startsWith(name + '='));
+            return hit ? decodeURIComponent(hit.slice(name.length + 1)) : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    function writeCookie(name, value, days) {
+        try {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+        } catch (err) {
+            // 忽略：无法写 cookie 时只影响弹窗频次，不影响页面功能
+        }
+    }
+
     /* rAF 循环统一封装：页面切到后台时挂起，回到前台再恢复，避免后台空转 */
     function createLoop(render) {
         let rafId = null;
@@ -580,7 +606,14 @@
 
         const close = () => modal.classList.remove('show');
 
-        setTimeout(() => modal.classList.add('show'), TIMING.modalDelay);
+        // 只在首次访问时弹出：cookie 已有标记就跳过；弹出时立刻写下标记，之后不再弹
+        if (!readCookie(MODAL_SEEN_COOKIE)) {
+            setTimeout(() => {
+                modal.classList.add('show');
+                writeCookie(MODAL_SEEN_COOKIE, '1', MODAL_SEEN_DAYS);
+            }, TIMING.modalDelay);
+        }
+
         modal.querySelector('.modal-close')?.addEventListener('click', close);
         document.getElementById('blogGoBtn')?.addEventListener('click', () => {
             window.open('doc/index.html', '_blank', 'noopener');
