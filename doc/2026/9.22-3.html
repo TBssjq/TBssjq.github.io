@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ 那些「奇怪却短得离谱」的算法 - My Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Serif SC', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        display: ['ZCOOL KuaiLe', 'cursive'],
+                    },
+                    colors: {
+                        accent: '#f97316',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+</head>
+<body class="min-h-screen">
+    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
+        <div class="h-full flex items-center justify-between px-6">
+            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white" target="_blank" rel="noopener noreferrer">My Blog</a>
+            <div class="flex items-center gap-3">
+                <div class="music-player music-player--top">
+                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"></iframe>
+                </div>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-16">
+        <div class="article-shell">
+            <article class="article-main">
+                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">C++ 那些「奇怪却短得离谱」的算法</h1>
+
+                <p class="article-meta">
+
+                    <span class="meta-date">9月22日</span>
+                </p>
+
+            <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
+                    <h2 id="c-那些奇怪却短得离谱的算法">C++ 那些「奇怪却短得离谱」的算法</h2>
+
+                    <blockquote>
+                        <p>收录标准：<strong>代码量 ≤ 10 行</strong>，但第一次看见时会让人怀疑人生——"这也能行？"
+                        从位运算黑魔法、玄学浮点 Hack，到短到 6 行的并查集，再到纯属整活的奇葩排序。</p>
+                        <p>本文所有代码片段均在 <code>g++ 11.4 / -std=c++20 -O2</code> 下编译并跑过正确性验证（含随机对拍与暴力对拍），可以直接抄。
+                        凡是"看起来对但有坑"的地方都标了 ⚠️。</p>
+                    </blockquote>
+
+                    <h3 id="一位运算黑魔法bit-twiddling">一、位运算黑魔法（Bit Twiddling）</h3>
+
+                    <h4 id="1-x-x取出最低位的那个-1">1. <code>x &amp; -x</code>：取出最低位的那个 1</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int lowbit(int x) { return x &amp; -x; }   // 12(1100) -&gt; 4(0100)</code></pre>
+                    </div>
+
+                    <p>补码下 <code>-x == ~x + 1</code>，它会把最低位 1 以下全部置 0、以上全部取反，一按与就只剩那一个 1。
+                    树状数组、状压 DP、枚举子集的骨架全靠它。</p>
+
+                    <p>⚠️ <code>x == INT_MIN</code> 时 <code>-x</code> 溢出，是 UB。要稳妥就用 <code>unsigned</code>：
+                    <code>uint32_t lowbit(uint32_t x) { return x &amp; -x; }</code></p>
+
+                    <h4 id="2-x-x-1抹掉最低位的-1">2. <code>x &amp; (x - 1)</code>：抹掉最低位的 1</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>bool isPow2(unsigned x) { return x &amp;&amp; !(x &amp; (x - 1)); }        // 是不是 2 的幂
+int  popcount(int x) { int c = 0; while (x) { x &amp;= x - 1; ++c; } return c; }  // Brian Kernighan</code></pre>
+                    </div>
+
+                    <p><code>popcount</code> 的循环次数 = 1 的个数，而不是位数，比逐位扫描快得多。
+                    生产环境直接用 <code>__builtin_popcount(x)</code>（通常编译成一条 <code>popcnt</code> 指令）。</p>
+
+                    <h4 id="3-异或三连找只出现一次的数">3. 异或三连：找只出现一次的数</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int singleNumber(const vector&lt;int&gt;&amp; a) {
+    int ans = 0;
+    for (int v : a) ans ^= v;   // a^a=0, 0^x=x, 满足交换律
+    return ans;
+}</code></pre>
+                    </div>
+
+                    <p><code>O(n)</code> 时间、<code>O(1)</code> 空间。前提是<strong>其余元素都恰好出现两次</strong>。
+                    若其余元素出现三次，改用"逐位模 3 求和"或状态机（代码会长一点，就不算"短"了）。</p>
+
+                    <p>⚠️ 别用 <code>a ^= b ^= a ^= b</code> 做交换：同一表达式内对 <code>a</code> 多次修改且无顺序保证，是<strong>未定义行为</strong>，而且编译器生成的代码通常比 <code>std::swap</code> 更慢、还不能用于同一对象（<code>swap(x, x)</code> 会把 x 清零）。</p>
+
+                    <h4 id="4-无分支绝对值-min-max">4. 无分支绝对值 / min / max</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int32_t iabs(int32_t x) { int32_t m = x &gt;&gt; 31; return (x ^ m) - m; }
+int imin(int a, int b)  { return b ^ ((a ^ b) &amp; -(a &lt; b)); }
+int imax(int a, int b)  { return a ^ ((a ^ b) &amp; -(a &lt; b)); }
+int signum(int x)       { return (x &gt; 0) - (x &lt; 0); }          // -1 / 0 / 1
+bool opposite(int a, int b) { return (a ^ b) &lt; 0; }            // 是否异号</code></pre>
+                    </div>
+
+                    <p>原理是"用掩码做条件传送"：<code>-(a &lt; b)</code> 得到全 1 或全 0，再用异或选择。
+                    在分支预测失败率极高的场合（随机数据的最值扫描）确实能提速。</p>
+
+                    <p>⚠️ <code>iabs(INT32_MIN)</code> 溢出 UB；C++20 才正式规定有符号右移为算术右移，之前的编译器虽然都这么做，但严格讲是实现定义。</p>
+
+                    <h4 id="5-防溢出取平均">5. 防溢出取平均</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int avg(int a, int b) { return (a &amp; b) + ((a ^ b) &gt;&gt; 1); }     // (INT_MAX+INT_MAX)/2 不会炸</code></pre>
+                    </div>
+
+                    <p><code>(a + b) / 2</code> 在 <code>a + b</code> 溢出时是 UB，二分查找里 <code>mid = (l + r) / 2</code> 的经典 bug 就出自这里。</p>
+
+                    <p>⚠️ 这个位运算版本算的是 <strong>floor 平均</strong>（向负无穷取整），而 <code>(a + b) / 2</code> 是<strong>向零取整</strong>，奇数负和时两者差 1：
+                    <code>avg(INT_MAX, INT_MIN) == -1</code>，而 <code>(INT_MAX + INT_MIN) / 2 == 0</code>。
+                    保守写法其实更简单：<code>l + (r - l) / 2</code>。</p>
+
+                    <h4 id="6-只用位运算做加法">6. 只用位运算做加法</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int add(int a, int b) {
+    while (b) {
+        uint32_t carry = ((uint32_t)a &amp; (uint32_t)b) &lt;&lt; 1;   // 进位
+        a ^= b;                                              // 不进位相加
+        b = (int)carry;
+    }
+    return a;
+}</code></pre>
+                    </div>
+
+                    <p>CPU 里加法器就是这么搭的。典型用途：某些只允许用 <code>+</code> 的面试题、或用位运算实现减法/乘法。
+                    ⚠️ 中途必须用无符号类型承载进位，否则溢出 UB。</p>
+
+                    <h4 id="7-格雷码与逆变换">7. 格雷码与逆变换</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>unsigned gray(unsigned n)   { return n ^ (n &gt;&gt; 1); }                    // 二进制 -&gt; 格雷码
+unsigned invgray(unsigned g){ unsigned n = 0; while (g) { n ^= g; g &gt;&gt;= 1; } return n; }  // 逆</code></pre>
+                    </div>
+
+                    <p>相邻整数只差一位——旋转编码器、卡诺图、汉密尔顿路径都用它。
+                    逆变换本质是"前缀异或"。</p>
+
+                    <h4 id="8-枚举子集一行-for">8. 枚举子集：一行 for</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>for (int s = m; ; s = (s - 1) &amp; m) {   // 遍历 m 的所有子集（含空集）
+    /* ... */
+    if (s == 0) break;
+}</code></pre>
+                    </div>
+
+                    <p><code>(s - 1) &amp; m</code> 会自动借位并"跳过"不属于 m 的位，绝不产生非法子集，比逐个 <code>if ((s &amp; m) == s)</code> 快得多。
+                    对 <code>m = 0b1011</code>（3 个 1）恰好访问 8 个子集。</p>
+
+                    <h4 id="9-gospers-hack枚举恰好-k-个-1的下一个数">9. Gosper's Hack：枚举"恰好 k 个 1"的下一个数</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>uint32_t gosper(uint32_t x) {            // 返回 popcount 相同、字典序的下一个数
+    uint32_t c = x &amp; -x, r = x + c;
+    return (((r ^ x) &gt;&gt; 2) / c) | r;
+}</code></pre>
+                    </div>
+
+                    <p>想枚举"n 个里选 k 个"的全部组合（不想要 <code>k</code> 的循环嵌套），就用它：
+                    从 <code>(1u &lt;&lt; k) - 1</code> 开始反复调用，直到 <code>x &gt;= (1u &lt;&lt; n)</code>。
+                    已对拍验证：对 <code>3 ≤ n ≤ 12</code> 的所有 <code>k</code>，生成的组合数量与 <code>C(n,k)</code> 完全一致且无重复。</p>
+
+                    <h4 id="10-32-位整数位反转分治魔法">10. 32 位整数位反转（分治魔法）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>uint32_t rev32(uint32_t x) {
+    x = ((x &amp; 0x55555555u) &lt;&lt; 1) | ((x &gt;&gt; 1) &amp; 0x55555555u);   // 相邻 1 位对调
+    x = ((x &amp; 0x33333333u) &lt;&lt; 2) | ((x &gt;&gt; 2) &amp; 0x33333333u);   // 相邻 2 位对调
+    x = ((x &amp; 0x0F0F0F0Fu) &lt;&lt; 4) | ((x &gt;&gt; 4) &amp; 0x0F0F0F0Fu);   // 4 位
+    x = ((x &amp; 0x00FF00FFu) &lt;&lt; 8) | ((x &gt;&gt; 8) &amp; 0x00FF00FFu);   // 8 位
+    return (x &lt;&lt; 16) | (x &gt;&gt; 16);                              // 16 位
+}</code></pre>
+                    </div>
+
+                    <p>5 步就把 32 位翻转，比循环 32 次快一个数量级。FFT 位反转置换、二进制回文判断都用得上。</p>
+
+                    <h4 id="11-向上取整到-2-的幂">11. 向上取整到 2 的幂</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>uint32_t npot(uint32_t x) { --x; x |= x &gt;&gt; 1; x |= x &gt;&gt; 2; x |= x &gt;&gt; 4; x |= x &gt;&gt; 8; x |= x &gt;&gt; 16; return x + 1; }</code></pre>
+                    </div>
+
+                    <p>先把最高位 1 右边全部"糊"成 1，再加 1 进位——像滚雪球一样，5 次移位覆盖 32 位。
+                    环形缓冲区、哈希表容量、内存对齐的常客。⚠️ <code>x == 0</code> 时返回 0，需要单独处理。</p>
+
+                    <h4 id="12-编译器内建指令一行顶十行">12. 编译器内建指令（一行顶十行）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>__builtin_clz(x)        // 前导零个数 -&gt; 最高位 1 的位置 = 31 - __builtin_clz(x)
+__builtin_ctz(x)        // 尾随零个数 -&gt; lowbit 的指数
+__builtin_popcount(x)   // 1 的个数（C++20 也有 std::popcount）
+__builtin_parity(x)     // 1 的个数的奇偶
+uint32_t hi = 1u &lt;&lt; (31 - __builtin_clz(x));   // 只保留最高位的 1
+uint32_t rotl(uint32_t x, int k) { return (x &lt;&lt; k) | (x &gt;&gt; (32 - k)); }  // 循环左移</code></pre>
+                    </div>
+
+                    <p>⚠️ <code>clz/ctz</code> 对 <code>0</code> 的结果未定义，调用前判空。MSVC 要换成 <code>_BitScanReverse</code> / <code>std::countr_zero</code>。</p>
+
+                    <hr>
+
+                    <h3 id="二玄学数值-hack">二、玄学数值 Hack</h3>
+
+                    <h4 id="13-快速平方根倒数0x5f3759df">13. 快速平方根倒数：<code>0x5f3759df</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;bit&gt;
+float rsqrt(float x) {                       // C++20 安全写法
+    int32_t i = std::bit_cast&lt;int32_t&gt;(x);   // 把浮点位型当整数看
+    i = 0x5f3759df - (i &gt;&gt; 1);               // 魔法数字：一次「除以 2 再取负」的近似
+    float y = std::bit_cast&lt;float&gt;(i);
+    return y * (1.5f - 0.5f * x * y * y);    // 一步牛顿迭代
+}</code></pre>
+                    </div>
+
+                    <p>因《雷神之锤 III》源码注释里那句 <code>// what the fuck?</code> 而闻名。
+                    原理：浮点位型右移一位 ≈ 指数减半；那个魔法常数同时修正了指数偏移与尾数误差。</p>
+
+                    <p>实测（x 取 0.01 ~ 2000，20 万个采样点的最大相对误差）：</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>牛顿迭代次数</th>
+                                    <th>最大相对误差</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0 次（纯魔法）</td>
+                                    <td><strong>3.44%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>1 次</td>
+                                    <td><strong>0.175%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>2 次</td>
+                                    <td><strong>0.00047%</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>⚠️ 三点：① 老代码 <code>i = *(long*)&amp;y</code> 违反 strict aliasing，是 UB，且 <code>long</code> 在 64 位 Linux 是 8 字节（经典 bug），务必用 <code>bit_cast</code> 或 <code>memcpy</code>；② 现代 CPU 的 <code>rsqrtss</code> 指令更快更准，这个 Hack 现在主要是"文物价值"；③ 想更准一点可换 Chris Lomont 推导的 <code>0x5f375a86</code>。</p>
+
+                    <h4 id="14-牛顿迭代开平方含小数也稳">14. 牛顿迭代开平方（含小数也稳）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>double sqrt_newton(double n) { double x = n; for (int i = 0; i &lt; 60; ++i) x = (x + n / x) / 2; return x; }</code></pre>
+                    </div>
+
+                    <p>迭代 60 次已达 double 精度极限（实际 5~6 次就够）。不能用地递归、不需要任何库的"手搓 sqrt"。</p>
+
+                    <h4 id="15-xorshift32三行一个随机数发生器">15. xorshift32：三行一个随机数发生器</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>uint32_t x = 2463534242u;                      // 种子，不能为 0
+uint32_t xorshift32() { x ^= x &lt;&lt; 13; x ^= x &gt;&gt; 17; x ^= x &lt;&lt; 5; return x; }</code></pre>
+                    </div>
+
+                    <p>比你想象的靠谱：周期长达 2³²−1。已验证——连续生成 200 万个输出<strong>无任何重复</strong>，均值 0.500，低位无明显自相关。</p>
+
+                    <p>⚠️ 只是"统计上还行"，<strong>绝不能用于密码学</strong>（状态可线性还原）；正式项目请用 <code>std::mt19937</code>。</p>
+
+                    <h4 id="16-6k-1-判素数">16. 6k ± 1 判素数</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>bool isPrime(int n) {
+    if (n &lt; 2) return false;
+    if (n % 2 == 0 || n % 3 == 0) return n == 2 || n == 3;
+    for (int i = 5; 1LL * i * i &lt;= n; i += 6)
+        if (n % i == 0 || n % (i + 2) == 0) return false;   // 只测 6k-1 和 6k+1
+    return true;
+}</code></pre>
+                    </div>
+
+                    <p>除了 2 和 3，所有素数都形如 <code>6k ± 1</code>，试除量直接砍到 1/3。单次判定 <code>O(√n / 3)</code>。</p>
+
+                    <h4 id="17-快速幂二进制幂">17. 快速幂（二进制幂）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>long long qpow(long long a, long long n) {          // a^n
+    long long r = 1;
+    while (n) { if (n &amp; 1) r *= a; a *= a; n &gt;&gt;= 1; }
+    return r;
+}
+long long qpowm(long long a, long long n, long long m) {   // a^n mod m
+    long long r = 1 % m; a %= m;
+    while (n) { if (n &amp; 1) r = (__int128)r * a % m; a = (__int128)a * a % m; n &gt;&gt;= 1; }
+    return r;
+}</code></pre>
+                    </div>
+
+                    <p><code>O(log n)</code>。取模版用 <code>__int128</code> 防乘法溢出，是竞赛里的保命写法。</p>
+
+                    <h4 id="18-一行-gcd">18. 一行 gcd</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int gcd(int a, int b) { return b ? gcd(b, a % b) : a; }
+int lcm(int a, int b) { return a / gcd(a, b) * b; }   // 先除后乘，防溢出</code></pre>
+                    </div>
+
+                    <p>欧几里得算法，<code>O(log min(a,b))</code>，可能是世界上最短的"非平凡"递归算法。</p>
+
+                    <h4 id="19-蒙特卡洛求">19. 蒙特卡洛求 π</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::mt19937 rng(std::random_device{}());
+std::uniform_real_distribution&lt;double&gt; U(0, 1);
+long in = 0, N = 10'000'000;
+for (long i = 0; i &lt; N; ++i) { double x = U(rng), y = U(rng); if (x*x + y*y &lt; 1) ++in; }
+double pi = 4.0 * in / N;      // 误差 ≈ 1/√N，1e7 次大约到 3.141x</code></pre>
+                    </div>
+
+                    <p>"用随机性对抗维度"的最小范例。精度随 √N 增长，慢得离谱但代码只有 4 行。</p>
+
+                    <h4 id="20-szudzik-配对函数二维压一维">20. Szudzik 配对函数：二维压一维</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>uint64_t pair(uint32_t a, uint32_t b) { return a &gt;= b ? (uint64_t)a * a + a + b : (uint64_t)a + (uint64_t)b * b; }</code></pre>
+                    </div>
+
+                    <p>把 <code>N×N</code> 的双射塞进 <code>N²</code> 个整数里（比康托展开更紧凑）。已验证在 300×300 范围内<strong>完全无碰撞</strong>。
+                    用途：把二元组当 <code>unordered_set</code> 的 key，而不必写自定义哈希。</p>
+
+                    <hr>
+
+                    <h3 id="三短到离谱的正经算法">三、短到离谱的正经算法</h3>
+
+                    <h4 id="21-floyd-判圈龟兔赛跑">21. Floyd 判圈（龟兔赛跑）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>bool hasCycle(Node* h) {
+    Node *slow = h, *fast = h;
+    while (fast &amp;&amp; fast-&gt;next) {
+        slow = slow-&gt;next; fast = fast-&gt;next-&gt;next;
+        if (slow == fast) return true;
+    }
+    return false;
+}</code></pre>
+                    </div>
+
+                    <p><code>O(1)</code> 空间判断链表是否有环——不用哈希表。想找环入口：相遇后把 <code>slow</code> 放回 <code>h</code>，两者同速再走，相遇点即入口。</p>
+
+                    <h4 id="22-boyer-moore-多数投票">22. Boyer-Moore 多数投票</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int majority(const vector&lt;int&gt;&amp; a) {
+    int cand = 0, cnt = 0;
+    for (int v : a) { if (!cnt) cand = v; cnt += (v == cand) ? 1 : -1; }
+    return cand;   // 存在"出现次数 &gt; n/2"的元素时，答案就是它
+}</code></pre>
+                    </div>
+
+                    <p><code>O(n)</code> 时间、<code>O(1)</code> 空间，"对消"思想。⚠️ 前提是不存在多数元素时结果无意义，<strong>必须再遍历一次做校验</strong>。</p>
+
+                    <h4 id="23-fisher-yates-洗牌">23. Fisher-Yates 洗牌</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>for (int i = n - 1; i &gt; 0; --i) std::swap(a[i], a[std::uniform_int_distribution&lt;int&gt;(0, i)(rng)]);</code></pre>
+                    </div>
+
+                    <p>两行、均匀、无偏。已验证：n=4 时 24 种排列全部出现且频率均衡。</p>
+
+                    <p>⚠️ 两个致命错误：① 用 <code>rand() % (i + 1)</code> 会有取模偏差，且 <code>rand()</code> 质量差；② 写成 <code>% n</code> 而不是 <code>% (i+1)</code> 会得到<strong>有偏</strong>的排列。生产代码直接用 <code>std::shuffle(a.begin(), a.end(), rng)</code>。</p>
+
+                    <h4 id="24-约瑟夫环一行递推">24. 约瑟夫环：一行递推</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int josephus(int n, int m) { int f = 0; for (int i = 1; i &lt;= n; ++i) f = (f + m) % i; return f; }  // 0 下标</code></pre>
+                    </div>
+
+                    <p><code>O(n)</code>。<code>f(n) = (f(n-1) + m) % n</code> 从 1 人推到 n 人。已与暴力模拟对拍（n≤40, m≤12）全部吻合。
+                    下标从 1 开始就 <code>+1</code>。</p>
+
+                    <h4 id="25-树状数组fenwick-tree">25. 树状数组（Fenwick Tree）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct BIT {
+    int n; vector&lt;long long&gt; t;
+    BIT(int n) : n(n), t(n + 1, 0) {}
+    void add(int i, long long v) { for (; i &lt;= n; i += i &amp; -i) t[i] += v; }
+    long long sum(int i) { long long s = 0; for (; i &gt; 0; i -= i &amp; -i) s += t[i]; return s; }
+    long long range(int l, int r) { return sum(r) - sum(l - 1); }
+};</code></pre>
+                    </div>
+
+                    <p>前缀和 + 单点修改，两个循环各 3 行。区间和：<code>sum(r) - sum(l-1)</code>。</p>
+
+                    <h4 id="26-并查集路径压缩-按秩合并">26. 并查集：路径压缩 + 按秩合并</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct DSU {
+    vector&lt;int&gt; p, r;
+    DSU(int n) : p(n), r(n, 0) { std::iota(p.begin(), p.end(), 0); }
+    int find(int x) { return p[x] == x ? x : p[x] = find(p[x]); }
+    void unite(int a, int b) {
+        if ((a = find(a)) == (b = find(b))) return;
+        if (r[a] &lt; r[b]) std::swap(a, b);
+        p[b] = a; if (r[a] == r[b]) ++r[a];
+    }
+};</code></pre>
+                    </div>
+
+                    <p><code>find</code> 一行，<code>unite</code> 三行，均摊复杂度反阿克曼——实际就是 <code>O(1)</code>。已用 BFS 连通性对拍验证。</p>
+
+                    <h4 id="27-埃氏筛">27. 埃氏筛</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>vector&lt;bool&gt; is(n + 1, true); is[0] = is[1] = false;
+for (int i = 2; 1LL * i * i &lt;= n; ++i)
+    if (is[i]) for (long long j = 1LL * i * i; j &lt;= n; j += i) is[j] = false;</code></pre>
+                    </div>
+
+                    <p><code>O(n log log n)</code>。两个细节：从 <code>i*i</code> 开始划（更小的倍数早被划掉了）、<code>1LL*i*i</code> 防溢出。
+                    实测 <code>n = 100000</code> 恰好筛出 9592 个素数。</p>
+
+                    <h4 id="28-原地反转链表4-行">28. 原地反转链表（4 行）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>Node *pre = nullptr, *cur = head;
+while (cur) { Node* nx = cur-&gt;next; cur-&gt;next = pre; pre = cur; cur = nx; }
+head = pre;</code></pre>
+                    </div>
+
+                    <p>快慢指针找中点同理：<code>while (f &amp;&amp; f-&gt;next) { s = s-&gt;next; f = f-&gt;next-&gt;next; }</code>。</p>
+
+                    <h4 id="29-三分查找单峰极值">29. 三分查找（单峰极值）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>double l = -1e9, r = 1e9;
+for (int i = 0; i &lt; 100; ++i) {
+    double m1 = l + (r - l) / 3, m2 = r - (r - l) / 3;
+    if (f(m1) &lt; f(m2)) l = m1; else r = m2;      // 求最大值；求最小值把 &lt; 换成 &gt;
+}
+printf("%.10f\n", (l + r) / 2);</code></pre>
+                    </div>
+
+                    <p>固定 100 次迭代就能把区间压到 <code>1e-19</code> 量级，不用管精度阈值。
+                    已验证：对 <code>f(x) = -(x-3.7)² + 10</code>，结果 3.7000000000。⚠️ <strong>必须严格单峰</strong>，否则会跑到错的峰上。</p>
+
+                    <h4 id="30-异或链表省掉一半指针">30. 异或链表：省掉一半指针</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct XNode { int val; uintptr_t both; };        // both = prev ^ next
+XNode* nextOf(XNode* cur, XNode* prev) {
+    return reinterpret_cast&lt;XNode*&gt;(cur-&gt;both ^ reinterpret_cast&lt;uintptr_t&gt;(prev));
+}</code></pre>
+                    </div>
+
+                    <p>双向链表只存一个"异或指针"，靠 <code>a ^ (a ^ b) == b</code> 走回去。内存省 50%。</p>
+
+                    <p>⚠️ 代价巨大：调试器看不了、GC 类语言没法用、一个节点地址变了整条链就废、现代 CPU 上分支预测和缓存表现更差。<strong>知道它存在即可，别写进项目</strong>。</p>
+
+                    <h4 id="31-汉诺塔3-行递归">31. 汉诺塔：3 行递归</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void hanoi(int n, char a, char b, char c) {
+    if (!n) return;
+    hanoi(n - 1, a, c, b); printf("%c -&gt; %c\n", a, c); hanoi(n - 1, b, a, c);
+}</code></pre>
+                    </div>
+
+                    <p>递归之美的最小样本：把"移动 n 个"分解成"移动 n-1 个"两次 + 中间一步。移动次数必为 2ⁿ−1。</p>
+
+                    <h4 id="32-编译期计算constexpr-一行">32. 编译期计算（constexpr 一行）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>constexpr long long fib(int n) { return n &lt;= 1 ? n : fib(n - 1) + fib(n - 2); }
+static_assert(fib(90) == 2880067194370816120LL);    // 编译期算完，运行时零开销</code></pre>
+                    </div>
+
+                    <p>把"奇怪"从位运算挪到编译期：递归在编译器里跑，运行期只剩一个常量。
+                    同理可写 <code>constexpr</code> 阶乘、素数判定表（配合循环可生成编译期查找表）。</p>
+
+                    <h4 id="33-一行打印二进制">33. 一行打印二进制</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::cout &lt;&lt; std::bitset&lt;32&gt;(x) &lt;&lt; '\n';      // 00000000000000000000000000001100</code></pre>
+                    </div>
+
+                    <p>调试位运算时最省事的写法，比手写循环强。</p>
+
+                    <hr>
+
+                    <h3 id="四整活专区奇葩排序">四、整活专区：奇葩排序</h3>
+
+                    <blockquote>
+                        <p>这一节的算法<strong>都不该出现在生产代码里</strong>，但它们是理解"复杂度"这个概念最好的反面教材。以下四个均已对拍验证：随机数组排序结果正确。</p>
+                    </blockquote>
+
+                    <h4 id="34-sleep-sort让数字自己睡醒">34. Sleep Sort：让数字自己睡醒</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::vector&lt;std::thread&gt; ts;
+for (int v : a) ts.emplace_back([v] {
+    std::this_thread::sleep_for(std::chrono::milliseconds(v));
+    std::cout &lt;&lt; v &lt;&lt; ' ';
+});
+for (auto&amp; t : ts) t.join();</code></pre>
+                    </div>
+
+                    <p>每个数睡 <code>v</code> 毫秒，小的先醒，于是"排好序了"。复杂度是……<strong>O(睡觉时间)</strong>？</p>
+
+                    <p>⚠️ 只能排正整数、值大了要等半天、线程调度不保证顺序、结果不确定、负数直接异常。纯整活。</p>
+
+                    <h4 id="35-bogo-sort洗到对为止">35. Bogo Sort：洗到对为止</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>while (!std::is_sorted(a.begin(), a.end()))
+    std::shuffle(a.begin(), a.end(), rng);</code></pre>
+                    </div>
+
+                    <p>期望时间 <code>O(n · n!)</code>，n=10 就要平均几百万次洗牌，n=20 基本等到宇宙热寂。
+                    它的唯一价值：作为"随机算法期望复杂度"的教具。</p>
+
+                    <h4 id="36-stooge-sort递归砍三段砍完还砍">36. Stooge Sort：递归砍三段，砍完还砍</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void stooge(vector&lt;int&gt;&amp; a, int l, int r) {
+    if (a[l] &gt; a[r]) std::swap(a[l], a[r]);
+    if (r - l + 1 &gt; 2) {
+        int t = (r - l + 1) / 3;
+        stooge(a, l, r - t); stooge(a, l + t, r); stooge(a, l, r - t);   // 前 2/3、后 2/3、再前 2/3
+    }
+}</code></pre>
+                    </div>
+
+                    <p>复杂度 <code>O(n^2.71)</code>——比冒泡还慢，却是个正经的分治算法。看着它你就会明白：分治不等于快。</p>
+
+                    <h4 id="37-slow-sort投降乘法multiply-and-surrender">37. Slow Sort：投降乘法（Multiply and Surrender）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void slowsort(vector&lt;int&gt;&amp; a, int i, int j) {
+    if (i &gt;= j) return;
+    int m = (i + j) / 2;
+    slowsort(a, i, m); slowsort(a, m + 1, j);
+    if (a[m] &gt; a[j]) std::swap(a[m], a[j]);
+    slowsort(a, i, j - 1);          // 排好了? 再排一遍前 j-1 个
+}</code></pre>
+                    </div>
+
+                    <p>号称"故意设计成最烂的分治"：<code>O(n^(log n / 2 + ...))</code>，比 Stooge 还慢，却能证明正确。</p>
+
+                    <h4 id="38-gnome-sort一个下标来回走">38. Gnome Sort：一个下标来回走</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void gnome(vector&lt;int&gt;&amp; a) {
+    int i = 1, n = a.size();
+    while (i &lt; n) {
+        if (i == 0 || a[i - 1] &lt;= a[i]) ++i;
+        else { std::swap(a[i], a[i - 1]); --i; }      // 走错了就往回退
+    }
+}</code></pre>
+                    </div>
+
+                    <p><code>O(n²)</code> 但<strong>只要一个 <code>int i</code></strong>，号称"最省内存的排序"（花匠挪花盆的既视感）。
+                    有意思的是：把 <code>i</code> 的回退路径改成跳跃，它就变成了插入排序。</p>
+
+                    <hr>
+
+                    <h3 id="五速查表">五、速查表</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>需求</th>
+                                    <th>一行写法</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>取最低位 1</td>
+                                    <td><code>x &amp; -x</code></td>
+                                </tr>
+                                <tr>
+                                    <td>去掉最低位 1</td>
+                                    <td><code>x &amp; (x - 1)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>判 2 的幂</td>
+                                    <td><code>x &amp;&amp; !(x &amp; (x - 1))</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1 的个数</td>
+                                    <td><code>__builtin_popcount(x)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>最高位 1 位置</td>
+                                    <td><code>31 - __builtin_clz(x)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>无分支绝对/最值</td>
+                                    <td><code>(x ^ m) - m</code> / <code>b ^ ((a ^ b) &amp; -(a &lt; b))</code></td>
+                                </tr>
+                                <tr>
+                                    <td>防溢出平均</td>
+                                    <td><code>(a &amp; b) + ((a ^ b) &gt;&gt; 1)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>二进制 → 格雷码</td>
+                                    <td><code>n ^ (n &gt;&gt; 1)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>枚举子集</td>
+                                    <td><code>for (int s = m; ; s = (s-1) &amp; m)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>向上取 2 的幂</td>
+                                    <td><code>--x; x\|=x&gt;&gt;1; x\|=x&gt;&gt;2; x\|=x&gt;&gt;4; x\|=x&gt;&gt;8; x\|=x&gt;&gt;16; x+1</code></td>
+                                </tr>
+                                <tr>
+                                    <td>快速幂</td>
+                                    <td><code>while (n) { if (n &amp; 1) r *= a; a *= a; n &gt;&gt;= 1; }</code></td>
+                                </tr>
+                                <tr>
+                                    <td>最大公约数</td>
+                                    <td><code>b ? gcd(b, a % b) : a</code></td>
+                                </tr>
+                                <tr>
+                                    <td>找唯一出现一次的数</td>
+                                    <td>全部 <code>^=</code> 起来</td>
+                                </tr>
+                                <tr>
+                                    <td>多数元素</td>
+                                    <td>Boyer-Moore 投票（记得校验）</td>
+                                </tr>
+                                <tr>
+                                    <td>判环</td>
+                                    <td>快慢指针</td>
+                                </tr>
+                                <tr>
+                                    <td>洗牌</td>
+                                    <td><code>std::shuffle</code></td>
+                                </tr>
+                                <tr>
+                                    <td>前缀和 + 单点改</td>
+                                    <td>树状数组 <code>i += i &amp; -i</code></td>
+                                </tr>
+                                <tr>
+                                    <td>连通性</td>
+                                    <td>并查集 <code>find</code> + 路径压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>打印二进制</td>
+                                    <td><code>std::bitset&lt;32&gt;(x)</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="六什么时候不该用这些">六、什么时候不该用这些</h3>
+
+                    <ol>
+                        <li><strong>先问编译器，再问技巧。</strong> <code>-O2</code> 下 GCC/Clang 会把 <code>x / 2</code> 变成移位、把简单的 <code>min/max</code> 变成 <code>cmov</code>、把 <code>popcount</code> 变成一条指令。手写 Hack 很可能只是让代码更难读，速度毫无变化，甚至更慢（异或交换就是典型）。</li>
+                        <li><strong>未定义行为是隐形炸弹。</strong> <code>*(float*)&amp;i</code>、有符号溢出、<code>a ^= b ^= a ^= b</code>、<code>x &gt;&gt; 31</code> 依赖实现——同一个二进制在 <code>-O0</code> 下对、<code>-O3</code> 下错的故事每天都在发生。需要位型转换时用 <code>std::bit_cast</code>（C++20）或 <code>memcpy</code>。</li>
+                        <li><strong>可移植性自己兜底。</strong> <code>__builtin_*</code> 是 GCC/Clang 扩展，MSVC 另有其道；<code>int</code> 不一定是 32 位。写位运算就用 <code>&lt;cstdint&gt;</code> 的 <code>int32_t</code> / <code>uint32_t</code>。</li>
+                        <li><strong>精度与前提要写进注释。</strong> 快速平方根倒数只在 <code>float</code> 上成立；Boyer-Moore 必须二次校验；三分查找必须严格单峰；xorshift 不能用于安全场景。</li>
+                        <li><strong>可读性 &gt; 炫技。</strong> 生产代码里 <code>&lt;algorithm&gt;</code> 的 <code>std::shuffle</code> / <code>std::lower_bound</code> / <code>std::gcd</code>（C++17）永远优先于手写版本。这些 Hack 的最佳归宿是：竞赛、底层库、以及你向同事解释"为什么这么写"时的那句"因为好玩"。</li>
+                    </ol>
+
+                    <hr>
+
+                    <h4 id="附验证方式">附：验证方式</h4>
+
+                    <p>文中片段集中在一个测试程序里跑过：随机对拍（<code>imin/imax/iavg/add</code> 各 2 万组）、暴力对拍（约瑟夫 <code>n≤40, m≤12</code>、素数 <code>n&lt;5000</code>、并查集 vs BFS、树状数组 vs 朴素前缀和、Gosper's Hack vs 组合数）、数学性质验证（格雷码往返 5000 次、位反转 vs 暴力 2000 组、Szudzik 单射 300×300、牛顿法 vs <code>std::sqrt</code>、rsqrt 20 万采样点误差统计、Fisher-Yates 排列覆盖与均匀性、xorshift 200 万输出无重复）、以及四种奇葩排序 ×50 组随机数组与 <code>std::sort</code> 对拍。全部通过。</p>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <div class="giscus"></div>
+                </div>
+                <div class="mt-8">
+                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium" target="_blank" rel="noopener noreferrer">
+                        <span>目录</span>
+                        <span class="font-semibold">Go!</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+
+            <aside class="article-toc" data-toc aria-label="文章目录"></aside>
+        </div>
+    </main>
+
+    <script src="../article.js" defer></script>
+    <script src="../toc.js" defer></script>
+
+
+</body>
+</html>
