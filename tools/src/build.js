@@ -120,6 +120,25 @@ function copyTheme() {
   });
 }
 
+// ── GitHub Pages 安全网 ──
+// GitHub Pages 在没有 .nojekyll 时会用 Jekyll 渲染整个仓库；正文里的 {{ }} / {% %}
+// （例如 C++ 的 std::map<std::string,int> m{{"a",1}, {"b",2}}）会被当成 Liquid 模板而报错。
+// 构建时提前发现并给出指引，不必等 Pages 构建失败才知道。
+const LIQUID_TOKEN = /\{\{|\{%/;
+
+function warnLiquidHazards(posts) {
+  // 仓库根已有 .nojekyll 时 Jekyll 根本不跑，保持安静不打扰
+  if (fs.existsSync(path.join(path.resolve(cfg.repoRoot), '.nojekyll'))) return;
+
+  const hits = posts.filter(function (p) { return LIQUID_TOKEN.test(p.markdown); });
+  if (!hits.length) return;
+
+  console.log('  警告：以下文章正文含 {{ }} 或 {% %}，在启用 Jekyll 的 GitHub Pages 上会触发 Liquid 语法错误：');
+  hits.forEach(function (p) { console.log('      - ' + p.year + '/' + p.slug + '.md'); });
+  console.log('  解决办法：在仓库根目录放一个 .nojekyll 文件关闭 Jekyll（本站为纯静态站点，推荐）；');
+  console.log('            或把相关代码片段用 {% raw %} … {% endraw %} 包起来。');
+}
+
 function build() {
   fs.mkdirSync(cfg.outputDir, { recursive: true });
 
@@ -161,6 +180,8 @@ function build() {
 
   copyTheme();
   console.log('  已同步主题资源 -> ' + cfg.outputDir);
+
+  warnLiquidHazards(posts);
 }
 
 // 监听 posts/ 增量重建；package.json 的 `npm run dev` 依赖这个能力

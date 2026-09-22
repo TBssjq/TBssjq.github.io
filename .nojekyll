@@ -1,0 +1,3 @@
+# 关闭 GitHub Pages 的 Jekyll 构建（该文件存在即生效，内容会被忽略）。
+# 本站是纯静态 HTML，不需要 Jekyll；跳过它也能避免 tools/posts/**/*.md
+# 正文里的 {{ ... }} 代码片段被 Liquid 当成模板解析而报错。
