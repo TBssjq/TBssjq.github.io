@@ -175,6 +175,65 @@ int main() {
 
                     <p>但 <code>reset(q)</code> 里改的是 <code>p</code> 这个副本，不影响外面的 <code>q</code>。<br>这说明：传指针也是值传递，只不过拷贝的是地址值。</p>
 
+                    <h4 id="如果想真正把-q-改成-null应该怎么做">如果想真正把 <code>q</code> 改成 <code>NULL</code>，应该怎么做？</h4>
+
+                    <p>需要传递“指针的指针”：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>void reset(int **p) {
+    *p = NULL;
+}
+
+int main() {
+    int a = 1;
+    int *q = &amp;a;
+
+    reset(&amp;q);
+    printf("%p\n", (void*)q); // 输出空指针，通常是 (nil) 或 0x0
+}</code></pre>
+                    </div>
+
+                    <p>因为这时：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>p == &amp;q
+*p == q</code></pre>
+                    </div>
+
+                    <p>所以：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>*p = NULL;</code></pre>
+                    </div>
+
+                    <p>等价于：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="c"><code>q = NULL;</code></pre>
+                    </div>
+
+                    <hr>
+
                     <h4 id="24-c默认也是值传递">2.4 C++：默认也是值传递</h4>
 
                     <div class="code-block">
@@ -448,6 +507,278 @@ swap:
     lea rsi, [rel y]
     call swap</code></pre>
                     </div>
+
+                    <h4 id="211-交换两个-int-变量的地址交换指针">2.11 交换两个 int 变量的地址（交换指针）</h4>
+
+                    <p>在 C++ 中，<strong>变量本身的地址是固定的</strong>，无法交换两个 <code>int</code> 变量在内存中的位置。通常所说的“交换地址”是指交换<strong>指向这些变量的指针</strong>，让两个指针互相指向对方原来指向的地址。</p>
+
+                    <h5 id="方法一使用指针的引用">方法一：使用指针的引用</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;iostream&gt;
+
+// 交换两个 int* 指针，即交换它们所保存的地址
+void swapAddress(int*&amp; a, int*&amp; b) {
+    int* temp = a;
+    a = b;
+    b = temp;
+}
+
+int main() {
+    int x = 10, y = 20;
+    int* p1 = &amp;x;
+    int* p2 = &amp;y;
+
+    std::cout &lt;&lt; "交换前：\n";
+    std::cout &lt;&lt; "p1 指向 " &lt;&lt; *p1 &lt;&lt; "，地址 " &lt;&lt; p1 &lt;&lt; "\n";
+    std::cout &lt;&lt; "p2 指向 " &lt;&lt; *p2 &lt;&lt; "，地址 " &lt;&lt; p2 &lt;&lt; "\n";
+
+    swapAddress(p1, p2);   // 交换指针，而不是交换 x 和 y 的值
+
+    std::cout &lt;&lt; "\n交换后：\n";
+    std::cout &lt;&lt; "p1 指向 " &lt;&lt; *p1 &lt;&lt; "，地址 " &lt;&lt; p1 &lt;&lt; "\n";
+    std::cout &lt;&lt; "p2 指向 " &lt;&lt; *p2 &lt;&lt; "，地址 " &lt;&lt; p2 &lt;&lt; "\n";
+
+    return 0;
+}</code></pre>
+                    </div>
+
+                    <p><strong>输出示例：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>交换前：
+p1 指向 10，地址 0x7ffd...
+p2 指向 20，地址 0x7ffd...
+交换后：
+p1 指向 20，地址 0x7ffd...  // 原来 p2 的地址
+p2 指向 10，地址 0x7ffd...  // 原来 p1 的地址</code></pre>
+                    </div>
+
+                    <p>注意：<code>x</code> 和 <code>y</code> 的值并没有改变，只是 <code>p1</code> 和 <code>p2</code> 指向的目标互换了。</p>
+
+                    <h5 id="方法二使用标准库-stdswap">方法二：使用标准库 <code>std::swap</code></h5>
+
+                    <p>如果只是交换两个指针，直接使用 <code>std::swap</code> 即可：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;utility&gt;  // 或 &lt;algorithm&gt;
+
+std::swap(p1, p2);</code></pre>
+                    </div>
+
+                    <h5 id="方法三使用二级指针c-风格">方法三：使用二级指针（C 风格）</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void swapAddress(int** a, int** b) {
+    int* temp = *a;
+    *a = *b;
+    *b = temp;
+}
+// 调用：swapAddress(&amp;p1, &amp;p2);</code></pre>
+                    </div>
+
+                    <h5 id="关键点">关键点</h5>
+
+                    <ul>
+                        <li><strong>不能交换 <code>int</code> 变量本身的地址</strong>：变量地址由编译器分配，在作用域内固定不变。</li>
+                        <li><strong>只能交换指向 <code>int</code> 的指针</strong>：通过交换指针的值，间接实现“交换地址”的效果。</li>
+                        <li>如果希望函数内部修改指针本身，必须传递<strong>指针的引用</strong>（<code>int*&amp;</code>）或<strong>指针的指针</strong>（<code>int**</code>）。</li>
+                    </ul>
+
+                    <h4 id="212-和-有什么区别">2.12 <code>*&amp;</code> 和 <code>**</code> 有什么区别</h4>
+
+                    <p>在 C++ 中，<code>*&amp;</code> 和 <code>**</code> 出现在类型声明里时，含义完全不同。<code>int*&amp;</code> 和 <code>int**</code> 就是典型对比。</p>
+
+                    <h5 id="本质区别">本质区别</h5>
+
+                    <ul>
+                        <li><strong><code>int*&amp;</code></strong>：这是一个<strong>引用</strong>，引用的是一个 <code>int*</code> 类型的指针变量。<br>读作：“指向 int 的指针的引用”。<br>它相当于给一个指针变量起了个别名，操作它就是在操作原指针。</li>
+                        <li><strong><code>int**</code></strong>：这是一个<strong>二级指针</strong>，它本身是一个指针，指向另一个 <code>int*</code> 类型的指针变量。<br>读作：“指向（指向 int 的指针）的指针”。<br>它保存的是“指针变量的地址”。</li>
+                    </ul>
+
+                    <h5 id="代码对比">代码对比</h5>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int x = 10;
+int* p = &amp;x;      // p 是指向 int 的指针
+
+int*&amp; ref = p;    // ref 是 p 的引用，ref 就是 p
+int** pp = &amp;p;    // pp 是二级指针，指向 p</code></pre>
+                    </div>
+
+                    <h6 id="访问方式">访问方式</h6>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>操作</th>
+                                    <th><code>int*&amp; ref</code></th>
+                                    <th><code>int** pp</code></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>访问 x 的值</td>
+                                    <td><code>*ref</code></td>
+                                    <td><code>**pp</code></td>
+                                </tr>
+                                <tr>
+                                    <td>修改 p 的指向</td>
+                                    <td><code>ref = nullptr;</code></td>
+                                    <td><code>*pp = nullptr;</code></td>
+                                </tr>
+                                <tr>
+                                    <td>修改 x 的值</td>
+                                    <td><code>*ref = 20;</code></td>
+                                    <td><code>**pp = 20;</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 id="作为函数参数的区别">作为函数参数的区别</h5>
+
+                    <h6 id="使用-intc-推荐">使用 <code>int*&amp;</code>（C++ 推荐）</h6>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void swapPtr(int*&amp; a, int*&amp; b) {
+    int* temp = a;
+    a = b;
+    b = temp;
+}
+
+int main() {
+    int x = 1, y = 2;
+    int* p1 = &amp;x;
+    int* p2 = &amp;y;
+    swapPtr(p1, p2);   // 直接传指针变量
+}</code></pre>
+                    </div>
+
+                    <ul>
+                        <li>引用必须绑定到一个已存在的指针变量。</li>
+                        <li>函数内部对 <code>a</code>、<code>b</code> 的修改会直接改变 <code>p1</code>、<code>p2</code>。</li>
+                        <li>引用不能为空，也不能重新绑定到别的变量。</li>
+                    </ul>
+
+                    <h6 id="使用-intc-风格">使用 <code>int**</code>（C 风格）</h6>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void swapPtr(int** a, int** b) {
+    int* temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int main() {
+    int x = 1, y = 2;
+    int* p1 = &amp;x;
+    int* p2 = &amp;y;
+    swapPtr(&amp;p1, &amp;p2); // 必须传指针的地址
+}</code></pre>
+                    </div>
+
+                    <ul>
+                        <li>二级指针可以为空，也可以重新指向别的指针变量。</li>
+                        <li>函数内部需要多一次解引用 <code>*a</code> 才能操作原来的指针。</li>
+                    </ul>
+
+                    <h5 id="核心差异总结">核心差异总结</h5>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>特性</th>
+                                    <th><code>int*&amp;</code>（指针的引用）</th>
+                                    <th><code>int**</code>（二级指针）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>本质</td>
+                                    <td>引用（别名）</td>
+                                    <td>指针（保存地址）</td>
+                                </tr>
+                                <tr>
+                                    <td>能否为空</td>
+                                    <td>否</td>
+                                    <td>是</td>
+                                </tr>
+                                <tr>
+                                    <td>能否重新绑定/指向</td>
+                                    <td>否（引用一旦绑定不可变）</td>
+                                    <td>是</td>
+                                </tr>
+                                <tr>
+                                    <td>修改原指针</td>
+                                    <td><code>a = ...</code></td>
+                                    <td><code>*a = ...</code></td>
+                                </tr>
+                                <tr>
+                                    <td>访问最终 int</td>
+                                    <td><code>*a</code></td>
+                                    <td><code>**a</code></td>
+                                </tr>
+                                <tr>
+                                    <td>函数调用</td>
+                                    <td><code>func(p)</code></td>
+                                    <td><code>func(&amp;p)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>风格</td>
+                                    <td>C++ 惯用，更安全直观</td>
+                                    <td>C 风格，更底层</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 id="注意">注意</h5>
+
+                    <ul>
+                        <li><code>*&amp;</code> 不是一个独立的运算符，而是类型声明中的符号组合。<br>在表达式中，<code>*&amp;p</code> 等价于 <code>p</code>（先取地址再解引用），但这和类型声明 <code>int*&amp;</code> 是两回事。</li>
+                        <li><code>int&amp;*</code> 是非法的：不能定义“指向引用的指针”。</li>
+                        <li>如果只是想在函数里修改指针本身，优先用 <code>int*&amp;</code>；只有在需要兼容 C 或处理更复杂的多级间接时，才用 <code>int**</code>。</li>
+                    </ul>
+
+                    <p>简单记：<br><strong><code>int*&amp;</code> 是指针的别名，<code>int**</code> 是指针的地址。</strong></p>
 
                     <hr>
 
@@ -1887,6 +2218,14 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                                     <td>必须是 <code>int</code>，因为 <code>*a</code> 是 <code>int</code> 值；<code>int *t</code> 是指针，不能保存旧值</td>
                                 </tr>
                                 <tr>
+                                    <td>交换指针（地址）</td>
+                                    <td>交换的是指针变量的值，不是变量的地址；用 <code>int*&amp;</code> 或 <code>int**</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>*&amp;</code> 与 <code>**</code></td>
+                                    <td><code>int*&amp;</code> 是指针的引用，不能为空、不能改绑；<code>int**</code> 是二级指针，可为空、可改指向</td>
+                                </tr>
+                                <tr>
                                     <td><code>*</code> 的含义</td>
                                     <td>声明中表示指针声明符；表达式中表示解引用；乘法中表示乘号</td>
                                 </tr>
@@ -2023,6 +2362,14 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                                     <td><code>int **q = a;</code></td>
                                     <td>二维数组 <code>a</code> 不是 <code>int **</code>，类型不兼容</td>
                                 </tr>
+                                <tr>
+                                    <td>试图交换 <code>int</code> 变量本身的地址</td>
+                                    <td>变量地址固定，不能交换；只能交换指向它们的指针</td>
+                                </tr>
+                                <tr>
+                                    <td>用 <code>int**</code> 时忘记解引用</td>
+                                    <td><code>int**</code> 修改原指针需要 <code>*a = ...</code>；<code>int*&amp;</code> 直接 <code>a = ...</code></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -2032,7 +2379,7 @@ for (int i = array.getSize() - 1; i &gt;= 0; --i) {
                     <h3 id="12-记忆口诀">12. 记忆口诀</h3>
 
                     <blockquote>
-                        <p>数组名，多退化，首元素地址就是它。<br><code>&amp;数组</code>，类型变，指向整个数组的指针。<br>声明看括号，<code>(*p)[N]</code> 才指数组。<br>下标 <code>p[x]</code> 就是 <code>*(p+x)</code>。<br>优先级 <code>[]</code> 高于 <code>*</code>，<code>*p[x]</code> 是 <code>*(p[x])</code>。<br>C 只有值传递，改外面传地址。<br>C++ 用 <code>{}</code> 防窄化，能用引用就别用指针，能用智能指针就别用裸指针，远离 UB。<br><code>swap</code> 临时变量存值，<code>int t</code> 不能换 <code>int *t</code>。<br>指针加法按类型缩放：<code>int *</code> 加 4，<code>char *</code> 加 1，<code>double *</code> 加 8。<br>数组不是指针，指针不是数组；数组名会退化，但 <code>sizeof</code> 不退化。<br><code>p++</code> 移指针，<code>(*p)++</code> 改值，<code>*p++</code> 先取值再移指针。</p>
+                        <p>数组名，多退化，首元素地址就是它。<br><code>&amp;数组</code>，类型变，指向整个数组的指针。<br>声明看括号，<code>(*p)[N]</code> 才指数组。<br>下标 <code>p[x]</code> 就是 <code>*(p+x)</code>。<br>优先级 <code>[]</code> 高于 <code>*</code>，<code>*p[x]</code> 是 <code>*(p[x])</code>。<br>C 只有值传递，改外面传地址。<br>C++ 用 <code>{}</code> 防窄化，能用引用就别用指针，能用智能指针就别用裸指针，远离 UB。<br><code>swap</code> 临时变量存值，<code>int t</code> 不能换 <code>int *t</code>。<br>交换地址换指针，<code>int*&amp;</code> 或 <code>int**</code>，变量地址永不变。<br><code>int*&amp;</code> 是别名，不能为空不能改绑；<code>int**</code> 是地址，可空可改指向。<br>指针加法按类型缩放：<code>int *</code> 加 4，<code>char *</code> 加 1，<code>double *</code> 加 8。<br>数组不是指针，指针不是数组；数组名会退化，但 <code>sizeof</code> 不退化。<br><code>p++</code> 移指针，<code>(*p)++</code> 改值，<code>*p++</code> 先取值再移指针。</p>
                     </blockquote>
                 </div>
 

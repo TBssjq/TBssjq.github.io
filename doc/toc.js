@@ -74,14 +74,8 @@
 
         var summary = document.createElement('summary');
         summary.className = 'toc-summary';
-        // 标题文本单独包一层 span，方便套用「勿忘我」同款 3D 立体字
-        // （T3D 由页面可选提供，缺失时这里只是一段普通文本，组件仍零依赖可用）
-        var summaryText = document.createElement('span');
-        summaryText.className = 'toc-title';
-        summaryText.textContent = title;
-        summary.appendChild(summaryText);
+        summary.textContent = title;
         box.appendChild(summary);
-        if (window.T3D && window.T3D.enhance) window.T3D.enhance(summaryText);
 
         var nav = document.createElement('nav');
         nav.className = 'toc-nav';

@@ -81,15 +81,3 @@
 @media (prefers-reduced-motion: reduce) {
     .toc-link { transition: none; }
 }
-
-/* ── 目录标题：套用「勿忘我」同款 3D 立体字（规则本体在 article.css）── */
-.toc-title {
-    --t3d-g1: #ffffff;
-    --t3d-g2: #fdba74;
-    --t3d-g3: #f97316;
-    --t3d-g4: #fb923c;
-    --t3d-sh1: rgba(249, 115, 22, .45);
-    --t3d-sh2: rgba(194, 84, 10, .36);
-    --t3d-sh3: rgba(154, 64, 6, .28);
-    --t3d-sh4: rgba(120, 50, 5, .24);
-}
