@@ -1,0 +1,3458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++11 现代 C++ 开发指南 - My Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Serif SC', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        display: ['ZCOOL KuaiLe', 'cursive'],
+                    },
+                    colors: {
+                        accent: '#f97316',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+</head>
+<body class="min-h-screen">
+    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
+        <div class="h-full flex items-center justify-between px-6">
+            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white" target="_blank" rel="noopener noreferrer">My Blog</a>
+            <div class="flex items-center gap-3">
+                <div class="music-player music-player--top">
+                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"></iframe>
+                </div>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-16">
+        <div class="article-shell">
+            <article class="article-main">
+                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">C++11 现代 C++ 开发指南</h1>
+
+                <p class="article-meta">
+
+                    <span class="meta-date">9月22日</span>
+                </p>
+
+            <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
+                    <h2 id="c11-现代-c-开发指南">C++11 现代 C++ 开发指南</h2>
+
+                    <blockquote>
+                        <p><strong>读者定位</strong>：已经学完「面向对象（OOP）+ STL 基础」的 C++ 新手。
+                        你已经会写 <code>class</code>、会继承多态、会用 <code>vector</code> / <code>map</code> / <code>sort</code> / <code>find</code>，但写出来的代码还停留在「C++98 的味道」。
+                        本文的目标：让你<strong>系统掌握 C++11 到底新增了什么、为什么要有它、怎么写才地道</strong>，并能在日常开发中稳定输出现代风格代码。</p>
+                        <p><strong>版本约定</strong>：本文主体为 <strong>C++11</strong>。凡是标记 <code>C++14</code> / <code>C++17</code> / <code>C++20</code> 的特性，都只是顺带提示，不会作为正文要求。</p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h3 id="目录">目录</h3>
+
+                    <ul>
+                        <li><a href="#第-0-章-环境与学习姿势" target="_blank" rel="noopener noreferrer">第 0 章 环境与学习姿势</a></li>
+                        <li><a href="#第-1-章-让代码变短类型推导与语法糖" target="_blank" rel="noopener noreferrer">第 1 章 让代码变短：类型推导与语法糖</a></li>
+                        <li><a href="#第-2-章-右值引用与移动语义本章最重要" target="_blank" rel="noopener noreferrer">第 2 章 右值引用与移动语义（本章最重要）</a></li>
+                        <li><a href="#第-3-章-智能指针与-raii" target="_blank" rel="noopener noreferrer">第 3 章 智能指针与 RAII</a></li>
+                        <li><a href="#第-4-章-lambda-与可调用对象" target="_blank" rel="noopener noreferrer">第 4 章 Lambda 与可调用对象</a></li>
+                        <li><a href="#第-5-章-oop-的现代化改写" target="_blank" rel="noopener noreferrer">第 5 章 OOP 的现代化改写</a></li>
+                        <li><a href="#第-6-章-模板进阶变参完美转发类型萃取" target="_blank" rel="noopener noreferrer">第 6 章 模板进阶：变参、完美转发、类型萃取</a></li>
+                        <li><a href="#第-7-章-stl-新容器与新算法" target="_blank" rel="noopener noreferrer">第 7 章 STL 新容器与新算法</a></li>
+                        <li><a href="#第-8-章-并发编程基础" target="_blank" rel="noopener noreferrer">第 8 章 并发编程基础</a></li>
+                        <li><a href="#第-9-章-常用工具库chrono--random--regex--字符串" target="_blank" rel="noopener noreferrer">第 9 章 常用工具库：chrono / random / regex / 字符串</a></li>
+                        <li><a href="#第-10-章-20-个高频陷阱清单" target="_blank" rel="noopener noreferrer">第 10 章 20 个高频陷阱清单</a></li>
+                        <li><a href="#第-11-章-代码风格与工程实践" target="_blank" rel="noopener noreferrer">第 11 章 代码风格与工程实践</a></li>
+                        <li><a href="#第-12-章-综合实战并发词频统计器" target="_blank" rel="noopener noreferrer">第 12 章 综合实战：并发词频统计器</a></li>
+                        <li><a href="#附录-a-特性速查表" target="_blank" rel="noopener noreferrer">附录 A 特性速查表</a></li>
+                        <li><a href="#附录-b-自检题含答案提示" target="_blank" rel="noopener noreferrer">附录 B 自检题（含答案提示）</a></li>
+                        <li><a href="#附录-c-进阶学习路线" target="_blank" rel="noopener noreferrer">附录 C 进阶学习路线</a></li>
+                    </ul>
+
+                    <hr>
+
+                    <h3 id="第-0-章-环境与学习姿势">第 0 章 环境与学习姿势</h3>
+
+                    <h4 id="01-编译器与标准开关">0.1 编译器与标准开关</h4>
+
+                    <p>C++11 是 2011 年发布的标准，现在（GCC / Clang / MSVC）早已完整支持。关键是<strong>显式指定标准版本</strong>，否则默认可能是 C++98 或 C++17。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="bash"><code># 单文件编译（推荐起步就用这一串）
+g++ -std=c++11 -Wall -Wextra -Wpedantic -O2 -pthread main.cpp -o main
+
+# 想看清「拷贝/移动到底发生了几次」时，关掉编译器的优化（复制消除）
+g++ -std=c++11 -fno-elide-constructors demo.cpp -o demo
+
+# 开启 sanitizer 查内存/线程问题（学习期强烈建议）
+g++ -std=c++11 -g -fsanitize=address,undefined main.cpp -o main
+g++ -std=c++11 -g -fsanitize=thread -pthread main.cpp -o main</code></pre>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>选项</th>
+                                    <th>作用</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>-std=c++11</code></td>
+                                    <td>指定语言标准（也可用 <code>c++14</code> / <code>c++17</code>）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>-Wall -Wextra -Wpedantic</code></td>
+                                    <td>打开大部分警告，<strong>新手必须开</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>-O2</code></td>
+                                    <td>优化；调试时换成 <code>-g -O0</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>-pthread</code></td>
+                                    <td>使用 <code>std::thread</code> 时在 Linux 下必须链接</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ 常见坑：忘了 <code>-pthread</code>，程序编译通过但运行时抛 <code>std::system_error: Enable multithreading to use std::thread</code>。</p>
+                    </blockquote>
+
+                    <h4 id="02-cmake-最小模板">0.2 CMake 最小模板</h4>
+
+                    <p>只要超过 1 个源文件，就用 CMake，别手敲 g++。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cmake"><code>cmake_minimum_required(VERSION 3.10)
+project(WordCount CXX)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)   # 不支持就报错，绝不悄悄降级
+set(CMAKE_CXX_EXTENSIONS OFF)         # 关掉 GNU 扩展，保证可移植
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
+find_package(Threads REQUIRED)
+add_executable(wordcount main.cpp)
+target_link_libraries(wordcount PRIVATE Threads::Threads)</code></pre>
+                    </div>
+
+                    <h4 id="03-三条学习建议">0.3 三条学习建议</h4>
+
+                    <ol>
+                        <li><strong>先懂「为什么」，再记「怎么写」</strong>。C++11 几乎每个特性都是为了解决 98 的一个具体痛点（拷贝太贵、类型写太长、回调太啰嗦、没有标准线程等）。</li>
+                        <li><strong>每个特性写一份 30 行的小 demo</strong>，加打印，亲手验证。移动语义一定要打印地址/计数，否则永远学不会。</li>
+                        <li><strong>不要一次吞下所有特性</strong>。优先级建议：
+                        <code>auto / 范围 for / nullptr / 统一初始化</code> → <code>移动语义</code> → <code>智能指针</code> → <code>lambda</code> → <code>override/delete/default</code> → <code>STL 新容器</code> → <code>并发</code> → <code>模板进阶</code>。</li>
+                    </ol>
+
+                    <hr>
+
+                    <h3 id="第-1-章-让代码变短类型推导与语法糖">第 1 章 让代码变短：类型推导与语法糖</h3>
+
+                    <h4 id="11-auto让编译器替你写类型">1.1 <code>auto</code>：让编译器替你写类型</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::map&lt;std::string, std::vector&lt;int&gt;&gt; table;
+
+// C++98
+std::map&lt;std::string, std::vector&lt;int&gt;&gt;::iterator it = table.begin();
+
+// C++11
+auto it = table.begin();          // it 的类型由初始化表达式推导
+auto pos = table.find("key");     // 少写 60 个字符，且改容器类型时不用改代码</code></pre>
+                    </div>
+
+                    <p>规则与注意点：</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>写法</th>
+                                    <th>含义</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>auto x = expr;</code></td>
+                                    <td>按值拷贝，<strong>丢掉引用和顶层 const</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>const auto x = expr;</code></td>
+                                    <td>按值拷贝，得到 const 值</td>
+                                </tr>
+                                <tr>
+                                    <td><code>auto&amp; x = expr;</code></td>
+                                    <td>保留底层 const，绑定到左值</td>
+                                </tr>
+                                <tr>
+                                    <td><code>const auto&amp; x = expr;</code></td>
+                                    <td><strong>遍历容器时的首选</strong>，不拷贝不修改</td>
+                                </tr>
+                                <tr>
+                                    <td><code>auto&amp;&amp; x = expr;</code></td>
+                                    <td>万能引用（第 2 章详讲）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>const std::vector&lt;int&gt; v{1,2,3};
+auto  a = v;          // a 是 vector&lt;int&gt;          （顶层 const 被丢掉）
+auto&amp; b = v;          // b 是 const vector&lt;int&gt;&amp;
+for (const auto&amp; n : v) { /* 只读，零拷贝 */ }</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <code>auto</code> 会丢掉引用，所以 <code>auto x = *it;</code> 是<strong>一次拷贝</strong>。想要引用必须显式写 <code>auto&amp;</code>。</p>
+                    </blockquote>
+
+                    <p><strong>什么时候不该用 <code>auto</code></strong>：类型本身是重要信息、且无法从上下文一眼看出时（例如 <code>auto rate = calc();</code> 看不出是 <code>double</code> 还是 <code>int</code>）。接口边界处宁可写显式类型。</p>
+
+                    <h4 id="12-decltype我要表达式的类型但不要它的值">1.2 <code>decltype</code>：我要「表达式的类型」，但不要它的值</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int a = 0;
+decltype(a)      b = 1;   // int
+decltype((a))    c = a;   // int&amp;  —— 注意括号！(a) 是左值表达式，得到引用
+decltype(a + 0)  d = 2;   // int
+
+// 典型用途：函数模板的返回类型依赖于参数
+template &lt;typename A, typename B&gt;
+auto add(A a, B b) -&gt; decltype(a + b) {   // 尾置返回类型
+    return a + b;
+}</code></pre>
+                    </div>
+
+                    <p><code>decltype</code> 最常见的两个用途：</p>
+
+                    <ol>
+                        <li><strong>尾置返回类型</strong>（<code>auto f(...) -&gt; decltype(...)</code>）：C++11 的 lambda 与模板函数常需要。</li>
+                        <li><strong>类型别名中转</strong>：<code>using T = decltype(container.begin());</code></li>
+                    </ol>
+
+                    <blockquote>
+                        <p>C++14 起可以直接写 <code>decltype(auto)</code> 和省略尾置返回类型（<code>auto add(A a, B b) { return a + b; }</code>），更省心。</p>
+                    </blockquote>
+
+                    <h4 id="13-范围-forrange-based-for">1.3 范围 for（Range-based for）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::vector&lt;std::string&gt; names{"Ann", "Bob"};
+
+for (const auto&amp; s : names)  std::cout &lt;&lt; s &lt;&lt; '\n';  // 只读 → const auto&amp;
+for (auto&amp; s : names)        s += "!";                // 要改元素 → auto&amp;
+for (auto s : names)         { /* 拷贝一份，通常没必要 */ }</code></pre>
+                    </div>
+
+                    <p>它本质上是语法糖，等价于：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>{
+    auto&amp;&amp; __range = names;
+    auto __begin = begin(__range), __end = end(__range);
+    for (; __begin != __end; ++__begin) {
+        const auto&amp; s = *__begin;
+        /* 循环体 */
+    }
+}</code></pre>
+                    </div>
+
+                    <p><strong>注意</strong>：</p>
+
+                    <ul>
+                        <li>循环体内<strong>不要增删容器元素</strong>（迭代器失效，同普通 for）。</li>
+                        <li>想遍历自定义类型，只需提供 <code>begin()</code> / <code>end()</code> 成员（或非成员 <code>begin(T)</code> / <code>end(T)</code>）。</li>
+                        <li>C++11 中不能在范围 for 里 <code>std::move</code> 元素吗？可以，但要写 <code>auto&amp;&amp;</code> 或 <code>auto&amp;</code> 再 <code>std::move(s)</code>。</li>
+                    </ul>
+
+                    <h4 id="14-nullptr干掉-null-和-0">1.4 <code>nullptr</code>：干掉 <code>NULL</code> 和 <code>0</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void f(int);
+void f(char*);
+
+f(NULL);      // 灾难：NULL 通常是 0 → 调用 f(int)
+f(0);         // 同上
+f(nullptr);   // ✅ 明确调用 f(char*)</code></pre>
+                    </div>
+
+                    <p><code>nullptr</code> 的类型是 <code>std::nullptr_t</code>，<strong>不是整数</strong>，能隐式转换成任意指针类型，不能转成 <code>int</code>。
+                    <strong>新代码里永远不要写 <code>NULL</code>，也不要用 <code>0</code> 表示空指针。</strong></p>
+
+                    <h4 id="15-统一初始化-与-stdinitializerlist">1.5 统一初始化 <code>{}</code> 与 <code>std::initializer_list</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int  x{10};            // 直接初始化
+int  y = {10};         // 拷贝列表初始化
+int  z{};              // 零初始化 → 0（不再有"忘了初始化"的 bug）
+
+std::vector&lt;int&gt; v{1, 2, 3, 4};
+std::map&lt;std::string, int&gt; m{{"a", 1}, {"b", 2}};
+
+struct Point { int x, y; };
+Point p{1, 2};                       // 聚合初始化
+Point* q = new Point{3, 4};</code></pre>
+                    </div>
+
+                    <p><strong><code>{}</code> 的三大好处</strong>：</p>
+
+                    <ol>
+                        <li>
+                            <p><strong>禁止窄化转换（narrowing）</strong>，编译期报错：</p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="cpp"><code>int  a{3.14};   // ❌ 编译错误：double → int 是窄化
+char c{300};    // ❌ 编译错误
+int  b(3.14);   // ⚠️ 通过，悄悄变成 3</code></pre>
+                            </div>
+                        </li>
+                        <li>
+                            <p><strong>解决"最令人头疼的解析"（most vexing parse）</strong>：</p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="cpp"><code>std::vector&lt;int&gt; v1();    // ⚠️ 这不是变量！这是声明了一个返回 vector&lt;int&gt; 的函数 v1
+std::vector&lt;int&gt; v2{};    // ✅ 空的 vector
+std::vector&lt;int&gt; v3(10);  // ✅ 10 个 0
+std::vector&lt;int&gt; v4{10};  // ⚠️ 1 个元素，值为 10（因为有 initializer_list 构造函数）</code></pre>
+                            </div>
+                        </li>
+                        <li>
+                            <p><strong>成员默认初始值</strong>（C++11 新增，强烈推荐）：</p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="cpp"><code>class Widget {
+    int      id_   = 0;              // 类内初始值
+    std::string name_{"unknown"};    // 用 {} 或 = 都行
+    bool     ready_ = false;
+};</code></pre>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <p><strong><code>std::initializer_list&lt;T&gt;</code></strong> 让你自己的类型也支持 <code>{...}</code>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;initializer_list&gt;
+#include &lt;algorithm&gt;
+
+class IntSet {
+public:
+    IntSet(std::initializer_list&lt;int&gt; init) {
+        for (int v : init) data_.push_back(v);
+        std::sort(data_.begin(), data_.end());
+    }
+private:
+    std::vector&lt;int&gt; data_;
+};
+
+IntSet s{3, 1, 2};   // ✅</code></pre>
+                    </div>
+
+                    <h4 id="16-using-别名比-typedef-更清爽">1.6 <code>using</code> 别名：比 <code>typedef</code> 更清爽</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// C++98
+typedef void (*Callback)(int, void*);
+typedef std::map&lt;std::string, std::vector&lt;int&gt;&gt; Table;
+
+// C++11：可读性大幅提升，且支持模板别名
+using Callback = void (*)(int, void*);
+using Table    = std::map&lt;std::string, std::vector&lt;int&gt;&gt;;
+
+// typedef 做不到的：别名模板
+template &lt;typename T&gt;
+using Vec = std::vector&lt;T, MyAllocator&lt;T&gt;&gt;;   // 固定分配器
+Vec&lt;int&gt; a;      // == std::vector&lt;int, MyAllocator&lt;int&gt;&gt;
+
+template &lt;typename T&gt;
+using Ptr = T*;
+Ptr&lt;const int&gt; p;  // == const int*</code></pre>
+                    </div>
+
+                    <h4 id="17-enum-class强类型枚举">1.7 <code>enum class</code>：强类型枚举</h4>
+
+                    <p>C++98 的 <code>enum</code> 会<strong>把名字泄漏到外层作用域</strong>，且能隐式转 int：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 老式：污染作用域
+enum Color { Red, Green, Blue };
+enum Fruit { Apple, Green };   // ❌ 重定义冲突！
+
+// C++11
+enum class Color : uint8_t { Red, Green, Blue };   // 可指定底层类型
+enum class Fruit { Apple, Banana };
+
+Color c = Color::Red;
+// int  n = c;                  // ❌ 不能隐式转换
+int  n = static_cast&lt;int&gt;(c);   // ✅ 必须显式</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>想让 <code>enum class</code> 支持位运算（如 <code>Flags::A | Flags::B</code>），需要自己重载 <code>operator|</code>；C++11 没有自动支持。</p>
+                    </blockquote>
+
+                    <h4 id="18-其他零散但常用的小特性">1.8 其他零散但常用的小特性</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>特性</th>
+                                    <th>示例</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>原始字符串</td>
+                                    <td><code>auto s = R"(C:\path\to\n)";</code></td>
+                                    <td>反斜杠不转义，写正则/路径神器</td>
+                                </tr>
+                                <tr>
+                                    <td>自定义分隔符</td>
+                                    <td><code>R"delim(有 )" 也不怕)delim"</code></td>
+                                    <td>处理含 <code>)"</code> 的文本</td>
+                                </tr>
+                                <tr>
+                                    <td><code>long long</code></td>
+                                    <td><code>long long n = 9e18;</code></td>
+                                    <td>至少 64 位，正式入标准</td>
+                                </tr>
+                                <tr>
+                                    <td><code>&gt;&gt;</code> 不再需要空格</td>
+                                    <td><code>vector&lt;vector&lt;int&gt;&gt; v;</code></td>
+                                    <td>C++98 必须写 <code>&gt; &gt;</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>static_assert</code></td>
+                                    <td><code>static_assert(sizeof(int)==4, "need 32-bit int");</code></td>
+                                    <td><strong>编译期断言</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>noexcept</code></td>
+                                    <td><code>void f() noexcept;</code></td>
+                                    <td>承诺不抛异常（见 2.6）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>thread_local</code></td>
+                                    <td><code>thread_local int tls;</code></td>
+                                    <td>线程局部存储</td>
+                                </tr>
+                                <tr>
+                                    <td><code>alignof/alignas</code></td>
+                                    <td><code>alignas(16) float buf[4];</code></td>
+                                    <td>对齐控制</td>
+                                </tr>
+                                <tr>
+                                    <td><code>char16_t/char32_t</code></td>
+                                    <td><code>char16_t c = u'中';</code></td>
+                                    <td>Unicode 字符类型</td>
+                                </tr>
+                                <tr>
+                                    <td>UTF-8 字面量</td>
+                                    <td><code>u8"中文"</code></td>
+                                    <td>C++11 起（C++20 才是真正的 <code>char8_t</code>）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="第-2-章-右值引用与移动语义本章最重要">第 2 章 右值引用与移动语义（本章最重要）</h3>
+
+                    <blockquote>
+                        <p>如果 C++11 只能学一件事，那就是这一章。
+                        它直接决定了你写的类<strong>快不快</strong>，也决定了你能不能看懂 STL 源码和别人的代码。</p>
+                    </blockquote>
+
+                    <h4 id="21-左值-vs-右值先分清这两个词">2.1 左值 vs 右值：先分清这两个词</h4>
+
+                    <ul>
+                        <li><strong>左值（lvalue）</strong>：有名字、有地址、可以出现在 <code>=</code> 左边（非 const 时）。<code>a</code>、<code>*p</code>、<code>v[0]</code>、返回左值引用的函数调用。</li>
+                        <li><strong>右值（rvalue）</strong>：临时的、即将消亡的、不能取地址的值。<code>42</code>、<code>a + b</code>、<code>std::string("hi")</code>、<code>f()</code>（返回非引用）、<code>std::move(x)</code> 的结果。</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int  a = 10;
+int&amp; lr = a;        // ✅ 左值引用绑左值
+// int&amp;  bad = 10;  // ❌ 非常量左值引用不能绑右值
+const int&amp; cr = 10; // ✅ const 左值引用可以绑右值（延长生命周期）
+int&amp;&amp; rr = 10;      // ✅ 右值引用绑右值
+// int&amp;&amp; bad2 = a;  // ❌ 右值引用不能绑左值</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>判断口诀：<strong>能取地址的、能长期存在的 → 左值；临时的、表达式结果 → 右值</strong>。</p>
+                    </blockquote>
+
+                    <h4 id="22-为什么需要移动解决无意义的深拷贝">2.2 为什么需要移动：解决「无意义的深拷贝」</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::vector&lt;std::string&gt; makeNames() {
+    std::vector&lt;std::string&gt; v;
+    v.push_back("Alice");
+    v.push_back("Bob");
+    return v;   // C++98：理论上要拷贝 2 个 string（实际被 RVO 优化掉）
+}
+
+std::vector&lt;std::string&gt; names = makeNames();   // 又一次拷贝？</code></pre>
+                    </div>
+
+                    <p>对于持有堆资源的对象（string、vector、你自己写的 <code>Buffer</code>），<strong>拷贝 = 重新分配内存 + 逐元素复制</strong>，代价昂贵。
+                    但很多时候，源对象马上就要销毁了（临时对象、返回值、<code>std::move</code> 后的对象）——<strong>既然你都要死了，把资源直接"偷"过来不就行了？</strong></p>
+
+                    <p>这就是移动语义：<strong>把资源所有权从一个对象转移到另一个对象，源对象被"掏空"但保持可析构、可赋值的合法状态。</strong></p>
+
+                    <h4 id="23-stdmove它不移动任何东西">2.3 <code>std::move</code>：它不移动任何东西</h4>
+
+                    <blockquote>
+                        <p>⚠️ 新手最大的误解：<strong><code>std::move</code> 只是个强制类型转换</strong>（把左值转成右值引用，即 <code>static_cast&lt;T&amp;&amp;&gt;</code>），真正执行移动的是<strong>移动构造函数 / 移动赋值运算符</strong>。</p>
+                    </blockquote>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename T&gt;
+typename std::remove_reference&lt;T&gt;::type&amp;&amp; move(T&amp;&amp; t) noexcept {
+    return static_cast&lt;typename std::remove_reference&lt;T&gt;::type&amp;&amp;&gt;(t);
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::string a = "hello";
+std::string b = std::move(a);
+// a 现在是"有效但未指定状态"（通常是空的，但标准不保证），不要再读它的值
+std::cout &lt;&lt; a.size();   // ⚠️ 合法但结果不可预期，别这么写
+a = "world";             // ✅ 可以赋值，可以析构</code></pre>
+                    </div>
+
+                    <p><strong>何时用 <code>std::move</code></strong>：当你确定「这个对象我不再需要了」，把它标记为可移动，从而触发移动构造/赋值。</p>
+
+                    <h4 id="24-写一个完整的带移动语义的类">2.4 写一个完整的、带移动语义的类</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;algorithm&gt;
+#include &lt;cstddef&gt;
+#include &lt;utility&gt;   // std::move, std::swap
+
+class Buffer {
+public:
+    explicit Buffer(std::size_t n)
+        : data_(n ? new char[n] : nullptr), size_(n) {}
+
+    ~Buffer() { delete[] data_; }                 // 1. 析构
+
+    // 2. 拷贝构造：真·深拷贝
+    Buffer(const Buffer&amp; other)
+        : data_(other.size_ ? new char[other.size_] : nullptr), size_(other.size_) {
+        std::copy(other.data_, other.data_ + size_, data_);
+    }
+
+    // 3. 拷贝赋值：先"新后旧" → 强异常安全
+    Buffer&amp; operator=(const Buffer&amp; other) {
+        if (this != &amp;other) {
+            char* tmp = other.size_ ? new char[other.size_] : nullptr;  // 可能抛
+            std::copy(other.data_, other.data_ + other.size_, tmp);
+            delete[] data_;      // 到这里不会再抛
+            data_  = tmp;
+            size_  = other.size_;
+        }
+        return *this;
+    }
+
+    // 4. 移动构造：偷指针，noexcept！
+    Buffer(Buffer&amp;&amp; other) noexcept
+        : data_(other.data_), size_(other.size_) {
+        other.data_ = nullptr;   // 关键：让源对象析构时不会 delete 我们刚偷的内存
+        other.size_ = 0;
+    }
+
+    // 5. 移动赋值：先释放自己的，再偷
+    Buffer&amp; operator=(Buffer&amp;&amp; other) noexcept {
+        if (this != &amp;other) {
+            delete[] data_;
+            data_       = other.data_;
+            size_       = other.size_;
+            other.data_ = nullptr;
+            other.size_ = 0;
+        }
+        return *this;
+    }
+
+    std::size_t size() const noexcept { return size_; }
+
+private:
+    char*       data_;
+    std::size_t size_;
+};</code></pre>
+                    </div>
+
+                    <p><strong>三条铁律</strong>：</p>
+
+                    <ol>
+                        <li><strong>移动构造/移动赋值必须标 <code>noexcept</code></strong>（见 2.6），否则 <code>std::vector</code> 扩容时不敢用你的移动构造，会退化成拷贝！</li>
+                        <li><strong>移动后，源对象必须处于"有效但未指定"状态</strong>——至少能安全析构、能被赋值。通常做法是<strong>把源指针置空</strong>。</li>
+                        <li><strong>一旦你写了析构函数/拷贝构造/拷贝赋值中的任意一个，编译器就不再自动生成移动操作</strong>。这就是后面要讲的 Rule of Five。</li>
+                    </ol>
+
+                    <h4 id="25-rule-of-three-five-zero">2.5 Rule of Three / Five / Zero</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Rule of Three</strong>（C++98）</td>
+                                    <td>如果你需要自定义 <code>析构 / 拷贝构造 / 拷贝赋值</code> 中的<strong>任意一个</strong>，通常需要三个都写（因为你在手动管理资源）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rule of Five</strong>（C++11）</td>
+                                    <td>上面的三个 + <code>移动构造</code> + <code>移动赋值</code>，共 5 个特殊成员函数</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rule of Zero</strong>（现代推荐 ⭐）</td>
+                                    <td><strong>根本别手动管理资源</strong>：用 <code>std::vector</code>、<code>std::string</code>、<code>std::unique_ptr</code> 等 RAII 成员成员拼装你的类，编译器自动生成的 5 个函数就都是对的，你一个都不用写</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// Rule of Zero 示例：一个字都不用手写资源管理
+class Person {
+public:
+    Person(std::string name, std::vector&lt;int&gt; scores)
+        : name_(std::move(name)), scores_(std::move(scores)) {}
+    // 拷贝/移动/析构：编译器全搞定，而且都是最优的
+private:
+    std::string        name_;
+    std::vector&lt;int&gt;   scores_;
+};</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>💡 <strong>现代 C++ 的第一原则</strong>：优先 Rule of Zero。只有在你真的在封装裸资源（文件句柄、socket、内存池）时才写 Rule of Five。</p>
+                    </blockquote>
+
+                    <h4 id="26-noexcept为什么移动构造必须标它">2.6 <code>noexcept</code>：为什么移动构造必须标它</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class X {
+public:
+    X(X&amp;&amp;) noexcept;   // ✅
+    X(X&amp;&amp;);            // ⚠️ 没标 → vector 扩容时改用拷贝构造
+};</code></pre>
+                    </div>
+
+                    <p>原因：<code>std::vector::push_back</code> 触发扩容时，需要把旧元素搬到新内存。</p>
+
+                    <ul>
+                        <li>如果移动构造 <code>noexcept</code>：即使搬到一半出事也没关系（因为承诺不抛），可以放心<strong>用移动</strong>。</li>
+                        <li>如果不承诺：搬到一半抛异常，容器就处于"一半搬了一半没搬"的损坏状态，无法回滚 —— 所以 <code>vector</code> 会保守地<strong>用拷贝</strong>（拷贝失败可以回滚）。</li>
+                    </ul>
+
+                    <p><code>noexcept</code> 的两张面孔：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void f() noexcept;          // 承诺不抛；抛了就 std::terminate（不会传播，也不会析构栈）
+void g() noexcept(true);    // 等价写法
+bool b = noexcept(f());     // noexcept 运算符：编译期查询表达式是否不抛</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>析构函数<strong>默认就是 <code>noexcept</code></strong> 的（C++11 起），不要在析构里抛异常。</p>
+                    </blockquote>
+
+                    <h4 id="27-完美转发与引用折叠模板必学">2.7 完美转发与引用折叠（模板必学）</h4>
+
+                    <p>问题：写一个工厂函数，把参数原封不动（保留左值/右值、const 属性）传给构造函数。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename T, typename... Args&gt;
+std::unique_ptr&lt;T&gt; make_unique(Args&amp;&amp;... args) {   // 注：C++14 才有 std::make_unique
+    return std::unique_ptr&lt;T&gt;(new T(std::forward&lt;Args&gt;(args)...));
+}
+
+auto p1 = make_unique&lt;std::string&gt;(5, 'x');   // 参数原样转发
+std::string s = "hi";
+auto p2 = make_unique&lt;std::string&gt;(s);        // 传左值 → 拷贝
+auto p3 = make_unique&lt;std::string&gt;(std::move(s)); // 传右值 → 移动</code></pre>
+                    </div>
+
+                    <p>两个关键机制：</p>
+
+                    <p><strong>① 万能引用（Universal Reference / Forwarding Reference）</strong>
+                    <code>T&amp;&amp;</code> 出现在<strong>模板参数推导</strong>场景时（<code>template&lt;class T&gt; void f(T&amp;&amp;)</code>），它不是纯右值引用，而是万能引用：</p>
+
+                    <ul>
+                        <li>传入左值 <code>int</code> → <code>T</code> 被推导为 <code>int&amp;</code> → <code>T&amp;&amp;</code> = <code>int&amp; &amp;&amp;</code> → 折叠为 <code>int&amp;</code></li>
+                        <li>传入右值 <code>int</code> → <code>T</code> 被推导为 <code>int</code> → <code>T&amp;&amp;</code> = <code>int&amp;&amp;</code></li>
+                    </ul>
+
+                    <p><strong>② 引用折叠规则</strong>（只在模板/typedef 场景发生）：</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>组合</th>
+                                    <th>结果</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>&amp; &amp;</code></td>
+                                    <td><code>&amp;</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>&amp; &amp;&amp;</code></td>
+                                    <td><code>&amp;</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>&amp;&amp; &amp;</code></td>
+                                    <td><code>&amp;</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>&amp;&amp; &amp;&amp;</code></td>
+                                    <td><code>&amp;&amp;</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>③ <code>std::forward&lt;T&gt;</code></strong>：<strong>有条件</strong>的 <code>static_cast&lt;T&amp;&amp;&gt;</code>。当 <code>T</code> 是 <code>int&amp;</code> 时什么都不做（保持左值），当 <code>T</code> 是 <code>int</code> 时转成 <code>int&amp;&amp;</code>（变成右值）。这就是"完美"的含义。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename T&gt;
+void wrapper(T&amp;&amp; arg) {
+    // ❌ 错：arg 是具名变量，本身永远是左值！直接传会丢掉右值性
+    // target(arg);
+    // ✅ 对：
+    target(std::forward&lt;T&gt;(arg));
+}</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>记忆：<code>std::move(x)</code> = <strong>无条件</strong>转右值；<code>std::forward&lt;T&gt;(x)</code> = <strong>按 T 的原始属性</strong>转发。</p>
+                    </blockquote>
+
+                    <h4 id="28-不要对返回值滥用-stdmove">2.8 不要对返回值滥用 <code>std::move</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::vector&lt;int&gt; build() {
+    std::vector&lt;int&gt; v;
+    // ...
+    return v;                 // ✅ 好：编译器会做 NRVO（具名返回值优化），一次构造都不用
+    // return std::move(v);   // ❌ 坏：反而阻止了 NRVO，强制调用移动构造
+}
+
+std::string getName() const {
+    return name_;             // ✅ 成员也一样，直接返回，别 std::move
+}</code></pre>
+                    </div>
+
+                    <p><strong>例外</strong>：返回的是函数参数、或与返回类型不同的对象时，编译器不一定能自动移动，这时可以显式 <code>std::move</code>。但默认写法永远是<strong>直接返回</strong>。</p>
+
+                    <h4 id="29-移动语义在-stl-中的落地">2.9 移动语义在 STL 中的落地</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::vector&lt;std::string&gt; v;
+v.push_back(std::string(10000, 'x'));   // 临时对象 → 调用移动构造
+v.emplace_back(10000, 'x');             // ✅ 更好：直接在容器内存里构造，连移动都省了
+
+std::string a = "hello";
+v.push_back(std::move(a));              // 明确放弃 a → 移动
+
+// 算法层面：std::move（&lt;algorithm&gt;）把整个区间的元素"搬"过去
+std::vector&lt;std::string&gt; dst;
+std::move(src.begin(), src.end(), std::back_inserter(dst));  // 注意是 algorithm 的 std::move
+std::vector&lt;std::string&gt; dst2(std::make_move_iterator(src.begin()),
+                              std::make_move_iterator(src.end()));</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ 名字撞车：<code>std::move(x)</code>（<code>&lt;utility&gt;</code>，转型）和 <code>std::move(first, last, d_first)</code>（<code>&lt;algorithm&gt;</code>，区间搬运算法）是完全不同的两个东西。</p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h3 id="第-3-章-智能指针与-raii">第 3 章 智能指针与 RAII</h3>
+
+                    <blockquote>
+                        <p><strong>核心原则</strong>：现代 C++ 里，<strong>裸 <code>new</code>/<code>delete</code> 应该几乎绝迹</strong>。所有权交给智能指针，生命周期交给作用域。</p>
+                    </blockquote>
+
+                    <h4 id="31-raii-复习">3.1 RAII 复习</h4>
+
+                    <p>RAII（Resource Acquisition Is Initialization）：<strong>资源的获取 = 对象的构造，资源的释放 = 对象的析构</strong>。
+                    只要对象在栈上，无论函数正常返回还是抛异常，析构都保证被调用 → 资源不泄漏。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 手写 RAII 文件句柄（比智能指针更通用的模式）
+class File {
+public:
+    explicit File(const char* path) : fp_(std::fopen(path, "r")) {
+        if (!fp_) throw std::runtime_error("open failed");
+    }
+    ~File() { if (fp_) std::fclose(fp_); }
+
+    File(const File&amp;)            = delete;   // 禁止拷贝（见第 5 章）
+    File&amp; operator=(const File&amp;) = delete;
+
+    File(File&amp;&amp; other) noexcept : fp_(other.fp_) { other.fp_ = nullptr; }
+    File&amp; operator=(File&amp;&amp; other) noexcept {
+        if (this != &amp;other) {
+            if (fp_) std::fclose(fp_);
+            fp_ = other.fp_;
+            other.fp_ = nullptr;
+        }
+        return *this;
+    }
+    std::FILE* get() const noexcept { return fp_; }
+private:
+    std::FILE* fp_;
+};</code></pre>
+                    </div>
+
+                    <h4 id="32-stduniqueptr独占所有权首选90-场景用它">3.2 <code>std::unique_ptr</code>：独占所有权（首选，90% 场景用它）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;memory&gt;
+
+std::unique_ptr&lt;Foo&gt; p1(new Foo(1, 2));   // OK
+auto p2 = std::make_unique&lt;Foo&gt;(1, 2);    // ✅ 更好（C++14，强烈推荐；C++11 可自己写 make_unique）
+
+// 独占：不可拷贝
+// auto p3 = p1;              // ❌ 编译错误
+auto p3 = std::move(p1);      // ✅ 所有权转移，p1 变成 nullptr
+
+p3-&gt;doSomething();
+Foo&amp; ref = *p3;
+Foo* raw = p3.get();          // 只是"借用"，不拥有，绝不能 delete
+
+p3.reset();                   // 释放资源，p3 = nullptr
+p3.reset(new Foo());          // 释放旧的，拥有新的
+Foo* leaked = p3.release();   // 放弃所有权并返回裸指针（你得自己管，慎用）</code></pre>
+                    </div>
+
+                    <p><strong>关键能力</strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 1. 数组特化
+std::unique_ptr&lt;int[]&gt; arr(new int[10]);
+arr[0] = 1;                            // 有 operator[]，无 operator*
+
+// 2. 自定义删除器（FILE*、malloc、SDL 资源…）
+auto fileDeleter = [](std::FILE* f) { if (f) std::fclose(f); };
+using FilePtr = std::unique_ptr&lt;std::FILE, decltype(fileDeleter)&gt;;
+FilePtr fp(std::fopen("a.txt", "r"), fileDeleter);
+
+// 3. 作为容器元素（vector&lt;unique_ptr&lt;T&gt;&gt; 完全合法，因为它可移动）
+std::vector&lt;std::unique_ptr&lt;Shape&gt;&gt; shapes;
+shapes.push_back(std::make_unique&lt;Circle&gt;(1.0));
+shapes.emplace_back(new Square(2.0));   // 也可以（但 make_unique 更安全）
+
+// 4. 多态工厂返回值（天然表达"所有权转移"）
+std::unique_ptr&lt;Shape&gt; createShape(Kind k) {
+    switch (k) {
+        case Kind::Circle: return std::make_unique&lt;Circle&gt;(1.0);
+        case Kind::Square: return std::make_unique&lt;Square&gt;(2.0);
+    }
+    return nullptr;
+}</code></pre>
+                    </div>
+
+                    <p><strong>函数参数该怎么写？</strong></p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>意图</th>
+                                    <th>写法</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>只是用一下，不接管所有权</td>
+                                    <td><code>void f(Foo* p)</code> 或 <code>void f(Foo&amp; r)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>要接管所有权（转移）</td>
+                                    <td><code>void f(std::unique_ptr&lt;Foo&gt; p)</code>（调用方写 <code>f(std::move(ptr))</code>）</td>
+                                </tr>
+                                <tr>
+                                    <td>函数内部重新绑定到别的对象</td>
+                                    <td><code>void f(std::unique_ptr&lt;Foo&gt;&amp; p)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>返回值表达"交给你了"</td>
+                                    <td><code>std::unique_ptr&lt;Foo&gt; make()</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <code>unique_ptr</code> 作<strong>值传递</strong>时必须 <code>std::move</code>。如果函数只接受 <code>unique_ptr</code> 但内部不保存，说明设计错了，应该传 <code>Foo&amp;</code>。</p>
+                    </blockquote>
+
+                    <p><strong>C++11 没有 <code>std::make_unique</code>？自己补 8 行</strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename T, typename... Args&gt;
+std::unique_ptr&lt;T&gt; make_unique(Args&amp;&amp;... args) {
+    return std::unique_ptr&lt;T&gt;(new T(std::forward&lt;Args&gt;(args)...));
+}</code></pre>
+                    </div>
+
+                    <h4 id="33-stdsharedptr共享所有权有代价别滥用">3.3 <code>std::shared_ptr</code>：共享所有权（有代价，别滥用）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>auto sp1 = std::make_shared&lt;Foo&gt;(1, 2);   // ✅ 永远用 make_shared，不用 new
+std::shared_ptr&lt;Foo&gt; sp2 = sp1;           // 引用计数 +1 = 2
+std::cout &lt;&lt; sp1.use_count();             // 2
+
+sp1.reset();                              // 计数 -1，sp2 仍持有
+// sp2 析构 → 计数归零 → 对象销毁</code></pre>
+                    </div>
+
+                    <p><strong>为什么一定要 <code>make_shared</code></strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::shared_ptr&lt;Foo&gt; a(new Foo());   // ❌ 两次内存分配（对象 + 控制块），且异常不安全
+auto b = std::make_shared&lt;Foo&gt;();    // ✅ 一次分配，异常安全，更快更小</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p><code>std::shared_ptr&lt;Foo&gt; f(std::shared_ptr&lt;Foo&gt;(new Foo), g());</code> 这种写法在参数求值顺序不确定时可能泄漏 —— <code>make_shared</code> 彻底规避。</p>
+                    </blockquote>
+
+                    <p><strong>自定义删除器</strong>（写法与 <code>unique_ptr</code> 不同，删除器不是类型的一部分）：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::shared_ptr&lt;std::FILE&gt; fp(std::fopen("a.txt", "r"),
+                              [](std::FILE* f) { if (f) std::fclose(f); });</code></pre>
+                    </div>
+
+                    <h4 id="34-weakptr打破循环引用">3.4 <code>weak_ptr</code>：打破循环引用</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct Node {
+    std::shared_ptr&lt;Node&gt; parent;   // ❌ 父子互相 shared_ptr → 谁也析构不了 → 内存泄漏
+    std::shared_ptr&lt;Node&gt; child;
+};</code></pre>
+                    </div>
+
+                    <p>正确做法：<strong>"从属"方向用 <code>weak_ptr</code></strong>。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct Node {
+    std::weak_ptr&lt;Node&gt;   parent;   // ✅ 弱引用，不增加引用计数
+    std::shared_ptr&lt;Node&gt; child;
+};
+
+std::shared_ptr&lt;Node&gt; parent = std::make_shared&lt;Node&gt;();
+std::shared_ptr&lt;Node&gt; child  = std::make_shared&lt;Node&gt;();
+parent-&gt;child  = child;
+child-&gt;parent  = parent;      // 弱引用
+
+// 使用 weak_ptr 前必须"提升"为 shared_ptr（因为对象可能已经死了）
+if (auto p = child-&gt;parent.lock()) {   // lock() 返回 shared_ptr，失败则为空
+    p-&gt;doSomething();
+} else {
+    // parent 已销毁
+}
+// 也可以用 expired() 检查，但 lock() 才是正确用法（避免检查与使用之间的竞态）</code></pre>
+                    </div>
+
+                    <p>其他用途：<strong>缓存</strong>、<strong>观察者列表</strong>、<strong>打破双向关联</strong>。</p>
+
+                    <h4 id="35-enablesharedfromthis在成员函数中拿到指向自己的-sharedptr">3.5 <code>enable_shared_from_this</code>：在成员函数中拿到指向自己的 <code>shared_ptr</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class Session : public std::enable_shared_from_this&lt;Session&gt; {
+public:
+    void start() {
+        // 想把自己传给异步回调，让回调期间对象活着
+        auto self = shared_from_this();     // 得到 shared_ptr&lt;Session&gt;
+        doAsync([self] { self-&gt;onDone(); });
+    }
+private:
+    void onDone();
+};
+
+auto s = std::make_shared&lt;Session&gt;();
+s-&gt;start();     // ✅
+// Session s2; s2.start();  // ❌ 崩溃：对象不由 shared_ptr 管理，shared_from_this 抛 bad_weak_ptr</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <strong>绝对不能在构造函数里调用 <code>shared_from_this()</code></strong> —— 此时对象还没被 <code>shared_ptr</code> 接管。</p>
+                    </blockquote>
+
+                    <h4 id="36-选型决策表">3.6 选型决策表</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>场景</th>
+                                    <th>选择</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>独占资源、明确单一所有者</td>
+                                    <td><code>unique_ptr</code> ⭐</td>
+                                </tr>
+                                <tr>
+                                    <td>需要共享、生命周期难以静态确定</td>
+                                    <td><code>shared_ptr</code></td>
+                                </tr>
+                                <tr>
+                                    <td>存在循环引用 / 需要"观察"但不拥有</td>
+                                    <td><code>weak_ptr</code></td>
+                                </tr>
+                                <tr>
+                                    <td>不拥有，只是借用</td>
+                                    <td><strong>裸指针 <code>T*</code> 或引用 <code>T&amp;</code></strong></td>
+                                </tr>
+                                <tr>
+                                    <td>局部对象</td>
+                                    <td>直接栈上对象，不用指针</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <blockquote>
+                        <p><strong>一句话</strong>：默认 <code>unique_ptr</code>，共享才 <code>shared_ptr</code>，不拥有就用 <code>T&amp;</code>/<code>T*</code>。不要因为"怕出错"就把所有东西都塞进 <code>shared_ptr</code> —— 那会让所有权关系变得无法分析。</p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h3 id="第-4-章-lambda-与可调用对象">第 4 章 Lambda 与可调用对象</h3>
+
+                    <h4 id="41-lambda-基本语法">4.1 Lambda 基本语法</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>[capture](parameters) mutable noexcept -&gt; return_type { body }
+         ^^^^^^^^^^^  ^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
+         捕获列表      可选（全部可省）  尾置返回类型（通常可省，编译器推导）</code></pre>
+                    </div>
+
+                    <p>最常见形态：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>auto add = [](int a, int b) { return a + b; };   // 返回类型自动推导为 int
+std::cout &lt;&lt; add(1, 2);   // 3</code></pre>
+                    </div>
+
+                    <h4 id="42-捕获列表-里能写什么">4.2 捕获列表（<code>[]</code> 里能写什么）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>写法</th>
+                                    <th>含义</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>[]</code></td>
+                                    <td>不捕获任何东西</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[x]</code></td>
+                                    <td>按<strong>值</strong>捕获 <code>x</code>（默认拷贝，且在 C++11 中是 const 的）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[&amp;x]</code></td>
+                                    <td>按<strong>引用</strong>捕获 <code>x</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>[=]</code></td>
+                                    <td>按值捕获<strong>所有</strong>被用到的自动变量</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[&amp;]</code></td>
+                                    <td>按引用捕获<strong>所有</strong>被用到的自动变量</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[=, &amp;y]</code></td>
+                                    <td>默认按值，但 <code>y</code> 按引用</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[&amp;, x]</code></td>
+                                    <td>默认按引用，但 <code>x</code> 按值</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[this]</code></td>
+                                    <td>捕获当前对象的 <code>this</code> 指针（访问成员）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>[=]</code> 或 <code>[&amp;]</code> 在成员函数内</td>
+                                    <td>隐式捕获 <code>this</code> ⚠️</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int factor = 10;
+auto mul = [factor](int x) { return x * factor; };   // 值捕获
+
+int sum = 0;
+std::for_each(v.begin(), v.end(), [&amp;sum](int x) { sum += x; });  // 引用捕获，累加
+
+// C++11 中，值捕获的变量默认是 const，想修改要加 mutable
+int counter = 0;
+auto tick = [counter]() mutable { return ++counter; };  // 改的是副本
+tick(); tick();
+std::cout &lt;&lt; counter;   // 仍然是 0！
+
+// 想改外部变量必须引用捕获
+auto tick2 = [&amp;counter]() { return ++counter; };
+tick2();
+std::cout &lt;&lt; counter;   // 1</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>💡 C++14 引入了 <strong>init-capture</strong>：<code>[x = std::move(p)] { ... }</code>，可以在捕获时移动构造。C++11 只能值拷贝/引用。</p>
+                    </blockquote>
+
+                    <h4 id="43-lambda-与-stl-算法最爽的用法">4.3 Lambda 与 STL 算法（最爽的用法）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::vector&lt;int&gt; v{5, 2, 8, 1};
+
+std::sort(v.begin(), v.end(), [](int a, int b) { return a &gt; b; });        // 降序
+auto it = std::find_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; });
+int  n  = std::count_if(v.begin(), v.end(), [](int x) { return x &gt; 3; });
+std::for_each(v.begin(), v.end(), [](int x) { std::cout &lt;&lt; x &lt;&lt; ' '; });
+
+// 按自定义规则排序对象
+std::sort(users.begin(), users.end(),
+          [](const User&amp; a, const User&amp; b) { return a.name &lt; b.name; });</code></pre>
+                    </div>
+
+                    <p>对比 C++98 写 <code>operator()</code> 的仿函数类或 <code>std::bind1st</code> —— lambda 让<strong>"就地定义行为"</strong>成为可能，代码可读性提升一个量级。</p>
+
+                    <h4 id="44-stdfunction统一的可调用对象容器">4.4 <code>std::function</code>：统一的可调用对象容器</h4>
+
+                    <p><code>std::function&lt;R(Args...)&gt;</code> 可以装下任何<strong>签名匹配</strong>的可调用物：普通函数、函数对象、lambda、<code>bind</code> 结果、成员函数指针（配合 <code>bind</code>）。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;functional&gt;
+
+std::function&lt;int(int, int)&gt; op;
+
+op = [](int a, int b) { return a + b; };      // lambda
+op = std::multiplies&lt;int&gt;();                  // 函数对象
+op = &amp;myFunc;                                 // 普通函数
+int r = op(3, 4);
+
+// 典型：回调注册
+class Button {
+public:
+    using OnClick = std::function&lt;void(int x, int y)&gt;;
+    void setOnClick(OnClick cb) { onClick_ = std::move(cb); }
+private:
+    OnClick onClick_;
+};
+
+Button btn;
+btn.setOnClick([](int x, int y) { std::cout &lt;&lt; "clicked at " &lt;&lt; x &lt;&lt; ',' &lt;&lt; y; });</code></pre>
+                    </div>
+
+                    <p><strong>代价要知道</strong>：<code>std::function</code> 做了<strong>类型擦除</strong>，有动态分配 + 一次间接调用的开销，且<strong>不可内联</strong>。</p>
+
+                    <ul>
+                        <li>如果只是<strong>当场用一次</strong>（比如传给 <code>std::sort</code>）→ 用 <strong><code>template</code> 参数</strong>或 <code>auto</code>（C++14），不要塞进 <code>std::function</code>。</li>
+                        <li>如果需要<strong>存储回调</strong>（成员变量、容器里放一堆回调）→ 用 <code>std::function</code>。</li>
+                    </ul>
+
+                    <h4 id="45-stdbind参数绑定c11-有但-lambda-往往更好">4.5 <code>std::bind</code>：参数绑定（C++11 有，但 lambda 往往更好）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;functional&gt;
+using namespace std::placeholders;   // _1, _2, _3...
+
+void log(int level, const std::string&amp; msg);
+auto errLog = std::bind(log, 3, _1);         // 固定第一个参数为 3
+errLog("something wrong");                   // == log(3, "something wrong")
+
+// 成员函数绑定（第二参数是对象）
+struct Foo { void bar(int); };
+Foo f;
+auto cb = std::bind(&amp;Foo::bar, &amp;f, _1);
+cb(42);                                       // == f.bar(42)
+// 注意：用 &amp;f 时要保证 f 的生命周期长于 cb！否则用 shared_ptr 或值拷贝对象
+auto cb2 = std::bind(&amp;Foo::bar, f, _1);       // 拷贝 f（需要 Foo 可拷贝）
+
+// 参数重排
+auto f3 = std::bind(divide, _2, _1);          // f3(a, b) == divide(b, a)</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p><strong>建议</strong>：C++11 里 <code>bind</code> 只在<strong>必须</strong>时（成员函数调用、参数重排）使用；普通场景优先 lambda，可读性更好、更容易内联。
+                        传引用参数给 <code>bind</code> 时要用 <code>std::ref(x)</code> / <code>std::cref(x)</code>，否则会被拷贝（因为 <code>bind</code> 默认 decay-copy）。</p>
+                    </blockquote>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>void inc(int&amp; n) { ++n; }
+int x = 0;
+// auto bad  = std::bind(inc, x);      // ❌ 拷贝了一份，改不到 x
+auto good = std::bind(inc, std::ref(x)); // ✅</code></pre>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="第-5-章-oop-的现代化改写">第 5 章 OOP 的现代化改写</h3>
+
+                    <h4 id="51-override-与-final">5.1 <code>override</code> 与 <code>final</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class Base {
+public:
+    virtual void draw(int) const;
+    virtual ~Base() = default;      // ✅ 基类必须有虚析构
+};
+
+class Derived : public Base {
+public:
+    void draw(int) const override;   // ✅ 明确"我是重写"，写错签名就编译报错
+    // void draw(float) const override;  // ❌ 编译错误：基类没有这个虚函数
+};</code></pre>
+                    </div>
+
+                    <p><code>override</code> 解决的经典 bug：以为重写了虚函数，实际因为签名不一致（少了 <code>const</code>、参数类型不同）<strong>新建了一个函数</strong>，多态静默失效。加上 <code>override</code>，编译器替你兜底。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class FinalThing final { /* 不能被继承 */ };
+
+class Base2 {
+public:
+    virtual void f() final;   // 子类不能再重写 f
+};</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p><code>final</code> 还能帮助编译器<strong>去虚拟化</strong>（devirtualization）优化。</p>
+                    </blockquote>
+
+                    <h4 id="52-default-与-delete">5.2 <code>= default</code> 与 <code>= delete</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class NonCopyable {
+public:
+    NonCopyable()                       = default;   // ✅ 显式要求编译器生成默认版本
+    ~NonCopyable()                      = default;
+    NonCopyable(const NonCopyable&amp;)     = delete;    // ❌ 禁止拷贝构造
+    NonCopyable&amp; operator=(const NonCopyable&amp;) = delete;
+
+    // 允许移动
+    NonCopyable(NonCopyable&amp;&amp;)            = default;
+    NonCopyable&amp; operator=(NonCopyable&amp;&amp;) = default;
+};</code></pre>
+                    </div>
+
+                    <p>用途清单：</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>写法</th>
+                                    <th>用途</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>X() = default;</code></td>
+                                    <td>恢复被抑制的默认构造（比如你自己写了带参构造后）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>X(const X&amp;) = delete;</code></td>
+                                    <td>禁用拷贝（C++11 里实现不可拷贝类的标准做法）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>~X() = default;</code></td>
+                                    <td>明确虚析构，且不抑制移动操作</td>
+                                </tr>
+                                <tr>
+                                    <td><code>void f(int) = delete;</code>&lt;br&gt;<code>void f(double) = delete;</code></td>
+                                    <td>禁用某些重载/隐式转换（比 private 不定义更好，报错更早更清楚）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 经典：禁止不想要的隐式转换
+void process(long);
+void process(char) = delete;   // 传 char 直接编译错
+// process('a');  // ❌</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <strong>重要副作用</strong>：手动声明析构函数（哪怕写 <code>~X() = default;</code>）<strong>不会</strong>抑制移动操作的生成，但手动声明拷贝构造<strong>会</strong>抑制移动操作生成。
+                        所以：要移动语义时，要么全交给编译器（Rule of Zero），要么 5 个都显式写出来。</p>
+                    </blockquote>
+
+                    <h4 id="53-委托构造函数delegating-constructor">5.3 委托构造函数（Delegating Constructor）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class Connection {
+public:
+    Connection() : Connection("localhost", 8080) {}     // 委托给下面的构造
+    Connection(std::string host) : Connection(std::move(host), 8080) {}
+    Connection(std::string host, int port)
+        : host_(std::move(host)), port_(port) { connect(); }
+private:
+    std::string host_;
+    int         port_;
+    void connect();
+};</code></pre>
+                    </div>
+
+                    <p>消灭了 C++98 里"公共 <code>init()</code> 私有函数"的丑陋写法。</p>
+
+                    <h4 id="54-继承构造函数inheriting-constructor">5.4 继承构造函数（Inheriting Constructor）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class Base {
+public:
+    Base(int);
+    Base(int, double);
+    Base(const std::string&amp;);
+};
+
+class Derived : public Base {
+public:
+    using Base::Base;     // ✅ 把 Base 的所有构造函数"继承"下来
+};
+
+Derived d1(1);
+Derived d2(1, 2.0);
+Derived d3("hi");</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>注意：继承来的构造函数<strong>不会</strong>初始化 <code>Derived</code> 自己的新成员（它们用类内初始值或默认初始化）。默认构造、拷贝构造、移动构造不继承。</p>
+                    </blockquote>
+
+                    <h4 id="55-explicit-现在能用于转换运算符">5.5 <code>explicit</code> 现在能用于转换运算符</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class SafeBool {
+public:
+    explicit operator bool() const { return ok_; }   // C++11 起 explicit 可用于转换函数
+private:
+    bool ok_ = false;
+};
+
+SafeBool b;
+if (b) { /* ✅ 语境转换允许 */ }
+// int n = b;      // ❌ 禁止隐式转换</code></pre>
+                    </div>
+
+                    <h4 id="56-移动语义与多态的结合">5.6 移动语义与多态的结合</h4>
+
+                    <ul>
+                        <li><strong>基类析构必须是 <code>virtual</code></strong>（老规矩不变）。</li>
+                        <li>如果类有虚函数（多态基类），<strong>通常应该把拷贝构造声明为 <code>= delete</code> 或 <code>protected</code></strong>，避免"对象切片"（object slicing）。</li>
+                        <li>移动构造<strong>不能</strong>是虚的；多态对象的移动通过 <code>clone()</code> 或 <code>unique_ptr&lt;Base&gt;</code> 转移完成。</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class Shape {
+public:
+    virtual ~Shape() = default;
+    virtual double area() const = 0;
+    virtual std::unique_ptr&lt;Shape&gt; clone() const = 0;   // 虚拷贝惯用法
+
+    Shape() = default;
+    Shape(const Shape&amp;) = delete;             // 防切片
+    Shape&amp; operator=(const Shape&amp;) = delete;
+};
+
+class Circle : public Shape {
+public:
+    explicit Circle(double r) : r_(r) {}
+    double area() const override { return 3.14159 * r_ * r_; }
+    std::unique_ptr&lt;Shape&gt; clone() const override { return std::make_unique&lt;Circle&gt;(*this); }
+private:
+    double r_;
+};</code></pre>
+                    </div>
+
+                    <h4 id="57-constexpr编译期计算">5.7 <code>constexpr</code>：编译期计算</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>constexpr int square(int x) { return x * x; }   // 编译期可求值
+constexpr int n = square(5);                    // ✅ 编译期常量，n = 25
+int arr[n];                                     // ✅ 可作数组长度
+
+int x = 5;
+// constexpr int m = square(x);   // ❌ x 不是常量表达式
+int m = square(x);                // ✅ 运行时也能用，constexpr 函数同时是普通函数</code></pre>
+                    </div>
+
+                    <p>C++11 的限制（C++14 大幅放宽，记住这条就能看懂老代码）：</p>
+
+                    <ul>
+                        <li><strong>函数体只能有一条 <code>return</code> 语句</strong>（不能有循环、局部变量、if）。</li>
+                        <li>递归是允许的：</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>constexpr unsigned factorial(unsigned n) {
+    return n &lt;= 1 ? 1 : n * factorial(n - 1);   // ✅ 三元表达式算一条 return
+}
+static_assert(factorial(5) == 120, "compile-time check");</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p><code>constexpr</code> 变量隐式为 <code>const</code>，且必须用常量表达式初始化。
+                        与 <code>const</code> 的区别：<code>const</code> 只表示"运行时不可改"，<code>constexpr</code> 表示"<strong>编译期就已知</strong>"。</p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h3 id="第-6-章-模板进阶变参完美转发类型萃取">第 6 章 模板进阶：变参、完美转发、类型萃取</h3>
+
+                    <blockquote>
+                        <p>这一章是"能读懂 STL / 库源码"的分水岭。写业务代码时用得不多，但<strong>读</strong>得懂非常重要。</p>
+                    </blockquote>
+
+                    <h4 id="61-变长模板variadic-templates">6.1 变长模板（Variadic Templates）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 基础：递归展开参数包
+void printAll() {}    // 递归终止（0 参数版本）
+
+template &lt;typename T, typename... Rest&gt;
+void printAll(const T&amp; first, const Rest&amp;... rest) {
+    std::cout &lt;&lt; first &lt;&lt; ' ';
+    printAll(rest...);        // 递归展开
+}
+
+printAll(1, 2.5, "hello", 'c');   // 输出：1 2.5 hello c</code></pre>
+                    </div>
+
+                    <p><code>typename... Args</code> 是<strong>模板参数包</strong>，<code>Args... args</code> 是<strong>函数参数包</strong>，<code>args...</code> 是<strong>包展开</strong>。</p>
+
+                    <p>更常见的写法是用<strong>初始化列表</strong>一次性展开（避免递归，且保证求值顺序）：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename... Args&gt;
+void print(Args&amp;&amp;... args) {
+    using expander = int[];
+    (void)expander{0, (std::cout &lt;&lt; std::forward&lt;Args&gt;(args) &lt;&lt; ' ', 0)...};
+}</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>C++17 有折叠表达式 <code>(std::cout &lt;&lt; ... &lt;&lt; args)</code>；C++11 只能用上面这些技巧。</p>
+                    </blockquote>
+
+                    <p><strong><code>sizeof...</code></strong> 获取参数个数：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename... Args&gt;
+constexpr std::size_t count(Args... args) { return sizeof...(Args); }</code></pre>
+                    </div>
+
+                    <h4 id="62-完美转发实战实现一个-emplace-风格的函数">6.2 完美转发实战：实现一个 <code>emplace</code> 风格的函数</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename T&gt;
+class Holder {
+public:
+    template &lt;typename... Args&gt;
+    void emplaceConstruct(Args&amp;&amp;... args) {
+        ptr_.reset(new T(std::forward&lt;Args&gt;(args)...));   // 参数原样交给 T 的构造函数
+    }
+    T* get() const { return ptr_.get(); }
+private:
+    std::unique_ptr&lt;T&gt; ptr_;
+};
+
+Holder&lt;std::string&gt; h;
+h.emplaceConstruct(3, 'x');     // 构造 "xxx"，全程零拷贝</code></pre>
+                    </div>
+
+                    <h4 id="63-类型萃取-typetraits">6.3 类型萃取 <code>type_traits</code>（<code>&lt;type_traits&gt;</code>）</h4>
+
+                    <p>编译期查询/修改类型信息，是泛型编程的"反射"。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;type_traits&gt;
+
+std::remove_const&lt;const int&gt;::type          // int
+std::add_pointer&lt;int&gt;::type                 // int*
+std::decay&lt;const int&amp;&gt;::type                // int（去掉引用与 cv，模拟按值传参的效果）
+std::is_same&lt;int, int&gt;::value               // true
+std::is_integral&lt;int&gt;::value                // true
+std::is_pointer&lt;int*&gt;::value                // true
+std::is_base_of&lt;Base, Derived&gt;::value       // true
+std::is_class&lt;T&gt;::value
+std::underlying_type&lt;Color&gt;::type           // enum class 的底层类型
+
+// C++14 起有 _t / _v 简写：std::remove_const_t&lt;const int&gt;、std::is_same_v&lt;...&gt;</code></pre>
+                    </div>
+
+                    <p><strong>条件类型</strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 根据条件选择类型
+typename std::conditional&lt;cond, int, double&gt;::type
+typename std::enable_if&lt;std::is_integral&lt;T&gt;::value, bool&gt;::type   // SFINAE 基石</code></pre>
+                    </div>
+
+                    <h4 id="64-sfinae-入门用类型条件约束模板">6.4 SFINAE 入门：用类型条件约束模板</h4>
+
+                    <p>SFINAE = Substitution Failure Is Not An Error（替换失败不是错误）。配合 <code>enable_if</code> 可以"按类型选择重载"：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;type_traits&gt;
+#include &lt;iostream&gt;
+
+// 版本 1：只对整数类型启用
+template &lt;typename T&gt;
+typename std::enable_if&lt;std::is_integral&lt;T&gt;::value, void&gt;::type
+printType(T) { std::cout &lt;&lt; "integral\n"; }
+
+// 版本 2：只对浮点类型启用
+template &lt;typename T&gt;
+typename std::enable_if&lt;std::is_floating_point&lt;T&gt;::value, void&gt;::type
+printType(T) { std::cout &lt;&lt; "floating\n"; }
+
+printType(42);     // integral
+printType(3.14);   // floating
+// printType("hi"); // ❌ 无匹配（这是好事，错误信息更清晰）</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>C++20 的 Concepts 就是这玩意的漂亮替代品（<code>requires std::integral&lt;T&gt;</code>）。C++11 只能这么写。</p>
+                    </blockquote>
+
+                    <h4 id="65-模板的两阶段查找与-typename-template-关键字">6.5 模板的两阶段查找与 <code>typename</code> / <code>template</code> 关键字</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>template &lt;typename T&gt;
+void f() {
+    T::iterator it;                 // ❌ 编译错误：编译器不知道 T::iterator 是类型还是静态成员
+    typename T::iterator it2;       // ✅ 必须加 typename
+
+    T obj;
+    obj.template get&lt;int&gt;();        // 依赖名的成员模板调用要加 template
+}</code></pre>
+                    </div>
+
+                    <p>记不住就一条：<strong>凡是用 <code>::</code> 从模板参数里取东西当类型用，前面加 <code>typename</code></strong>。</p>
+
+                    <hr>
+
+                    <h3 id="第-7-章-stl-新容器与新算法">第 7 章 STL 新容器与新算法</h3>
+
+                    <h4 id="71-新增容器一览">7.1 新增容器一览</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>容器</th>
+                                    <th>头文件</th>
+                                    <th>何时用</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>std::array&lt;T, N&gt;</code></td>
+                                    <td><code>&lt;array&gt;</code></td>
+                                    <td><strong>固定大小数组</strong>，替代 C 数组。零开销，知道自己的大小，支持迭代器</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::forward_list&lt;T&gt;</code></td>
+                                    <td><code>&lt;forward_list&gt;</code></td>
+                                    <td>单向链表，比 <code>list</code> 省内存；只能前向，插入用 <code>insert_after</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::unordered_map&lt;K,V&gt;</code></td>
+                                    <td><code>&lt;unordered_map&gt;</code></td>
+                                    <td>哈希表，平均 O(1) 查找，<strong>无序</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::unordered_set&lt;T&gt;</code></td>
+                                    <td><code>&lt;unordered_set&gt;</code></td>
+                                    <td>哈希集合</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::unordered_multimap/set</code></td>
+                                    <td>同上</td>
+                                    <td>允许重复 key</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::tuple&lt;T...&gt;</code></td>
+                                    <td><code>&lt;tuple&gt;</code></td>
+                                    <td>异构定长组，函数多返回值的轻量方案</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="72-stdarray">7.2 <code>std::array</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;array&gt;
+std::array&lt;int, 5&gt; a = {1, 2, 3, 4, 5};
+
+a[0] = 10;
+a.at(1) = 20;          // 带边界检查（抛 out_of_range）
+std::cout &lt;&lt; a.size(); // 5（C 数组做不到！）
+std::sort(a.begin(), a.end());
+std::get&lt;0&gt;(a);        // 编译期索引访问
+
+// 传参不会退化成指针
+void f(const std::array&lt;int, 5&gt;&amp; arr);   // ✅ 大小信息保留
+
+// ⚠️ 注意：array 在栈上，元素多时会爆栈；大数组用 vector</code></pre>
+                    </div>
+
+                    <h4 id="73-stdunorderedmap">7.3 <code>std::unordered_map</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;unordered_map&gt;
+std::unordered_map&lt;std::string, int&gt; wordCount;
+wordCount["hello"]++;                      // 平均 O(1)
+wordCount.emplace("world", 1);             // ✅ 避免临时对象
+
+// 查找（不要用 [] 查找，[] 会插入默认值！）
+auto it = wordCount.find("hello");
+if (it != wordCount.end()) { /* it-&gt;second */ }
+
+// 遍历（顺序不确定！）
+for (const auto&amp; kv : wordCount) {
+    std::cout &lt;&lt; kv.first &lt;&lt; ": " &lt;&lt; kv.second &lt;&lt; '\n';
+}
+// C++17 起可写 for (const auto&amp; [k, v] : wordCount)
+
+// 性能调优
+wordCount.reserve(10000);                  // 预分配桶，避免 rehash
+std::cout &lt;&lt; wordCount.bucket_count() &lt;&lt; " " &lt;&lt; wordCount.load_factor();</code></pre>
+                    </div>
+
+                    <p><strong>自定义 key 需要提供 hash</strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct Point { int x, y; };
+struct PointHash {
+    std::size_t operator()(const Point&amp; p) const {
+        return std::hash&lt;int&gt;()(p.x) ^ (std::hash&lt;int&gt;()(p.y) &lt;&lt; 1);
+    }
+};
+struct PointEq {
+    bool operator()(const Point&amp; a, const Point&amp; b) const {
+        return a.x == b.x &amp;&amp; a.y == b.y;
+    }
+};
+std::unordered_map&lt;Point, std::string, PointHash, PointEq&gt; m;</code></pre>
+                    </div>
+
+                    <p><strong>选型：<code>map</code>（红黑树）还是 <code>unordered_map</code>（哈希）？</strong></p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>维度</th>
+                                    <th><code>map</code></th>
+                                    <th><code>unordered_map</code></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>复杂度</td>
+                                    <td>稳定 O(log n)</td>
+                                    <td>平均 O(1)，最坏 O(n)</td>
+                                </tr>
+                                <tr>
+                                    <td>顺序</td>
+                                    <td><strong>有序</strong>，可范围查询</td>
+                                    <td>无序</td>
+                                </tr>
+                                <tr>
+                                    <td>内存</td>
+                                    <td>较低</td>
+                                    <td>较高（桶数组）</td>
+                                </tr>
+                                <tr>
+                                    <td>要求</td>
+                                    <td>key 需要 <code>&lt;</code></td>
+                                    <td>key 需要 <code>hash</code> + <code>==</code></td>
+                                </tr>
+                                <tr>
+                                    <td>迭代器稳定性</td>
+                                    <td>好</td>
+                                    <td>rehash 时全部失效</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <blockquote>
+                        <p>默认选 <code>std::map</code>（更可预测）；<strong>确认"不需要顺序 + 数据量大 + 只做点查"</strong>时才换 <code>unordered_map</code>。</p>
+                    </blockquote>
+
+                    <h4 id="74-stdtuple">7.4 <code>std::tuple</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;tuple&gt;
+
+std::tuple&lt;int, std::string, double&gt; t{1, "hi", 3.14};
+auto t2 = std::make_tuple(1, "hi", 3.14);   // 类型自动推导
+
+int    i = std::get&lt;0&gt;(t);                  // 编译期索引
+std::string s = std::get&lt;1&gt;(t);
+
+std::tie(i, s, std::ignore) = t;            // 解包到已有变量（std::ignore 占位）
+
+// C++11 没有结构化绑定（C++17 的 auto [a,b,c] = t;）
+
+// 泛型 lambda 之外，tuple 常用于多返回值
+std::tuple&lt;bool, int&gt; parse(const std::string&amp; s);
+auto r = parse("42");
+if (std::get&lt;0&gt;(r)) { /* ... */ }</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>更推荐：多返回值优先定义<strong>具名 struct</strong>，可读性远高于 <code>tuple</code>。<code>tuple</code> 适合通用库代码 / 临时聚合。</p>
+                    </blockquote>
+
+                    <h4 id="75-emplace-系列就地构造">7.5 <code>emplace</code> 系列：就地构造</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct Person { Person(std::string n, int a); };
+
+std::vector&lt;Person&gt; v;
+v.push_back(Person("Ann", 20));     // 构造临时对象 → 移动进容器
+v.emplace_back("Ann", 20);          // ✅ 直接在容器内存里构造，省一次移动
+
+std::map&lt;std::string, int&gt; m;
+m.insert(std::make_pair("a", 1));   // 老写法
+m.emplace("a", 1);                  // ✅
+m.insert({"a", 1});                 // ✅ 也可以</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <code>emplace_back</code> 不总是更快。如果参数已是一个完整对象，<code>push_back(obj)</code> 与 <code>emplace_back(obj)</code> 等价。
+                        ⚠️ <code>emplace</code> 系列会绕过 <code>explicit</code> 的部分保护吗？不会 —— 它调用的仍是构造函数，<code>explicit</code> 依然生效（但 <code>emplace_back("x")</code> 可能意外调用 <code>explicit</code> 构造，而 <code>push_back("x")</code> 会报错，这是少数 <code>emplace</code> 反而危险的场景）。</p>
+                    </blockquote>
+
+                    <h4 id="76-新增算法">7.6 新增算法（<code>&lt;algorithm&gt;</code> / <code>&lt;numeric&gt;</code>）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;algorithm&gt;
+#include &lt;numeric&gt;
+
+std::vector&lt;int&gt; v{1, 2, 3, 4, 5};
+
+// 判定类（C++11）
+bool all  = std::all_of (v.begin(), v.end(), [](int x){ return x &gt; 0; });
+bool any  = std::any_of (v.begin(), v.end(), [](int x){ return x &gt; 4; });
+bool none = std::none_of(v.begin(), v.end(), [](int x){ return x &lt; 0; });
+
+// 查找
+auto it = std::find_if_not(v.begin(), v.end(), [](int x){ return x &lt; 3; });  // 第一个不满足的
+
+// 拷贝/移动（带条件）
+std::vector&lt;int&gt; out;
+std::copy_if(v.begin(), v.end(), std::back_inserter(out), [](int x){ return x % 2; });
+std::move(v.begin(), v.end(), std::back_inserter(out));   // 区间移动（&lt;algorithm&gt;）
+std::partition_copy(v.begin(), v.end(), evenIt, oddIt, pred);
+
+// 最值
+auto mm = std::minmax_element(v.begin(), v.end());   // 一次遍历同时拿 min 和 max
+auto mx = std::max_element(v.begin(), v.end());
+
+// 洗牌（取代已废弃的 random_shuffle）
+std::mt19937 rng{std::random_device{}()};
+std::shuffle(v.begin(), v.end(), rng);
+
+// 数值（&lt;numeric&gt;）
+std::iota(v.begin(), v.end(), 0);            // 填充 0,1,2,3...
+int s = std::accumulate(v.begin(), v.end(), 0);
+
+// 容器首尾（无需区分成员/非成员）
+auto b = std::begin(v), e = std::end(v);
+auto it2 = std::next(v.begin());             // 前进 n 步（优于 it+1，对 list 也有效）
+auto it3 = std::prev(v.end());</code></pre>
+                    </div>
+
+                    <h4 id="77-c11-对已有容器的改进">7.7 C++11 对已有容器的改进</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>改进</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>cbegin()</code> / <code>cend()</code></td>
+                                    <td>常量迭代器，与 <code>auto</code> 配合更安全</td>
+                                </tr>
+                                <tr>
+                                    <td><code>shrink_to_fit()</code></td>
+                                    <td>请求释放多余容量（非强制，实现可忽略）</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::string::data()</code></td>
+                                    <td>C++11 起保证连续且以 <code>\0</code> 结尾</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vector::emplace*</code> 系列</td>
+                                    <td>就地构造</td>
+                                </tr>
+                                <tr>
+                                    <td>所有容器支持移动</td>
+                                    <td>容器可以作为返回值高效返回</td>
+                                </tr>
+                                <tr>
+                                    <td>支持 <code>initializer_list</code> 构造</td>
+                                    <td><code>vector&lt;int&gt; v{1,2,3};</code></td>
+                                </tr>
+                                <tr>
+                                    <td>迭代器要求更明确</td>
+                                    <td>支持移动迭代器</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="第-8-章-并发编程基础">第 8 章 并发编程基础</h3>
+
+                    <blockquote>
+                        <p>在 C++11 之前，C++ 标准里<strong>没有线程</strong>。多线程只能靠 pthread / WinAPI / Boost。
+                        C++11 带来了 <code>std::thread</code>、<code>std::mutex</code>、<code>std::atomic</code>、<code>std::future</code> —— 终于可以写可移植的多线程。</p>
+                    </blockquote>
+
+                    <h4 id="81-stdthread">8.1 <code>std::thread</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;thread&gt;
+
+void worker(int id) { /* ... */ }
+
+std::thread t1(worker, 42);          // 立刻开始执行
+std::thread t2([] { /* 做点事 */ });
+
+// ⚠️ 必须 join 或 detach，否则 thread 析构时调用 std::terminate()！
+t1.join();                           // 等待结束
+t2.detach();                         // 分离（之后无法控制，慎用）
+
+std::cout &lt;&lt; std::thread::hardware_concurrency();   // 硬件并发数（可能是 0）</code></pre>
+                    </div>
+
+                    <p><strong>RAII 包装线程（强烈推荐）</strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class ThreadGuard {
+public:
+    template &lt;typename... Args&gt;
+    explicit ThreadGuard(Args&amp;&amp;... args) : t_(std::forward&lt;Args&gt;(args)...) {}
+    ~ThreadGuard() { if (t_.joinable()) t_.join(); }   // 析构自动 join，异常安全
+    ThreadGuard(const ThreadGuard&amp;) = delete;
+    ThreadGuard&amp; operator=(const ThreadGuard&amp;) = delete;
+private:
+    std::thread t_;
+};</code></pre>
+                    </div>
+
+                    <h4 id="82-互斥量与锁">8.2 互斥量与锁</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;mutex&gt;
+
+std::mutex mtx;
+int shared = 0;
+
+void safe_inc() {
+    std::lock_guard&lt;std::mutex&gt; lock(mtx);   // ✅ 构造加锁，析构解锁（RAII）
+    ++shared;
+}   // 自动解锁，哪怕中途抛异常
+
+// 需要手动解锁/条件变量时用 unique_lock（更重，但灵活）
+void flexible() {
+    std::unique_lock&lt;std::mutex&gt; lock(mtx);
+    // ...
+    lock.unlock();
+    // 不持有锁的部分
+    lock.lock();
+}</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>💡 <strong>永远用 <code>lock_guard</code> / <code>unique_lock</code>，不要手写 <code>mtx.lock()</code> / <code>mtx.unlock()</code></strong>（异常或早退会导致死锁）。
+                        C++17 有 <code>std::scoped_lock</code> 可同时锁多个互斥量，C++11 用 <code>std::lock(m1, m2)</code> + <code>std::lock_guard(m1, std::adopt_lock)</code>。</p>
+                    </blockquote>
+
+                    <p><strong>避免死锁</strong>：所有线程<strong>按固定顺序</strong>加锁，或用 <code>std::lock</code> 一次性锁多个。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::mutex m1, m2;
+void f() {
+    std::lock(m1, m2);                                   // 原子地锁住两个，不会死锁
+    std::lock_guard&lt;std::mutex&gt; l1(m1, std::adopt_lock);  // adopt：已锁，只接管解锁责任
+    std::lock_guard&lt;std::mutex&gt; l2(m2, std::adopt_lock);
+    // ...
+}</code></pre>
+                    </div>
+
+                    <h4 id="83-条件变量">8.3 条件变量</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;condition_variable&gt;
+
+std::mutex              mtx;
+std::condition_variable cv;
+std::queue&lt;int&gt;         jobs;
+bool                    done = false;
+
+void consumer() {
+    for (;;) {
+        std::unique_lock&lt;std::mutex&gt; lock(mtx);
+        cv.wait(lock, [] { return !jobs.empty() || done; });   // ✅ 必须用谓词版本（防虚假唤醒）
+        if (jobs.empty() &amp;&amp; done) return;
+        int job = jobs.front(); jobs.pop();
+        lock.unlock();
+        process(job);       // 在锁外做耗时工作
+    }
+}
+
+void producer() {
+    for (int i = 0; i &lt; 10; ++i) {
+        {
+            std::lock_guard&lt;std::mutex&gt; lock(mtx);
+            jobs.push(i);
+        }
+        cv.notify_one();    // 通知一个等待者（notify_all 通知全部）
+    }
+    {
+        std::lock_guard&lt;std::mutex&gt; lock(mtx);
+        done = true;
+    }
+    cv.notify_all();
+}</code></pre>
+                    </div>
+
+                    <p><strong>三条铁律</strong>：</p>
+
+                    <ol>
+                        <li><code>wait</code> <strong>必须</strong>配合 <code>unique_lock</code>（不能是 <code>lock_guard</code>）。</li>
+                        <li><code>wait</code> <strong>必须</strong>用带谓词的重载，因为存在<strong>虚假唤醒</strong>（spurious wakeup）。</li>
+                        <li>修改共享状态要在<strong>持有锁时</strong>做；<code>notify</code> 之后是否立即释放锁是性能优化问题，不影响正确性。</li>
+                    </ol>
+
+                    <h4 id="84-stdatomic无锁的轻量同步">8.4 <code>std::atomic</code>：无锁的轻量同步</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;atomic&gt;
+
+std::atomic&lt;int&gt;  counter{0};
+std::atomic&lt;bool&gt; ready{false};
+
+counter++;                       // 原子自增
+counter.fetch_add(1);            // 显式
+counter.load();                  // 读
+counter.store(5);                // 写
+int old = counter.exchange(0);   // 交换
+
+// CAS（Compare-And-Swap）：无锁算法的核心
+int expected = counter.load();
+while (!counter.compare_exchange_weak(expected, expected + 1)) {
+    // expected 被更新为当前值，重试
+}
+
+// 最常用场景：停止标志
+std::atomic&lt;bool&gt; stop{false};
+void worker() { while (!stop.load(std::memory_order_relaxed)) { /* ... */ } }
+stop.store(true);</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <code>std::atomic</code> 不可拷贝（拷贝构造被 delete）。
+                        ⚠️ 内存序（<code>memory_order_*</code>）默认是最强的 <code>seq_cst</code>（顺序一致），<strong>新手就用默认值</strong>，<code>memory_order_relaxed</code> 等只有在明确知道自己在做什么时才用。
+                        💡 <code>atomic</code> 适合<strong>单个变量</strong>（计数器、标志位）；保护<strong>一组数据的不变式</strong>还是要用 mutex。</p>
+                    </blockquote>
+
+                    <h4 id="85-stdasync-future-promise-packagedtask">8.5 <code>std::async</code> / <code>future</code> / <code>promise</code> / <code>packaged_task</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;future&gt;
+
+// 1. 最简单的异步：async
+auto fut = std::async(std::launch::async, [] {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return 42;
+});
+// 期间做别的事...
+int result = fut.get();     // 阻塞等待结果（只能调用一次）
+
+// 2. promise：在一个线程里"承诺"结果，另一个线程取
+std::promise&lt;int&gt; p;
+std::future&lt;int&gt;  f = p.get_future();
+std::thread([&amp;p] {
+    try {
+        p.set_value(compute());
+    } catch (...) {
+        p.set_exception(std::current_exception());   // 异常可以跨线程传递
+    }
+}).detach();
+int v = f.get();   // 可能抛出 compute() 里的异常
+
+// 3. packaged_task：把"任务"和"取结果的 future"打包
+std::packaged_task&lt;int(int, int)&gt; task([](int a, int b) { return a + b; });
+std::future&lt;int&gt; f2 = task.get_future();
+std::thread t(std::move(task), 2, 3);   // packaged_task 只能移动
+t.join();
+std::cout &lt;&lt; f2.get();   // 5</code></pre>
+                    </div>
+
+                    <p><code>std::async</code> 的启动策略：</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>策略</th>
+                                    <th>行为</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>std::launch::async</code></td>
+                                    <td><strong>必须</strong>在新线程里跑</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::launch::deferred</code></td>
+                                    <td>延迟到 <code>get()</code>/<code>wait()</code> 时才在<strong>调用者线程</strong>同步执行</td>
+                                </tr>
+                                <tr>
+                                    <td>默认（不写，即 <code>async|deferred</code>）</td>
+                                    <td>由实现决定 ⚠️  unpredictable，<strong>显式指定</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <code>std::future</code> 的析构：由 <code>std::async</code> 产生的 future 若被丢弃，析构会<strong>阻塞等待</strong>任务完成（这是标准的一个特殊规定，容易踩坑）。</p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h3 id="第-9-章-常用工具库chrono-random-regex-字符串">第 9 章 常用工具库：chrono / random / regex / 字符串</h3>
+
+                    <h4 id="91-类型安全的时间">9.1 <code>&lt;chrono&gt;</code>：类型安全的时间</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;chrono&gt;
+using namespace std::chrono;
+
+auto start = steady_clock::now();     // 计时用 steady_clock（不受系统时间调整影响）
+doWork();
+auto end = steady_clock::now();
+
+auto ms = duration_cast&lt;milliseconds&gt;(end - start).count();
+std::cout &lt;&lt; "耗时 " &lt;&lt; ms &lt;&lt; " ms\n";
+
+// 时间字面量（C++14 起在 std::literals；C++11 用 duration 构造）
+std::this_thread::sleep_for(milliseconds(100));
+std::this_thread::sleep_until(system_clock::now() + seconds(5));
+
+// duration 是编译期单位，混用不会静默出错
+seconds s{5};
+milliseconds ms2 = s;            // ✅ 自动转换（允许无损转换）
+// seconds s2 = milliseconds(5); // ❌ 编译错误（有损，必须 duration_cast）
+auto x = duration_cast&lt;seconds&gt;(milliseconds(5000));   // ✅ 显式</code></pre>
+                    </div>
+
+                    <p>三种时钟：</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时钟</th>
+                                    <th>用途</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>system_clock</code></td>
+                                    <td>系统时钟，可转 <code>time_t</code>，用于"当前日期时间"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>steady_clock</code></td>
+                                    <td>单调时钟，<strong>计时首选</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>high_resolution_clock</code></td>
+                                    <td>最高精度（通常是上面两者的别名）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="92-取代-rand">9.2 <code>&lt;random&gt;</code>：取代 <code>rand()</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;random&gt;
+
+// rand() % 100 有偏、周期短、且不是线程安全 —— 别再用
+std::random_device rd;                  // 真随机种子（可能在某些平台确定）
+std::mt19937 gen(rd());                 // 梅森旋转引擎，最常用
+
+std::uniform_int_distribution&lt;int&gt;    dice(1, 6);
+std::uniform_real_distribution&lt;double&gt; real(0.0, 1.0);
+std::normal_distribution&lt;double&gt;      norm(0.0, 1.0);
+
+std::cout &lt;&lt; dice(gen) &lt;&lt; '\n';
+std::shuffle(v.begin(), v.end(), gen);   // 与 STL 算法配合</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>引擎（engine）与分布（distribution）分离是设计亮点：一个引擎可以喂给多个分布。</p>
+                    </blockquote>
+
+                    <h4 id="93-正则表达式">9.3 <code>&lt;regex&gt;</code>：正则表达式</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;regex&gt;
+
+std::string s = "Email: alice@example.com, bob@test.org";
+std::regex  re(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");  // 原始字符串写正则很香
+
+// 逐个匹配
+std::sregex_iterator it(s.begin(), s.end(), re);
+std::sregex_iterator end;
+for (; it != end; ++it) {
+    std::cout &lt;&lt; it-&gt;str() &lt;&lt; '\n';
+}
+
+// 判断全匹配
+bool ok = std::regex_match("12345", std::regex(R"(\d+)"));      // true
+bool found = std::regex_search(s, re);                          // 部分匹配
+std::string replaced = std::regex_replace(s, re, "[REDACTED]"); // 替换
+
+// 分组捕获
+std::smatch m;
+if (std::regex_search(s, m, re)) {
+    std::cout &lt;&lt; m[0] &lt;&lt; " prefix=" &lt;&lt; m.prefix() &lt;&lt; '\n';
+}</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ <code>std::regex</code> 的<strong>性能口碑很差</strong>（尤其 ECMAScript 语法下）。只在性能不敏感的场合用；热路径考虑 <code>std::string_view</code>(C++17) 手写解析或其他正则库。</p>
+                    </blockquote>
+
+                    <h4 id="94-字符串与数值转换">9.4 字符串与数值转换</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;string&gt;
+
+std::string s = std::to_string(42);        // "42"
+std::string d = std::to_string(3.14);      // "3.140000"
+
+int   i = std::stoi("42");
+long  l = std::stol("42");
+double dd = std::stod("3.14");
+float fl = std::stof("3.14");
+
+std::size_t pos;
+int v = std::stoi("42abc", &amp;pos);          // pos = 2，解析到哪一位
+// std::stoi("abc") 抛 std::invalid_argument
+// std::stoi("99999999999999") 抛 std::out_of_range</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>更现代的替代品：C++17 的 <code>std::from_chars</code> / <code>to_chars</code>（无异常、无分配、更快）。C++11 就用 <code>stoi</code>，记得 try-catch。</p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h3 id="第-10-章-20-个高频陷阱清单">第 10 章 20 个高频陷阱清单</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>陷阱</th>
+                                    <th>正确做法</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>以为 <code>std::move(x)</code> 会移动</td>
+                                    <td>它只是转型；移动由移动构造/赋值完成。调用后 x 仍存在，只是状态不确定</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td><code>return std::move(localVar);</code></td>
+                                    <td>直接 <code>return localVar;</code>（否则阻止 NRVO）</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>移动构造忘了 <code>noexcept</code></td>
+                                    <td>加上。否则 <code>vector</code> 扩容时不敢用移动，性能退化成拷贝</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>写了析构/拷贝却指望编译器生成移动</td>
+                                    <td>编译器不会生成。要遵循 Rule of Five，或改用 Rule of Zero</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td><code>const</code> 返回值</td>
+                                    <td><code>const T f()</code> 会阻止移动，也阻止 NRVO。返回值不要加顶层 const</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>移动后又去读源对象</td>
+                                    <td>源对象处于"有效但未指定"状态，只能析构或赋值</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td><code>unique_ptr</code> 当值传参忘了 <code>move</code></td>
+                                    <td><code>f(std::move(p))</code>；不转移所有权就传 <code>T&amp;</code>/<code>T*</code></td>
+                                </tr>
+                                <tr>
+                                    <td>8</td>
+                                    <td>两个 <code>shared_ptr</code> 互相持有</td>
+                                    <td>用 <code>weak_ptr</code> 打破循环</td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>用 <code>get()</code> 的裸指针又构造一个智能指针</td>
+                                    <td>会导致 double free。所有权只能有一处</td>
+                                </tr>
+                                <tr>
+                                    <td>10</td>
+                                    <td>在构造函数里调 <code>shared_from_this()</code></td>
+                                    <td>抛 <code>bad_weak_ptr</code>。只能在对象已被 <code>shared_ptr</code> 管理后调用</td>
+                                </tr>
+                                <tr>
+                                    <td>11</td>
+                                    <td>lambda 按引用捕获局部变量后异步使用</td>
+                                    <td>局部变量已销毁 → 悬空引用崩溃。异步场景按值捕获（或捕获 <code>shared_ptr</code>）</td>
+                                </tr>
+                                <tr>
+                                    <td>12</td>
+                                    <td><code>[=]</code> 在成员函数里隐式捕获 <code>this</code></td>
+                                    <td>若 lambda 生命周期超过对象就崩。显式写 <code>[this]</code> 或捕获需要的成员副本</td>
+                                </tr>
+                                <tr>
+                                    <td>13</td>
+                                    <td>到处用 <code>std::function</code></td>
+                                    <td>有类型擦除开销且不可内联。只用于<strong>存储</strong>回调；临时调用用模板/<code>auto</code></td>
+                                </tr>
+                                <tr>
+                                    <td>14</td>
+                                    <td>忘了 <code>join</code>/<code>detach</code></td>
+                                    <td><code>std::thread</code> 析构时若仍 joinable → <code>std::terminate()</code>。用 RAII 包装</td>
+                                </tr>
+                                <tr>
+                                    <td>15</td>
+                                    <td>手写 <code>lock()</code>/<code>unlock()</code></td>
+                                    <td>用 <code>lock_guard</code>。异常路径必然漏解锁</td>
+                                </tr>
+                                <tr>
+                                    <td>16</td>
+                                    <td>多把锁顺序不一致</td>
+                                    <td>死锁。固定顺序或用 <code>std::lock(m1, m2)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>17</td>
+                                    <td><code>cv.wait(lock)</code> 不带谓词</td>
+                                    <td>虚假唤醒会导致错误。必须写 <code>cv.wait(lock, pred)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>18</td>
+                                    <td><code>std::vector&lt;bool&gt;</code></td>
+                                    <td>特化版本，元素是代理引用，<code>auto b = v[0]</code> 得到代理类型而非 bool。需要真 bool 用 <code>vector&lt;char&gt;</code> 或 <code>deque&lt;bool&gt;</code></td>
+                                </tr>
+                                <tr>
+                                    <td>19</td>
+                                    <td>遍历中修改容器</td>
+                                    <td>迭代器失效。用 <code>erase-remove</code> 惯用法：<code>v.erase(std::remove_if(...), v.end())</code></td>
+                                </tr>
+                                <tr>
+                                    <td>20</td>
+                                    <td><code>unordered_map::operator[]</code> 用于查找</td>
+                                    <td>会<strong>插入</strong>默认值。查找用 <code>find()</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>补充几个</strong>：</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 陷阱 21：Windows 下 min/max 宏冲突
+#define NOMINMAX          // 在包含 windows.h 前定义
+#include &lt;windows.h&gt;
+// 或用 (std::min)(a, b) 这种怪写法绕过宏展开
+
+// 陷阱 22：静态变量的初始化顺序（不同编译单元之间未定义）
+// ✅ 用函数内静态局部变量（C++11 起初始化是线程安全的！）
+Config&amp; config() {
+    static Config c = loadFromFile();   // 线程安全的懒初始化，Meyers Singleton
+    return c;
+}
+
+// 陷阱 23：跨动态库（.so/.dll）边界传递 STL 对象
+// ABI 不统一（不同编译器/标准库实现），会崩。接口层只用 POD 或不透明指针
+
+// 陷阱 24：enum class 想做位标记
+enum class Flags { None = 0, A = 1, B = 2 };
+// Flags::A | Flags::B  // ❌ 编译错误
+constexpr Flags operator|(Flags a, Flags b) {
+    return static_cast&lt;Flags&gt;(static_cast&lt;int&gt;(a) | static_cast&lt;int&gt;(b));
+}</code></pre>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="第-11-章-代码风格与工程实践">第 11 章 代码风格与工程实践</h3>
+
+                    <h4 id="111-现代-c-写法清单可直接当-code-review-表">11.1 现代 C++ 写法清单（可直接当 Code Review 表）</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// ✅ 用 nullptr，不用 NULL / 0
+// ✅ 范围 for + const auto&amp;
+// ✅ 用 {} 初始化（防窄化、防 vexing parse）
+// ✅ 类内成员给默认初始值
+// ✅ 优先栈对象，其次 unique_ptr，最后 shared_ptr
+// ✅ 传参：只读用 const T&amp;，要拷就用 T 值传 + std::move（sink 参数），输出用 T&amp;
+// ✅ 重写虚函数必写 override
+// ✅ 移动操作标 noexcept
+// ✅ 锁用 lock_guard
+// ✅ 常量用 constexpr 而非 const（编译期可知时）
+// ✅ 单参数构造函数加 explicit
+// ✅ 多态基类有虚析构，并考虑删除拷贝
+// ✅ 用 emplace_back 代替 push_back(T(...))
+// ✅ 容器预留 reserve() 减少重分配
+// ✅ 用 enum class 而非裸 enum
+// ✅ 用 using 而非 typedef</code></pre>
+                    </div>
+
+                    <h4 id="112-参数传递的现代规则">11.2 参数传递的现代规则</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 1) 只读、不修改、不保存 → const T&amp;
+void print(const std::string&amp; s);
+
+// 2) 只读基本类型（int/double/指针）→ 值传递
+void setCount(int n);
+
+// 3) 要"存下来"（sink）→ 按值传 + move（只写一份代码，同时支持拷贝和移动）
+class Person {
+public:
+    Person(std::string name) : name_(std::move(name)) {}   // ✅ 一份代码搞定左值和右值
+private:
+    std::string name_;
+};
+std::string n = "Ann";
+Person p1(n);                  // 拷贝一次 + 移动一次
+Person p2(std::move(n));       // 移动两次（无堆分配）
+Person p3("Bob");              // 直接构造 + 移动
+
+// 4) 输出参数 → T&amp; （或返回 tuple/struct）
+bool parse(const std::string&amp; s, int&amp; outValue);
+
+// ⚠️ 不要写成 const std::string&amp; 再在函数里拷贝一份（对右值参数是浪费）</code></pre>
+                    </div>
+
+                    <h4 id="113-异常安全三级别">11.3 异常安全三级别</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>级别</th>
+                                    <th>含义</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>基本保证</strong></td>
+                                    <td>异常抛出后，对象仍有效、无资源泄漏，但状态可能改变</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>强保证</strong></td>
+                                    <td>失败则<strong>完全回滚</strong>到操作前状态（copy-and-swap 惯用法）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>不抛保证（nothrow）</strong></td>
+                                    <td>绝不抛异常（析构、移动、swap 应尽量做到）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// copy-and-swap 实现强异常安全的赋值运算符
+class Widget {
+public:
+    Widget(const Widget&amp; other) : data_(other.data_) {}   // 可能抛 → 在这步抛最安全
+    void swap(Widget&amp; other) noexcept { using std::swap; swap(data_, other.data_); }
+
+    Widget&amp; operator=(Widget other) noexcept {   // 注意：按值传参 = 拷贝/移动
+        swap(other);
+        return *this;
+    }
+private:
+    std::vector&lt;int&gt; data_;
+};</code></pre>
+                    </div>
+
+                    <h4 id="114-头文件的现代写法">11.4 头文件的现代写法</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// Foo.h
+#ifndef FOO_H_          // 或用 #pragma once（非标准但被所有主流编译器支持）
+#define FOO_H_
+
+#include &lt;memory&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+class Foo {
+public:
+    explicit Foo(std::string name);
+    ~Foo();                                  // 必须在 .cpp 定义（Pimpl 要求）
+    Foo(Foo&amp;&amp;) noexcept;                     // 移动也要在 .cpp 定义
+    Foo&amp; operator=(Foo&amp;&amp;) noexcept;
+    Foo(const Foo&amp;) = delete;
+    Foo&amp; operator=(const Foo&amp;) = delete;
+
+    void doWork();
+private:
+    struct Impl;                             // Pimpl：隐藏实现细节，减少编译依赖
+    std::unique_ptr&lt;Impl&gt; impl_;
+};
+#endif
+
+// Foo.cpp
+#include "Foo.h"
+struct Foo::Impl {
+    std::string name;
+    std::vector&lt;int&gt; data;
+};
+Foo::Foo(std::string name) : impl_(new Impl{std::move(name), {}}) {}
+Foo::~Foo() = default;      // ⚠️ 必须在 Impl 完整定义可见的地方，否则 unique_ptr 析构报错
+Foo::Foo(Foo&amp;&amp;) noexcept = default;
+Foo&amp; Foo::operator=(Foo&amp;&amp;) noexcept = default;
+void Foo::doWork() { impl_-&gt;data.push_back(1); }</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p><strong>Pimpl + <code>unique_ptr</code> 的坑</strong>：<code>unique_ptr&lt;Impl&gt;</code> 的析构需要 <code>Impl</code> 是完整类型，所以析构/移动必须在 <code>.cpp</code> 里定义（不能在头文件里 <code>= default</code>）。</p>
+                    </blockquote>
+
+                    <h4 id="115-断言与错误处理分层">11.5 断言与错误处理分层</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;cassert&gt;
+
+// 1) 编译期约束 → static_assert
+static_assert(sizeof(void*) == 8, "64-bit only");
+
+// 2) 内部逻辑不变量 → assert（Release 下消失）
+assert(index &lt; size() &amp;&amp; "index out of range");
+
+// 3) 运行时可恢复的错误 → 异常
+if (!file) throw std::runtime_error("cannot open file");
+
+// 4) 不可恢复的编程错误 → std::terminate / 直接崩溃（不要吞掉）</code></pre>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="第-12-章-综合实战并发词频统计器">第 12 章 综合实战：并发词频统计器</h3>
+
+                    <p>把前面所有特性串起来：<strong>文件 RAII + unique_ptr + 移动语义 + unordered_map + 线程池 + future + mutex + chrono + lambda + 算法排序</strong>。</p>
+
+                    <h4 id="121-线程池-threadpoolh">12.1 线程池 <code>ThreadPool.h</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#ifndef THREAD_POOL_H_
+#define THREAD_POOL_H_
+
+#include &lt;condition_variable&gt;
+#include &lt;functional&gt;
+#include &lt;future&gt;
+#include &lt;memory&gt;
+#include &lt;mutex&gt;
+#include &lt;queue&gt;
+#include &lt;stdexcept&gt;
+#include &lt;thread&gt;
+#include &lt;type_traits&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+
+class ThreadPool {
+public:
+    explicit ThreadPool(std::size_t n) : stop_(false) {
+        for (std::size_t i = 0; i &lt; n; ++i) {
+            workers_.emplace_back([this] { workerLoop(); });
+        }
+    }
+
+    // 禁止拷贝/移动（内部有 mutex、线程，不可复制）
+    ThreadPool(const ThreadPool&amp;)            = delete;
+    ThreadPool&amp; operator=(const ThreadPool&amp;) = delete;
+
+    ~ThreadPool() {
+        {
+            std::lock_guard&lt;std::mutex&gt; lk(queueMutex_);
+            stop_ = true;
+        }
+        cond_.notify_all();
+        for (std::thread&amp; t : workers_) {
+            if (t.joinable()) t.join();
+        }
+    }
+
+    // 提交任务，返回 future 拿结果
+    template &lt;typename F, typename... Args&gt;
+    auto submit(F&amp;&amp; f, Args&amp;&amp;... args)
+        -&gt; std::future&lt;typename std::result_of&lt;F(Args...)&gt;::type&gt; {
+        using ResultType = typename std::result_of&lt;F(Args...)&gt;::type;
+
+        auto task = std::make_shared&lt;std::packaged_task&lt;ResultType()&gt;&gt;(
+            std::bind(std::forward&lt;F&gt;(f), std::forward&lt;Args&gt;(args)...));
+
+        std::future&lt;ResultType&gt; fut = task-&gt;get_future();
+        {
+            std::lock_guard&lt;std::mutex&gt; lk(queueMutex_);
+            if (stop_) throw std::runtime_error("submit on stopped ThreadPool");
+            tasks_.emplace([task] { (*task)(); });   // 类型擦除成 void()
+        }
+        cond_.notify_one();
+        return fut;
+    }
+
+    std::size_t size() const { return workers_.size(); }
+
+private:
+    void workerLoop() {
+        for (;;) {
+            std::function&lt;void()&gt; job;
+            {
+                std::unique_lock&lt;std::mutex&gt; lk(queueMutex_);
+                cond_.wait(lk, [this] { return stop_ || !tasks_.empty(); });
+                if (stop_ &amp;&amp; tasks_.empty()) return;
+                job = std::move(tasks_.front());
+                tasks_.pop();
+            }   // 提前解锁：执行任务时不持锁
+            job();
+        }
+    }
+
+    std::vector&lt;std::thread&gt;          workers_;
+    std::queue&lt;std::function&lt;void()&gt;&gt; tasks_;
+    std::mutex                        queueMutex_;
+    std::condition_variable           cond_;
+    bool                              stop_;
+};
+
+#endif  // THREAD_POOL_H_</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>📌 说明：<code>std::result_of</code> 在 C++17 弃用、C++20 移除，新项目应改用 <code>std::invoke_result_t&lt;F, Args...&gt;</code>。
+                        📌 <code>std::bind</code> 会把参数 decay 后保存；若参数是 move-only 类型（如 <code>unique_ptr</code>），C++11 下需改写为 lambda 捕获（C++14 init-capture 或 C++11 的 <code>std::shared_ptr</code> 中转）。</p>
+                    </blockquote>
+
+                    <h4 id="122-词频统计-maincpp">12.2 词频统计 <code>main.cpp</code></h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;algorithm&gt;
+#include &lt;cctype&gt;
+#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;fstream&gt;
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+#include &lt;sstream&gt;
+#include &lt;string&gt;
+#include &lt;unordered_map&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+
+#include "ThreadPool.h"
+
+// ---------- RAII 文件读取：异常安全，返回可移动的 string ----------
+std::string readFile(const std::string&amp; path) {
+    std::ifstream in(path, std::ios::binary);   // 析构自动关闭
+    if (!in) throw std::runtime_error("cannot open: " + path);
+    std::ostringstream ss;
+    ss &lt;&lt; in.rdbuf();
+    return ss.str();   // 直接返回 → NRVO / 移动
+}
+
+// ---------- 统计单个文本的单词频次 ----------
+using WordCount = std::unordered_map&lt;std::string, std::size_t&gt;;
+
+WordCount countWords(const std::string&amp; text) {
+    WordCount local;
+    local.reserve(1024);                 // 减少 rehash
+    std::string word;
+    for (char ch : text) {
+        unsigned char uc = static_cast&lt;unsigned char&gt;(ch);
+        if (std::isalpha(uc)) {
+            word.push_back(static_cast&lt;char&gt;(std::tolower(uc)));
+        } else if (!word.empty()) {
+            ++local[word];               // 平均 O(1)
+            word.clear();
+        }
+    }
+    if (!word.empty()) ++local[word];
+    return local;                        // 返回值自动移动（NRVO）
+}
+
+// ---------- 合并结果 ----------
+void mergeInto(WordCount&amp; target, WordCount&amp;&amp; src) {
+    for (const auto&amp; kv : src) target[kv.first] += kv.second;
+}
+
+int main(int argc, char** argv) {
+    if (argc &lt; 2) {
+        std::cerr &lt;&lt; "usage: " &lt;&lt; argv[0] &lt;&lt; " file1 [file2 ...]\n";
+        return 1;
+    }
+
+    const std::size_t topN = 20;
+    std::vector&lt;std::string&gt; paths(argv + 1, argv + argc);
+
+    auto start = std::chrono::steady_clock::now();
+
+    ThreadPool pool(std::max&lt;std::size_t&gt;(
+        1, std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 4));
+
+    // 每个文件提交一个任务；future 保存结果
+    std::vector&lt;std::future&lt;WordCount&gt;&gt; futures;
+    futures.reserve(paths.size());
+    for (const auto&amp; p : paths) {
+        futures.push_back(pool.submit([p] {          // 按值捕获路径，安全
+            return countWords(readFile(p));
+        }));
+    }
+
+    WordCount total;
+    total.reserve(4096);
+    for (auto&amp; f : futures) {
+        mergeInto(total, f.get());      // get() 阻塞；若任务抛异常，这里重新抛出
+    }
+
+    // 取 Top N：拷到 vector 里排序
+    std::vector&lt;std::pair&lt;std::string, std::size_t&gt;&gt; sorted(total.begin(), total.end());
+    std::sort(sorted.begin(), sorted.end(),
+              [](const auto&amp; a, const auto&amp; b) {     // ⚠️ 泛型 lambda 是 C++14！
+                  if (a.second != b.second) return a.second &gt; b.second;
+                  return a.first &lt; b.first;
+              });
+    // C++11 写法：把 auto 换成 const std::pair&lt;std::string, std::size_t&gt;&amp;
+
+    if (sorted.size() &gt; topN) sorted.resize(topN);
+
+    for (const auto&amp; kv : sorted) {
+        std::cout &lt;&lt; kv.first &lt;&lt; '\t' &lt;&lt; kv.second &lt;&lt; '\n';
+    }
+
+    auto elapsed = std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(
+        std::chrono::steady_clock::now() - start);
+    std::cerr &lt;&lt; "\n" &lt;&lt; paths.size() &lt;&lt; " files, "
+              &lt;&lt; total.size() &lt;&lt; " unique words, "
+              &lt;&lt; elapsed.count() &lt;&lt; " ms\n";
+    return 0;
+}</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>⚠️ 上面代码里 <code>const auto&amp;</code> 作为 lambda 参数是 <strong>C++14</strong> 泛型 lambda。若严格用 <code>-std=c++11</code>，请改成显式类型：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" aria-label="复制代码">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                            <pre data-lang="cpp"><code>[](const std::pair&lt;std::string, std::size_t&gt;&amp; a,
+   const std::pair&lt;std::string, std::size_t&gt;&amp; b) { ... }</code></pre>
+                        </div>
+                    </blockquote>
+
+                    <h4 id="123-编译运行">12.3 编译运行</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="bash"><code>g++ -std=c++11 -O2 -Wall -Wextra -pthread main.cpp -o wordcount
+./wordcount *.txt</code></pre>
+                    </div>
+
+                    <h4 id="124-这个例子里用到了哪些-c11-特性">12.4 这个例子里用到了哪些 C++11 特性</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>特性</th>
+                                    <th>出现位置</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>auto</code> / 范围 for</td>
+                                    <td>到处都是</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{}</code> 统一初始化 / 类内初始值</td>
+                                    <td><code>stop_(false)</code>、<code>reserve</code></td>
+                                </tr>
+                                <tr>
+                                    <td>移动语义</td>
+                                    <td><code>WordCount</code> 作为返回值、<code>std::move</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::unique_ptr</code> / <code>make_shared</code></td>
+                                    <td>ThreadPool 的 <code>packaged_task</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>= delete</code></td>
+                                    <td>ThreadPool 禁拷贝</td>
+                                </tr>
+                                <tr>
+                                    <td><code>noexcept</code></td>
+                                    <td>移动操作</td>
+                                </tr>
+                                <tr>
+                                    <td>lambda</td>
+                                    <td>排序谓词、任务闭包、workerLoop</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::function</code> / <code>std::bind</code> / <code>std::future</code></td>
+                                    <td>ThreadPool</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::thread</code> / <code>mutex</code> / <code>lock_guard</code> / <code>unique_lock</code> / <code>condition_variable</code></td>
+                                    <td>ThreadPool</td>
+                                </tr>
+                                <tr>
+                                    <td><code>unordered_map</code> / <code>emplace_back</code> / <code>reserve</code></td>
+                                    <td>词频统计</td>
+                                </tr>
+                                <tr>
+                                    <td><code>&lt;chrono&gt;</code></td>
+                                    <td>计时</td>
+                                </tr>
+                                <tr>
+                                    <td>RAII（<code>ifstream</code>）</td>
+                                    <td>文件读取</td>
+                                </tr>
+                                <tr>
+                                    <td><code>std::max</code> / <code>hardware_concurrency</code></td>
+                                    <td>线程数决策</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="125-练习题把这个项目改成你的">12.5 练习题（把这个项目改成你的）</h4>
+
+                    <ol>
+                        <li><strong>忽略停用词</strong>（the/a/is/...）：用 <code>unordered_set&lt;std::string&gt;</code> 过滤。</li>
+                        <li><strong>支持中文</strong>：按 UTF-8 字节判断，或先转成 <code>std::wstring</code>（提示：C++11 的 <code>char32_t</code> + codecvt，C++11 的 <code>&lt;codecvt&gt;</code> 已能用但 C++17 弃用）。</li>
+                        <li><strong>分块并行</strong>：单个大文件切成 N 段，用线程池并行统计再合并（注意多字节字符的切分边界）。</li>
+                        <li><strong>输出为 JSON / CSV</strong>：练习 <code>ostringstream</code> 与格式化。</li>
+                        <li><strong>加单元测试</strong>：写一个极简的 <code>assert</code> 测试框架（或用 GoogleTest）。</li>
+                    </ol>
+
+                    <hr>
+
+                    <h3 id="附录-a-特性速查表">附录 A 特性速查表</h3>
+
+                    <h4 id="a1-c11-核心特性一览">A.1 C++11 核心特性一览</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>类别</th>
+                                    <th>特性</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>语法</strong></td>
+                                    <td><code>auto</code>、<code>decltype</code>、尾置返回类型、范围 for、<code>nullptr</code>、<code>enum class</code>、统一初始化 <code>{}</code>、<code>initializer_list</code>、<code>using</code> 别名/别名模板、委托构造、继承构造、<code>&gt;&gt;</code> 不再需要空格、<code>static_assert</code>、<code>noexcept</code>、<code>constexpr</code>、<code>thread_local</code>、原始字符串、用户自定义字面量、<code>long long</code>、<code>char16_t/char32_t</code>、<code>explicit</code> 转换运算符</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>类</strong></td>
+                                    <td><code>= default</code>、<code>= delete</code>、<code>override</code>、<code>final</code>、移动构造/移动赋值、类内成员初始值</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>模板</strong></td>
+                                    <td>变长模板、完美转发 <code>std::forward</code>、引用折叠、<code>type_traits</code>、<code>enable_if</code>、外部模板 <code>extern template</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>智能指针</strong></td>
+                                    <td><code>unique_ptr</code>、<code>shared_ptr</code>、<code>weak_ptr</code>、<code>make_shared</code>、<code>enable_shared_from_this</code>（<code>make_unique</code> 是 C++14）</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>STL 容器</strong></td>
+                                    <td><code>array</code>、<code>forward_list</code>、<code>unordered_map/set/multimap/multiset</code>、<code>tuple</code>、<code>emplace*</code> 系列、<code>cbegin/cend</code>、<code>shrink_to_fit</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>STL 算法</strong></td>
+                                    <td><code>all_of/any_of/none_of</code>、<code>find_if_not</code>、<code>copy_if</code>、<code>move</code>/<code>move_backward</code>、<code>partition_copy</code>、<code>shuffle</code>、<code>minmax_element</code>、<code>iota</code>、<code>begin/end</code>、<code>next/prev</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>并发</strong></td>
+                                    <td><code>thread</code>、<code>mutex</code>、<code>recursive_mutex</code>、<code>timed_mutex</code>、<code>lock_guard</code>、<code>unique_lock</code>、<code>std::lock</code>、<code>condition_variable</code>、<code>atomic</code>、<code>atomic_flag</code>、<code>future</code>、<code>promise</code>、<code>packaged_task</code>、<code>async</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>工具库</strong></td>
+                                    <td><code>chrono</code>、<code>random</code>、<code>regex</code>、<code>to_string</code>/<code>stoi</code>/<code>stod</code>、<code>function</code>、<code>bind</code>、<code>ref/cref</code>、<code>hash</code>、<code>type_traits</code>、<code>system_error</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="a2-后续版本的关键改进知道就好别在-c11-项目里用">A.2 后续版本的关键改进（知道就好，别在 C++11 项目里用）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>版本</th>
+                                    <th>重要特性</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>C++14</strong></td>
+                                    <td>泛型 lambda（<code>auto</code> 参数）、lambda init-capture、<code>std::make_unique</code>、<code>decltype(auto)</code>、返回类型推导、放宽 <code>constexpr</code>、变量模板、<code>std::integer_sequence</code>、共享的 <code>timed_mutex</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>C++17</strong></td>
+                                    <td>结构化绑定 <code>auto [a,b]</code>、<code>std::optional</code> / <code>variant</code> / <code>any</code> / <code>string_view</code>、<code>if constexpr</code>、折叠表达式、<code>std::filesystem</code>、<code>scoped_lock</code>、<code>shared_mutex</code>、并行算法、<code>invoke_result</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>C++20</strong></td>
+                                    <td><strong>Concepts</strong>、Ranges、<code>std::span</code>、<code>coroutine</code>、三路比较 <code>&lt;=&gt;</code>、模块、<code>std::format</code>、<code>jthread</code>、<code>constexpr</code> 容器与算法</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="a3-常用头文件速查">A.3 常用头文件速查</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>&lt;array&gt; &lt;forward_list&gt; &lt;unordered_map&gt; &lt;unordered_set&gt; &lt;tuple&gt;
+&lt;memory&gt;        // 智能指针
+&lt;functional&gt;    // std::function / bind / ref / hash
+&lt;thread&gt; &lt;mutex&gt; &lt;condition_variable&gt; &lt;atomic&gt; &lt;future&gt;
+&lt;chrono&gt; &lt;random&gt; &lt;regex&gt; &lt;ratio&gt;
+&lt;type_traits&gt; &lt;initializer_list&gt; &lt;utility&gt;   // move/forward/pair/swap
+&lt;algorithm&gt; &lt;numeric&gt; &lt;iterator&gt;</code></pre>
+                    </div>
+
+                    <hr>
+
+                    <h3 id="附录-b-自检题含答案提示">附录 B 自检题（含答案提示）</h3>
+
+                    <ol>
+                        <li><code>std::move(x)</code> 到底做了什么？移动之后 <code>x</code> 处于什么状态？
+                        → 只是 <code>static_cast&lt;T&amp;&amp;&gt;</code>；x 处于"有效但未指定"，可析构可赋值，但值不可预期。</li>
+                        <li>为什么移动构造函数要标 <code>noexcept</code>？
+                        → <code>vector</code> 扩容时只有移动不抛才能保证异常安全，否则退化为拷贝。</li>
+                        <li>Rule of Three / Five / Zero 分别是什么？你更该用哪个？
+                        → Three：析构/拷贝构造/拷贝赋值；Five：+移动构造/移动赋值；Zero：用 RAII 成员，一个都不写（推荐）。</li>
+                        <li><code>unique_ptr</code> 与 <code>shared_ptr</code> 的核心区别？默认该选哪个？
+                        → 独占 vs 引用计数共享；默认 <code>unique_ptr</code>。</li>
+                        <li>什么情况会产生 <code>shared_ptr</code> 循环引用？怎么破？
+                        → 父子/双向关联互相持有 <code>shared_ptr</code>；从属方改 <code>weak_ptr</code>。</li>
+                        <li><code>std::forward</code> 和 <code>std::move</code> 的区别？
+                        → <code>move</code> 无条件转右值；<code>forward&lt;T&gt;</code> 按 T 的推导结果有条件转发（保留左/右值性）。</li>
+                        <li><code>override</code> 关键字解决了什么问题？
+                        → 签名写错导致"以为重写其实是新建函数"，多态静默失效。</li>
+                        <li>lambda 的 <code>[=]</code> 和 <code>[&amp;]</code> 有何风险？
+                        → <code>[=]</code> 在成员函数内隐式捕获 <code>this</code>（悬空风险）；<code>[&amp;]</code> 捕获局部变量引用，异步场景必崩。</li>
+                        <li><code>condition_variable::wait</code> 为什么必须用谓词版本？
+                        → 存在虚假唤醒（spurious wakeup）。</li>
+                        <li><code>std::async</code> 默认启动策略有什么坑？
+                        → 默认 <code>async|deferred</code> 由实现决定，可能根本没开线程；显式指定 <code>std::launch::async</code>。</li>
+                        <li><code>emplace_back</code> 一定比 <code>push_back</code> 快吗？
+                        → 不一定；参数已是完整对象时等价，且 <code>emplace</code> 可能绕过 <code>explicit</code> 的意外构造。</li>
+                        <li><code>vector&lt;bool&gt;</code> 有什么问题？
+                        → 特化压缩存储，<code>operator[]</code> 返回代理引用，<code>auto</code> 会拿到代理类型而非 bool。</li>
+                        <li>为什么要用 <code>std::make_shared</code>？
+                        → 一次内存分配（对象 + 控制块）、异常安全、更快。</li>
+                        <li><code>const</code> 和 <code>constexpr</code> 的区别？
+                        → <code>const</code> 是"运行时不可改"；<code>constexpr</code> 是"编译期就已知"。</li>
+                        <li>析构函数为什么不能抛异常？
+                        → 栈展开时析构抛异常会导致 <code>std::terminate</code>；C++11 起析构默认 <code>noexcept</code>。</li>
+                    </ol>
+
+                    <hr>
+
+                    <h3 id="附录-c-进阶学习路线">附录 C 进阶学习路线</h3>
+
+                    <h4 id="c11-之后按优先级">C++11 之后（按优先级）</h4>
+
+                    <ol>
+                        <li><strong>先把 C++11 用熟</strong>：写 3~5 个小项目（文件解析、HTTP 客户端、小游戏、线程池、JSON 解析）。</li>
+                        <li><strong>C++14 / C++17 的高价值特性</strong>：<code>make_unique</code>、泛型 lambda、<code>optional</code>、<code>string_view</code>、<code>filesystem</code>、结构化绑定、<code>if constexpr</code>。</li>
+                        <li>
+                            <p><strong>读源码/好书</strong>：</p>
+                            <ul>
+                                <li>书：《Effective Modern C++》（Scott Meyers，C++11/14 必读）、《C++ Primer 第 5 版》（C++11 全面教材）、《Effective STL》。</li>
+                                <li>网站：<a href="https://en.cppreference.com" target="_blank" rel="noopener noreferrer">cppreference.com</a>（查特性与示例的第一选择）、<a href="https://isocpp.org" target="_blank" rel="noopener noreferrer">isocpp.org</a>、C++ Core Guidelines。</li>
+                            </ul>
+                        </li>
+                        <li><strong>工具链</strong>：CMake、clang-format（统一风格）、clang-tidy（静态检查）、ASan/UBSan/TSan（查内存与竞态）、valgrind、perf。</li>
+                        <li><strong>编译期观察</strong>：<a href="https://godbolt.org" target="_blank" rel="noopener noreferrer">Compiler Explorer</a> —— 看 <code>-std=c++11</code> 下你的代码生成了什么汇编，理解 NRVO、内联、移动是否真的发生。</li>
+                        <li><strong>下一步方向</strong>：模板元编程 → C++20 Concepts/Ranges → 协程与异步 → 高性能/低延迟编程。</li>
+                    </ol>
+
+                    <h4 id="推荐的每日练习法">推荐的每日练习法</h4>
+
+                    <ul>
+                        <li><strong>每天一个特性</strong>：30 行 demo + 打印验证 + 记一条"什么时候用/什么时候别用"。</li>
+                        <li><strong>每周一个小项目</strong>：强制自己用 <code>unique_ptr</code>、lambda、范围 for、<code>chrono</code> 写，不用裸 <code>new</code>、不用 <code>NULL</code>、不用 <code>[&amp;]</code> 捕获异步 lambda。</li>
+                        <li><strong>每月一次重构</strong>：把以前写的 C++98 风格代码改写成现代风格，对比行数、可读性、性能差异。</li>
+                    </ul>
+
+                    <hr>
+
+                    <blockquote>
+                        <p><strong>结束语</strong>：C++11 不是一个"多了几个语法糖"的版本，它标志着 <strong>Modern C++</strong> 的开端。
+                        学会它之后你会发现：C++ 代码可以写得更短、更快、更安全，而"手动管理内存、类型写到手抽筋、临时对象疯狂拷贝"这些痛苦，基本都可以交给语言和库去解决。</p>
+                        <p>祝你写出让自己三个月后还能看懂的代码。 🚀</p>
+                    </blockquote>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <div class="giscus"></div>
+                </div>
+                <div class="mt-8">
+                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium" target="_blank" rel="noopener noreferrer">
+                        <span>目录</span>
+                        <span class="font-semibold">Go!</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+
+            <aside class="article-toc" data-toc aria-label="文章目录"></aside>
+        </div>
+    </main>
+
+    <script src="../article.js" defer></script>
+    <script src="../toc.js" defer></script>
+
+
+</body>
+</html>

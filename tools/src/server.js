@@ -55,6 +55,36 @@ const SECURITY_HEADERS = {
   'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
+/* ── 控制台日志 ──
+   把后台里发生的保存 / 删除 / 上传 / 构建 / 提交 / 推送等动作，
+   同步打印到运行 `npm run admin` 的那个终端，方便不看浏览器也能盯进度。 */
+
+function stamp() {
+  const d = new Date();
+  const p = function (n) { return n < 10 ? '0' + n : '' + n; };
+  return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+}
+
+function logEvent(tag, message) {
+  console.log('[' + stamp() + '] ' + tag + ' ' + message);
+}
+
+// 把多行输出压成一行（取首个非空行并截断），用于打印 git 的详细输出
+function firstLine(text, max) {
+  const first = String(text || '').split('\n')
+    .map(function (l) { return l.trim(); })
+    .filter(Boolean)[0] || '';
+  const limit = max || 120;
+  return first.length > limit ? first.slice(0, limit) + '…' : first;
+}
+
+function humanSize(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+
 /* ── 响应工具 ── */
 
 function applySecurity(res, extra) {
@@ -283,12 +313,16 @@ function serveSite(req, res, pathname) {
 async function apiCreatePost(req, res) {
   const data = await readJson(req);
   const result = store.create(data);
+  logEvent('文章', '新建 ' + result.year + '/' + result.slug + ' 《' + (data.title || '未命名文章') + '》');
   return sendJson(res, 201, { ok: true, post: result });
 }
 
 async function apiSavePost(req, res, year, slug) {
   const data = await readJson(req);
   const result = store.save(year, slug, data);
+  const from = year + '/' + slug;
+  const to = result.year + '/' + result.slug;
+  logEvent('文章', '保存 ' + from + (to !== from ? ' → ' + to : ''));
   return sendJson(res, 200, { ok: true, post: result });
 }
 
@@ -320,8 +354,11 @@ function apiBuild(req, res) {
     // 正文可能变了，预览缓存失效
     previewCache.clear();
     store.invalidateList();
+    logEvent('构建', '完成，用时 ' + result.ms + 'ms');
+    result.log.forEach(function (l) { console.log('        ' + l); });
     return sendJson(res, 200, { ok: true, ms: result.ms, log: result.log });
   } catch (e) {
+    logEvent('构建', '失败: ' + e.message);
     return sendJson(res, 500, { error: '构建失败: ' + e.message, stack: String(e.stack || '').split('\n').slice(0, 5) });
   }
 }
@@ -354,6 +391,11 @@ async function apiGitSync(req, res) {
   const log = [];
   let ms = 0;
 
+  logEvent('同步', '开始（' +
+    '构建 ' + (data.build !== false ? '开' : '关') +
+    ' · 拉取 ' + (data.pull !== false ? '开' : '关') +
+    ' · 推送 ' + (data.push !== false ? '开' : '关') + '）');
+
   try {
     if (data.build !== false) {
       const t0 = Date.now();
@@ -363,15 +405,32 @@ async function apiGitSync(req, res) {
       built.log.forEach(function (l) { log.push('  ' + l); });
       previewCache.clear();
       store.invalidateList();
+      logEvent('同步', '构建完成，用时 ' + built.ms + 'ms');
     }
 
     const t1 = Date.now();
     const result = git.sync({ message: data.message, pull: data.pull, push: data.push });
     ms += Date.now() - t1;
 
+    // 把 add / commit / pull / push 每一步的结果都打到控制台
+    (result.steps || []).forEach(function (s) {
+      const state = s.skipped ? '跳过' : (s.ok ? '成功' : '失败');
+      const brief = firstLine(s.output);
+      logEvent('git', s.step + ' · ' + state + (brief ? ' — ' + brief : ''));
+    });
+
+    logEvent('同步', (result.ok ? '完成' : '未完成') +
+      (result.committed === false ? '（无改动）' : '') +
+      (result.message ? '：' + result.message : '') +
+      (result.pulled ? ' · 已拉取' : '') +
+      (result.pushed ? ' · 已推送' : '') +
+      '，用时 ' + ms + 'ms' +
+      (result.error ? ' —— ' + result.error : ''));
+
     return sendJson(res, 200, Object.assign({ log: log, ms: ms }, result));
   } catch (e) {
     const detail = String(e.detail || '').trim();
+    logEvent('同步', '失败: ' + (e.message || '同步失败') + (detail ? ' — ' + firstLine(detail) : ''));
     return sendJson(res, e.status || 500, {
       error: e.message || '同步失败',
       detail: detail,
@@ -390,6 +449,7 @@ async function apiUploadImage(req, res) {
   }
   const buf = Buffer.from(String(data.data), 'base64');
   const saved = store.saveImage(data.year || String(new Date().getFullYear()), data.name, buf);
+  logEvent('上传', '图片 ' + saved.year + '/' + saved.path + '（' + humanSize(buf.length) + '）');
   return sendJson(res, 201, { ok: true, image: saved });
 }
 
@@ -436,6 +496,7 @@ async function handleApi(req, res, pathname) {
       if (method === 'PUT') return await apiSavePost(req, res, year, slug);
       if (method === 'DELETE') {
         const removed = store.remove(year, slug);
+        logEvent('文章', '删除 ' + removed.year + '/' + removed.slug);
         return sendJson(res, 200, { ok: true, post: removed });
       }
       return sendJson(res, 405, { error: '方法不允许' });
@@ -454,11 +515,13 @@ async function handleApi(req, res, pathname) {
     if (pathname === '/api/tags' && method === 'POST') {
       const body = await readJson(req, res);
       const name = store.addTag(body && body.name);
+      logEvent('标签', '新增「' + name + '」');
       return sendJson(res, 200, { ok: true, name: name });
     }
     if (pathname === '/api/tags' && method === 'DELETE') {
       const body = await readJson(req, res);
       const n = store.deleteTag(body && body.name);
+      logEvent('标签', '删除「' + (body && body.name) + '」，影响 ' + n + ' 篇文章');
       return sendJson(res, 200, { ok: true, name: body && body.name, posts: n });
     }
 
@@ -477,8 +540,10 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 404, { error: '接口不存在: ' + pathname });
   } catch (e) {
     if (e instanceof store.StoreError) {
+      logEvent('错误', e.message);
       return sendJson(res, e.status, { error: e.message });
     }
+    logEvent('错误', e.message || '服务器内部错误');
     return sendJson(res, e.status || 500, { error: e.message || '服务器内部错误' });
   }
 }
@@ -500,6 +565,7 @@ function handle(req, res) {
   if (pathname.startsWith('/api/')) {
     applySecurity(res);
     handleApi(req, res, pathname).catch(function (err) {
+      logEvent('错误', (err && err.message) || '服务器内部错误');
       sendJson(res, err.status || 500, { error: err.message || '服务器内部错误' });
     });
     return;
