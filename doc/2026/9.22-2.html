@@ -63,11 +63,12 @@
                 </p>
 
             <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
-                    <h2 id="c-位运算完全指南">C++ 位运算完全指南</h2>
+                    <h2 id="c-位运算完全指南增强版">C++ 位运算完全指南（增强版）</h2>
 
                     <blockquote>
                         <p>从二进制底层到工程实战，一份能直接照着写代码、也能当速查手册用的位运算文档。
-                        本文所有案例代码均在 GCC 11.4 / <code>-std=c++20</code> 下编译运行通过，<strong>示例输出为真实运行结果</strong>。</p>
+                        本文所有案例代码均在 GCC 11.4 / <code>-std=c++20</code> 下编译运行通过，<strong>示例输出为真实运行结果</strong>。
+                        增强版新增：<strong>按技巧分类的 LeetCode 习题集（第 11-20 章）</strong>，覆盖从入门到竞赛的完整练习路径。</p>
                     </blockquote>
 
                     <h3 id="第-1-章-为什么要学位运算">第 1 章 为什么要学位运算</h3>
@@ -114,13 +115,15 @@
                         <li><strong>哈希与概率结构</strong>：布隆过滤器、HyperLogLog 的分桶</li>
                     </ul>
 
-                    <hr>
+                    <blockquote>
+                        <p><strong>为什么位运算是面试高频考点？</strong> 位运算题测试的是你对数据在硬件层面如何存储和操作的理解。Google、Microsoft 等公司经常出这类题，因为它能区分出真正理解计算机工作原理的候选人和只背算法的候选人。很多看起来需要复杂数据结构的问题，用位运算可以用 O(1) 空间和极快的速度优雅解决。</p>
+                    </blockquote>
 
                     <h3 id="第-2-章-二进制与补码位运算的地基">第 2 章 二进制与补码：位运算的地基</h3>
 
                     <h4 id="21-现代计算机统一用补码表示有符号整数">2.1 现代计算机统一用「补码」表示有符号整数</h4>
 
-                    <p>这是理解位运算的第一道门槛：<strong><code>-x</code> 在机器里不是"符号位 + 绝对值"，而是"取反加一"</strong>。</p>
+                    <p>这是理解位运算的第一道门槛： <strong><code>-x</code> 在机器里不是“符号位 + 绝对值”，而是“取反加一”</strong> 。</p>
 
                     <p>定义（w 位）：</p>
 
@@ -134,7 +137,7 @@
 [x]补 = x          (当 x &gt;= 0)</code></pre>
                     </div>
 
-                    <p>一个更实用的等价说法：<strong><code>~x + 1 == -x</code></strong>，反过来 <strong><code>~x == -x - 1</code></strong>。</p>
+                    <p>一个更实用的等价说法： <strong><code>~x + 1 == -x</code></strong> ，反过来 <strong><code>~x == -x - 1</code></strong> 。</p>
 
                     <p><strong>验证代码：</strong></p>
 
@@ -180,7 +183,7 @@ int main() {
                     <ol>
                         <li><code>-5</code> 的十六进制是 <code>0xFFFFFFFB</code>，高位全是 1——<strong>负数右移时补 1 就是这个原因</strong>。</li>
                         <li><code>~5</code> 是 <code>-6</code>，不是 6。因为 <code>~5 = -5 - 1</code>。</li>
-                        <li><code>~0 == -1</code>，所以 <strong><code>~0</code> 常被用作"全 1 掩码"</strong>。</li>
+                        <li><code>~0 == -1</code>，所以 <strong><code>~0</code> 常被用作“全 1 掩码”</strong> 。</li>
                     </ol>
 
                     <h4 id="22-为什么用补码">2.2 为什么用补码</h4>
@@ -270,8 +273,6 @@ auto c = 0377u;          // 八进制（少用，容易看错）
 std::bitset&lt;8&gt; bs(0b10101010u);
 std::cout &lt;&lt; bs &lt;&lt; "\n"; // 输出 10101010</code></pre>
                     </div>
-
-                    <hr>
 
                     <h3 id="第-3-章-六大运算符全解">第 3 章 六大运算符全解</h3>
 
@@ -371,7 +372,7 @@ x &amp; mask         // 提取指定字段
 
                     <p><strong>用途：</strong> 组合标志位。<code>OPEN_READ | OPEN_WRITE | O_CREAT</code> 就是典型写法。</p>
 
-                    <h4 id="33-按位异或-最聪明的运算符">3.3 <code>^</code> 按位异或 —— 最"聪明"的运算符</h4>
+                    <h4 id="33-按位异或-最聪明的运算符">3.3 <code>^</code> 按位异或 —— 最“聪明”的运算符</h4>
 
                     <p>异或的 6 条性质，全部能通向算法题：</p>
 
@@ -399,7 +400,7 @@ a ^ b = c  ⟺  a ^ c = b  ⟺  b ^ c = a   // 可逆性</code></pre>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="cpp"><code>x &amp; ~(1u &lt;&lt; k)    // 清除第 k 位（~ 造出"只有第 k 位是 0"的掩码）
+                        <pre data-lang="cpp"><code>x &amp; ~(1u &lt;&lt; k)    // 清除第 k 位（~ 造出“只有第 k 位是 0”的掩码）
 ~0u               // 全 1 掩码（32 位）
 ~0ULL             // 全 1 掩码（64 位）</code></pre>
                     </div>
@@ -414,7 +415,7 @@ a ^ b = c  ⟺  a ^ c = b  ⟺  b ^ c = a   // 可逆性</code></pre>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
-                        <pre data-lang="cpp"><code>1u &lt;&lt; k           // 构造"只有第 k 位是 1"的掩码
+                        <pre data-lang="cpp"><code>1u &lt;&lt; k           // 构造“只有第 k 位是 1”的掩码
 x &lt;&lt; 1            // x * 2
 x &lt;&lt; 3            // x * 8</code></pre>
                     </div>
@@ -459,8 +460,6 @@ b &gt;&gt; 1;              // 0111 1100 = 124 （补 0）</code></pre>
                     </div>
 
                     <p>同一串比特，结果天差地别。<strong>做位运算请一律用无符号类型。</strong></p>
-
-                    <hr>
 
                     <h3 id="第-4-章-位操作技巧速查手册">第 4 章 位操作技巧速查手册</h3>
 
@@ -596,7 +595,7 @@ uint32_t set_field(uint32_t x, int lo, int hi, uint32_t val) {
                                 </tr>
                                 <tr>
                                     <td>统计 1 的个数</td>
-                                    <td>Brian Kernighan 循环（见案例 4）</td>
+                                    <td>Brian Kernighan 循环（见案例 3）</td>
                                     <td>每次清掉一个 1</td>
                                 </tr>
                                 <tr>
@@ -670,8 +669,6 @@ int max_bit(int a, int b) {
                         <p>现代编译器对简单三目运算通常会自动生成 <code>cmov</code> 指令，手写无分支不一定更快，但在 GPU、SIMD、常数时间密码学场景下必须用。</p>
                     </blockquote>
 
-                    <hr>
-
                     <h3 id="第-5-章-实战案例可运行">第 5 章 实战案例（可运行）</h3>
 
                     <blockquote>
@@ -728,8 +725,6 @@ tgl bit0  : 00000000000000000000000000101010
 read bit5 : 1
 field 4..7 = 0xA : 0x0A</code></pre>
                     </div>
-
-                    <hr>
 
                     <h4 id="案例-2权限位系统生产环境最常用">案例 2：权限位系统（生产环境最常用）</h4>
 
@@ -792,8 +787,6 @@ alice 有读写全部? 1
                     </div>
 
                     <p><strong>工程提示：</strong> 权限位要持久化时，用 <code>uint64_t</code> 字段存 DB；接口返回时再展开成 <code>["READ","EXEC"]</code>。注意 64 位权限上限——超过 64 个权限需改用 <code>std::bitset&lt;N&gt;</code> 或 <code>vector&lt;uint64_t&gt;</code> 位图。</p>
-
-                    <hr>
 
                     <h4 id="案例-3lowbit统计-1-的个数判断-2-的幂">案例 3：lowbit、统计 1 的个数、判断 2 的幂</h4>
 
@@ -858,8 +851,6 @@ void add(int idx, int delta) { for (; idx &lt;= n; idx += lowbit(idx)) tree[idx]
 int  sum(int idx)            { int s = 0; for (; idx &gt; 0; idx -= lowbit(idx)) s += tree[idx]; return s; }</code></pre>
                     </div>
 
-                    <hr>
-
                     <h4 id="案例-4只出现一次的数字异或消元">案例 4：只出现一次的数字（异或消元）</h4>
 
                     <div class="code-block">
@@ -891,7 +882,7 @@ int main() {
 
                     <p><strong>原理：</strong> <code>a^a=0</code>，<code>a^0=a</code>，且异或满足交换律结合律，所以 <code>(4^4)^(1^1)^(2^2)^7 = 7</code>。</p>
 
-                    <p><strong>进阶（出现三次的变种）</strong>：用两个变量分别记录"出现 1 次的位"和"出现 2 次的位"：</p>
+                    <p><strong>进阶（出现三次的变种）</strong> ：用两个变量分别记录“出现 1 次的位”和“出现 2 次的位”：</p>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -908,8 +899,6 @@ int main() {
     return one;
 }</code></pre>
                     </div>
-
-                    <hr>
 
                     <h4 id="案例-5不用-实现加法以及减法">案例 5：不用 <code>+</code> 实现加法（以及减法）</h4>
 
@@ -961,8 +950,6 @@ sub(30, 12) = 18</code></pre>
                     </ul>
 
                     <p>⚠️ 注意 <code>carry</code> 用 <code>unsigned</code> 左移，避免有符号数左移溢出导致的未定义行为。</p>
-
-                    <hr>
 
                     <h4 id="案例-6快速幂二进制幂">案例 6：快速幂（二进制幂）</h4>
 
@@ -1021,8 +1008,6 @@ int main() {
     return r;
 }</code></pre>
                     </div>
-
-                    <hr>
 
                     <h4 id="案例-7位图去重-排序40-亿数据判重">案例 7：位图去重 + 排序（40 亿数据判重）</h4>
 
@@ -1087,8 +1072,6 @@ public:
                         <p><code>i &gt;&gt; 6</code> 等价于 <code>i / 64</code>，<code>i &amp; 63</code> 等价于 <code>i % 64</code>，配合 64 分块时这样写最快。</p>
                     </blockquote>
 
-                    <hr>
-
                     <h4 id="案例-8子集枚举状态压缩基础">案例 8：子集枚举（状态压缩基础）</h4>
 
                     <div class="code-block">
@@ -1141,8 +1124,6 @@ mask=101100 的子集: 44 40 36 32 12 8 4 0 </code></pre>
 
                     <p><strong>关键技巧：</strong> <code>s = (s - 1) &amp; m</code> 能生成 <code>m</code> 的所有子集，且不重不漏。<strong>必须把循环变量声明为无符号并检查 <code>s == 0</code> 后 break</strong>，否则 <code>unsigned</code> 从 0 减 1 会绕回最大值导致死循环。</p>
 
-                    <hr>
-
                     <h4 id="案例-9位反转32-位分治交换">案例 9：位反转（32 位，分治交换）</h4>
 
                     <div class="code-block">
@@ -1187,8 +1168,6 @@ out: 11010000000000000000000000000000 = 3489660928</code></pre>
                     <p><strong>应用：</strong> FFT 蝶形运算的位反转置换（bit-reversal permutation）、大小端转换、CRC 计算。</p>
 
                     <p><strong>魔术数字含义：</strong> <code>0x55 = 0101...</code>（间隔 1 位）、<code>0x33 = 0011...</code>（间隔 2 位）、<code>0x0F = 00001111</code>（间隔 4 位），逐级扩大交换跨度。</p>
-
-                    <hr>
 
                     <h4 id="案例-10格雷码相邻编码只差-1-位">案例 10：格雷码（相邻编码只差 1 位）</h4>
 
@@ -1235,8 +1214,6 @@ bin=7 gray=4 (逆变换回 7)</code></pre>
 
                     <p><strong>为什么重要：</strong> 格雷码相邻两个数的二进制<strong>只有一位不同</strong>。机械编码器、ADC 采样用它，可以避免多位同时跳变时因信号不同步产生的毛刺（比如 <code>0111→1000</code> 四位全变，中间可能读到 <code>0110</code>、<code>0100</code> 等错误值）。</p>
 
-                    <hr>
-
                     <h4 id="案例-11字符处理技巧">案例 11：字符处理技巧</h4>
 
                     <div class="code-block">
@@ -1271,8 +1248,6 @@ int main() {
                     <p><strong>原理：</strong> ASCII 中 <code>'a'=97=0b1100001</code>，<code>'A'=65=0b1000001</code>，只差第 5 位（值 32 = <code>' '</code> 空格字符的 ASCII）。</p>
 
                     <p>⚠️ <strong>只对 ASCII 有效</strong>，处理 UTF-8 中文请用 <code>&lt;locale&gt;</code> 或 ICU 库。</p>
-
-                    <hr>
 
                     <h4 id="案例-12汉明距离无临时变量交换位运算取绝对值">案例 12：汉明距离、无临时变量交换、位运算取绝对值</h4>
 
@@ -1317,11 +1292,9 @@ iabs(-42)=42 iabs(42)=42</code></pre>
 
                     <p>⚠️ <strong>异或交换的坑：</strong> <code>a[i] ^= a[j]</code> 当 <code>i == j</code> 时会把元素清零。生产代码请用 <code>std::swap</code>——编译器会优化，且异或交换破坏了编译器的依赖分析，实际往往更慢。</p>
 
-                    <hr>
-
                     <h4 id="案例-13状态压缩-dp-旅行商问题tsp">案例 13：状态压缩 DP —— 旅行商问题（TSP）</h4>
 
-                    <p>把"已访问城市集合"压成一个整数的经典范例。</p>
+                    <p>把“已访问城市集合”压成一个整数的经典范例。</p>
 
                     <div class="code-block">
                         <button class="copy-btn" aria-label="复制代码">
@@ -1370,8 +1343,6 @@ int main() {
 
                     <p><strong>复杂度：</strong> O(2^n · n²)，n ≤ 20 左右可用。状态数从 n! 降到 2^n，这就是位运算带来的质变。</p>
 
-                    <hr>
-
                     <h4 id="案例-14布隆过滤器极简版">案例 14：布隆过滤器（极简版）</h4>
 
                     <div class="code-block">
@@ -1416,9 +1387,7 @@ int main() {
                         <pre><code>apple? 1  banana? 1  cherry? 0 (可能误判)</code></pre>
                     </div>
 
-                    <p><strong>特性：</strong> 说"不存在"一定准确（不会漏报），说"存在"可能有误判。位数组越大、哈希函数越多，误判率越低。</p>
-
-                    <hr>
+                    <p><strong>特性：</strong> 说“不存在”一定准确（不会漏报），说“存在”可能有误判。位数组越大、哈希函数越多，误判率越低。</p>
 
                     <h4 id="案例-15运算符优先级陷阱血的教训">案例 15：运算符优先级陷阱（血的教训）</h4>
 
@@ -1453,8 +1422,6 @@ int main() {
                     <p><strong>这是位运算最高频的 bug。</strong> 原因：<code>==</code>、<code>!=</code>、<code>&lt;</code> 等比较运算符的优先级<strong>高于</strong> <code>&amp;</code>、<code>^</code>、<code>|</code>，而 <code>+</code> 的优先级<strong>高于</strong> <code>&lt;&lt;</code>、<code>&gt;&gt;</code>。</p>
 
                     <p><strong>铁律：位运算表达式一律加括号。</strong></p>
-
-                    <hr>
 
                     <h3 id="第-6-章-c20-标准库">第 6 章 C++20 <code>&lt;bit&gt;</code> 标准库</h3>
 
@@ -1563,8 +1530,6 @@ rotl(0x80000001,1)=0x00000003</code></pre>
 
                     <p>⚠️ 注意：<code>std::popcount(0)</code> 返回 0，但 <code>std::countr_zero(0)</code> 返回<strong>位宽</strong>（如 32），使用前确认边界行为。</p>
 
-                    <hr>
-
                     <h3 id="第-7-章-位域与-stdbitset">第 7 章 位域与 <code>std::bitset</code></h3>
 
                     <h4 id="71-位域bit-field结构体级别的位打包">7.1 位域（bit-field）：结构体级别的位打包</h4>
@@ -1637,8 +1602,6 @@ int main() {
                     </div>
 
                     <p>特点：大小<strong>编译期固定</strong>，支持 <code>&amp; | ^ ~ &lt;&lt; &gt;&gt;</code> 和 <code>count/any/all/none/set/reset/flip/test</code>。运行期动态长度请用 <code>boost::dynamic_bitset</code> 或 <code>vector&lt;uint64_t&gt;</code>。</p>
-
-                    <hr>
 
                     <h3 id="第-8-章-陷阱未定义行为与最佳实践">第 8 章 陷阱、未定义行为与最佳实践</h3>
 
@@ -1754,8 +1717,6 @@ if (a &lt; b) { /* 不会执行！*/ }  // a 被转换为 unsigned，变成 4294
 
                     <p>注意区分：<strong>位运算不受字节序影响</strong>（<code>x &gt;&gt; 1</code> 永远是逻辑上的除以 2），但<strong>内存中的字节排列受影响</strong>。网络传输需 <code>htonl/ntohl</code>。</p>
 
-                    <hr>
-
                     <h3 id="第-9-章-性能与可读性">第 9 章 性能与可读性</h3>
 
                     <h4 id="91-编译器比你想象的聪明">9.1 编译器比你想象的聪明</h4>
@@ -1771,7 +1732,7 @@ x % 8      // 若 x 无符号，优化为 x &amp; 7
 x / 4      // 优化为 x &gt;&gt; 2</code></pre>
                     </div>
 
-                    <p><strong>所以：不要为了"性能"把 <code>x * 2</code> 改成 <code>x &lt;&lt; 1</code>，可读性更重要。</strong> 位运算的价值在于<strong>表达意图</strong>（位掩码、集合操作），而不是当算术运算符的替代品。</p>
+                    <p><strong>所以：不要为了“性能”把 <code>x * 2</code> 改成 <code>x &lt;&lt; 1</code>，可读性更重要。</strong> 位运算的价值在于<strong>表达意图</strong>（位掩码、集合操作），而不是当算术运算符的替代品。</p>
 
                     <h4 id="92-什么时候位运算真的更快">9.2 什么时候位运算真的更快</h4>
 
@@ -1830,8 +1791,6 @@ constexpr uint32_t FLAG_INVALID = 1u &lt;&lt; 5;
                     </div>
 
                     <p>用 <code>constexpr</code> + <code>enum class</code> + <code>[[nodiscard]]</code>，把位运算封装成<strong>有名字的语义</strong>，这是生产代码与竞赛代码最大的区别。</p>
-
-                    <hr>
 
                     <h3 id="第-10-章-练习题与参考答案">第 10 章 练习题与参考答案</h3>
 
@@ -1940,9 +1899,1553 @@ constexpr uint32_t FLAG_INVALID = 1u &lt;&lt; 5;
                         <pre data-lang="cpp"><code>for (uint32_t i = 0; i &lt; (1u &lt;&lt; n); ++i) gray.push_back(i ^ (i &gt;&gt; 1));</code></pre>
                     </div>
 
-                    <hr>
+                    <h3 id="第-11-章-leetcode-习题集-基础操作篇">第 11 章 LeetCode 习题集 —— 基础操作篇</h3>
 
-                    <h3 id="附录一页速查表">附录：一页速查表</h3>
+                    <blockquote>
+                        <p>以下习题按技巧分类，建议按顺序刷。每题给出 LeetCode 题号、难度、与本书知识点的对应关系及核心思路。</p>
+                    </blockquote>
+
+                    <h4 id="111-位运算基础对应第-34-章">11.1 位运算基础（对应第 3、4 章）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>对应知识点</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>191</td>
+                                    <td><a href="https://leetcode.cn/problems/number-of-1-bits/" target="_blank" rel="noopener noreferrer">位 1 的个数</a></td>
+                                    <td>简单</td>
+                                    <td>4.4 统计 1 的个数</td>
+                                    <td>Kernighan 算法或 <code>std::popcount</code></td>
+                                </tr>
+                                <tr>
+                                    <td>338</td>
+                                    <td><a href="https://leetcode.cn/problems/counting-bits/" target="_blank" rel="noopener noreferrer">比特位计数</a></td>
+                                    <td>简单</td>
+                                    <td>4.4 + DP</td>
+                                    <td><code>dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>190</td>
+                                    <td><a href="https://leetcode.cn/problems/reverse-bits/" target="_blank" rel="noopener noreferrer">颠倒二进制位</a></td>
+                                    <td>简单</td>
+                                    <td>案例 9</td>
+                                    <td>逐位取低位移入结果，或分治法</td>
+                                </tr>
+                                <tr>
+                                    <td>231</td>
+                                    <td><a href="https://leetcode.cn/problems/power-of-two/" target="_blank" rel="noopener noreferrer">2 的幂</a></td>
+                                    <td>简单</td>
+                                    <td>4.4 判断 2 的幂</td>
+                                    <td><code>n &gt; 0 &amp;&amp; (n &amp; (n-1)) == 0</code></td>
+                                </tr>
+                                <tr>
+                                    <td>342</td>
+                                    <td><a href="https://leetcode.cn/problems/power-of-four/" target="_blank" rel="noopener noreferrer">4 的幂</a></td>
+                                    <td>简单</td>
+                                    <td>4.4 扩展</td>
+                                    <td>先判 2 的幂，再看 1 是否在奇数位（<code>n &amp; 0xAAAAAAAA == 0</code>）</td>
+                                </tr>
+                                <tr>
+                                    <td>476</td>
+                                    <td><a href="https://leetcode.cn/problems/number-complement/" target="_blank" rel="noopener noreferrer">数字的补数</a></td>
+                                    <td>简单</td>
+                                    <td>4.3 掩码构造</td>
+                                    <td>找最高位，构造同位数全 1 掩码，异或得补数</td>
+                                </tr>
+                                <tr>
+                                    <td>461</td>
+                                    <td><a href="https://leetcode.cn/problems/hamming-distance/" target="_blank" rel="noopener noreferrer">汉明距离</a></td>
+                                    <td>简单</td>
+                                    <td>案例 12</td>
+                                    <td><code>popcount(a ^ b)</code></td>
+                                </tr>
+                                <tr>
+                                    <td>477</td>
+                                    <td><a href="https://leetcode.cn/problems/total-hamming-distance/" target="_blank" rel="noopener noreferrer">汉明距离总和</a></td>
+                                    <td>中等</td>
+                                    <td>拆位贡献法</td>
+                                    <td>对每一位统计 0 和 1 的个数，贡献 = <code>cnt0 * cnt1</code></td>
+                                </tr>
+                                <tr>
+                                    <td>693</td>
+                                    <td><a href="https://leetcode.cn/problems/binary-number-with-alternating-bits/" target="_blank" rel="noopener noreferrer">交替位二进制数</a></td>
+                                    <td>简单</td>
+                                    <td>异或性质</td>
+                                    <td><code>n ^ (n &gt;&gt; 1)</code> 后判断是否全 1</td>
+                                </tr>
+                                <tr>
+                                    <td>405</td>
+                                    <td><a href="https://leetcode.cn/problems/convert-a-number-to-hexadecimal/" target="_blank" rel="noopener noreferrer">数字转换为十六进制数</a></td>
+                                    <td>简单</td>
+                                    <td>4.2 字段操作</td>
+                                    <td>每 4 位取一次，映射到 hex 字符</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>推荐刷题顺序：</strong> 191 → 338 → 231 → 342 → 461 → 190 → 476 → 693 → 477 → 405</p>
+
+                    <h4 id="112-位图-子集枚举对应第-5-章案例-78">11.2 位图 / 子集枚举（对应第 5 章案例 7、8）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>对应知识点</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>78</td>
+                                    <td><a href="https://leetcode.cn/problems/subsets/" target="_blank" rel="noopener noreferrer">子集</a></td>
+                                    <td>中等</td>
+                                    <td>案例 8 子集枚举</td>
+                                    <td>遍历 <code>0</code> 到 <code>2^n - 1</code>，每一位表示选/不选</td>
+                                </tr>
+                                <tr>
+                                    <td>90</td>
+                                    <td><a href="https://leetcode.cn/problems/subsets-ii/" target="_blank" rel="noopener noreferrer">子集 II</a></td>
+                                    <td>中等</td>
+                                    <td>子集枚举 + 去重</td>
+                                    <td>排序后位掩码枚举，用 set 去重或跳过重复</td>
+                                </tr>
+                                <tr>
+                                    <td>LCR 079</td>
+                                    <td><a href="https://leetcode.cn/problems/TVdhkn/" target="_blank" rel="noopener noreferrer">子集</a></td>
+                                    <td>中等</td>
+                                    <td>子集枚举</td>
+                                    <td>同 78 题</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 08.04</td>
+                                    <td><a href="https://leetcode.cn/problems/power-set-lcci/" target="_blank" rel="noopener noreferrer">幂集</a></td>
+                                    <td>中等</td>
+                                    <td>子集枚举</td>
+                                    <td>同 78 题</td>
+                                </tr>
+                                <tr>
+                                    <td>2044</td>
+                                    <td><a href="https://leetcode.cn/problems/count-number-of-maximum-bitwise-or-subsets/" target="_blank" rel="noopener noreferrer">统计按位或能得到最大值的子集数目</a></td>
+                                    <td>中等</td>
+                                    <td>子集枚举 + 位运算</td>
+                                    <td>枚举所有子集，记录最大 OR 值及其计数</td>
+                                </tr>
+                                <tr>
+                                    <td>1239</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-length-of-a-concatenated-string-with-unique-characters/" target="_blank" rel="noopener noreferrer">串联字符串的最大长度</a></td>
+                                    <td>中等</td>
+                                    <td>位图 + 回溯</td>
+                                    <td>用 <code>int</code> 的 26 位表示字符集合，位运算判重</td>
+                                </tr>
+                                <tr>
+                                    <td>318</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-product-of-word-lengths/" target="_blank" rel="noopener noreferrer">最大单词长度乘积</a></td>
+                                    <td>中等</td>
+                                    <td>位图 + 预处理</td>
+                                    <td>每个单词压成 26 位掩码，两两判 <code>&amp;</code> 是否为 0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>推荐刷题顺序：</strong> 78 → 面试题 08.04 → 90 → 318 → 1239 → 2044</p>
+
+                    <h4 id="113-不用算术运算符对应第-5-章案例-56">11.3 不用算术运算符（对应第 5 章案例 5、6）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>对应知识点</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>371</td>
+                                    <td><a href="https://leetcode.cn/problems/sum-of-two-integers/" target="_blank" rel="noopener noreferrer">两整数之和</a></td>
+                                    <td>中等</td>
+                                    <td>案例 5</td>
+                                    <td><code>a ^ b</code> 为无进位和，<code>(a &amp; b) &lt;&lt; 1</code> 为进位，循环直到进位为 0</td>
+                                </tr>
+                                <tr>
+                                    <td>29</td>
+                                    <td><a href="https://leetcode.cn/problems/divide-two-integers/" target="_blank" rel="noopener noreferrer">两数相除</a></td>
+                                    <td>中等</td>
+                                    <td>Q9</td>
+                                    <td>用移位逼近被除数，注意 <code>INT_MIN</code> 边界</td>
+                                </tr>
+                                <tr>
+                                    <td>67</td>
+                                    <td><a href="https://leetcode.cn/problems/add-binary/" target="_blank" rel="noopener noreferrer">二进制求和</a></td>
+                                    <td>简单</td>
+                                    <td>加法原理</td>
+                                    <td>逐位模拟二进制加法</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 17.01</td>
+                                    <td><a href="https://leetcode.cn/problems/add-without-plus-lcci/" target="_blank" rel="noopener noreferrer">不用加号的加法</a></td>
+                                    <td>简单</td>
+                                    <td>案例 5</td>
+                                    <td>同 371 题</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-12-章-leetcode-习题集-异或性质篇">第 12 章 LeetCode 习题集 —— 异或性质篇</h3>
+
+                    <blockquote>
+                        <p>异或（XOR）是位运算中最“聪明”的运算符，LeetCode 上有大量围绕它的题目。</p>
+                    </blockquote>
+
+                    <h4 id="121-只出现一次的数字经典系列">12.1 只出现一次的数字（经典系列）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>136</td>
+                                    <td><a href="https://leetcode.cn/problems/single-number/" target="_blank" rel="noopener noreferrer">只出现一次的数字</a></td>
+                                    <td>简单</td>
+                                    <td>全部异或，成对出现自动消零，剩下的就是唯一数</td>
+                                </tr>
+                                <tr>
+                                    <td>137</td>
+                                    <td><a href="https://leetcode.cn/problems/single-number-ii/" target="_blank" rel="noopener noreferrer">只出现一次的数字 II</a></td>
+                                    <td>中等</td>
+                                    <td>其余出现 3 次 → 用 <code>one</code>/<code>two</code> 两变量记录出现 1 次/2 次的位</td>
+                                </tr>
+                                <tr>
+                                    <td>260</td>
+                                    <td><a href="https://leetcode.cn/problems/single-number-iii/" target="_blank" rel="noopener noreferrer">只出现一次的数字 III</a></td>
+                                    <td>中等</td>
+                                    <td>全部异或得 <code>a^b</code>，取 lowbit 分组，分别在两组中异或</td>
+                                </tr>
+                                <tr>
+                                    <td>LCR 173</td>
+                                    <td><a href="https://leetcode.cn/problems/que-shi-de-shu-zi-lcof/" target="_blank" rel="noopener noreferrer">点名</a></td>
+                                    <td>简单</td>
+                                    <td>0~n 异或再与数组异或，剩下的就是缺失的数</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>137 题核心代码（三变量法）：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int singleNumber(vector&lt;int&gt;&amp; nums) {
+    int one = 0, two = 0;
+    for (int x : nums) {
+        one = (one ^ x) &amp; ~two;
+        two = (two ^ x) &amp; ~one;
+    }
+    return one;
+}</code></pre>
+                    </div>
+
+                    <p><strong>260 题核心代码（lowbit 分组）：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>vector&lt;int&gt; singleNumber(vector&lt;int&gt;&amp; nums) {
+    unsigned xorsum = 0;
+    for (int x : nums) xorsum ^= (unsigned)x;
+    unsigned lowbit = xorsum &amp; (~xorsum + 1);   // 取最低位的 1
+    int a = 0, b = 0;
+    for (int x : nums) {
+        if ((unsigned)x &amp; lowbit) a ^= x;       // 分为两组
+        else                      b ^= x;
+    }
+    return {a, b};
+}</code></pre>
+                    </div>
+
+                    <h4 id="122-异或的进阶应用">12.2 异或的进阶应用</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>268</td>
+                                    <td><a href="https://leetcode.cn/problems/missing-number/" target="_blank" rel="noopener noreferrer">丢失的数字</a></td>
+                                    <td>简单</td>
+                                    <td>0~n 全部异或，再与数组异或，结果就是缺失的数</td>
+                                </tr>
+                                <tr>
+                                    <td>389</td>
+                                    <td><a href="https://leetcode.cn/problems/find-the-difference/" target="_blank" rel="noopener noreferrer">找不同</a></td>
+                                    <td>简单</td>
+                                    <td>两字符串所有字符异或，剩下的就是多出的字符</td>
+                                </tr>
+                                <tr>
+                                    <td>1486</td>
+                                    <td><a href="https://leetcode.cn/problems/xor-operation-in-an-array/" target="_blank" rel="noopener noreferrer">数组异或操作</a></td>
+                                    <td>简单</td>
+                                    <td>按定义生成并异或，或用规律简化</td>
+                                </tr>
+                                <tr>
+                                    <td>421</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-xor-of-two-numbers-in-an-array/" target="_blank" rel="noopener noreferrer">数组中两个数的最大异或值</a></td>
+                                    <td>中等</td>
+                                    <td>字典树（0-1 Trie）贪心，或逐位确定前缀的贪心法</td>
+                                </tr>
+                                <tr>
+                                    <td>LCR 067</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-xor-of-two-numbers-in-an-array/" target="_blank" rel="noopener noreferrer">数组中两个数的最大异或值</a></td>
+                                    <td>中等</td>
+                                    <td>同 421 题</td>
+                                </tr>
+                                <tr>
+                                    <td>810</td>
+                                    <td><a href="https://leetcode.cn/problems/chalkboard-xor-game/" target="_blank" rel="noopener noreferrer">黑板异或游戏</a></td>
+                                    <td>困难</td>
+                                    <td>数学分析：全部异或为 0 或偶数个元素则先手胜</td>
+                                </tr>
+                                <tr>
+                                    <td>1829</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-xor-for-each-query/" target="_blank" rel="noopener noreferrer">每个查询的最大异或值</a></td>
+                                    <td>中等</td>
+                                    <td>前缀异或 + 贪心构造</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>268 题核心代码：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int missingNumber(vector&lt;int&gt;&amp; nums) {
+    int ans = 0, n = nums.size();
+    for (int i = 0; i &lt;= n; ++i) ans ^= i;
+    for (int x : nums) ans ^= x;
+    return ans;
+}</code></pre>
+                    </div>
+
+                    <h4 id="123-异或的其他技巧">12.3 异或的其他技巧</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>645</td>
+                                    <td><a href="https://leetcode.cn/problems/set-mismatch/" target="_blank" rel="noopener noreferrer">错误的集合</a></td>
+                                    <td>简单</td>
+                                    <td>异或找出重复和缺失的一对，再用 lowbit 分组</td>
+                                </tr>
+                                <tr>
+                                    <td>1442</td>
+                                    <td><a href="https://leetcode.cn/problems/count-triplets-that-can-form-two-arrays-of-equal-xor/" target="_blank" rel="noopener noreferrer">形成两个异或相等数组的三元组数目</a></td>
+                                    <td>中等</td>
+                                    <td>前缀异或 + 哈希表</td>
+                                </tr>
+                                <tr>
+                                    <td>1734</td>
+                                    <td><a href="https://leetcode.cn/problems/decode-xored-permutation/" target="_blank" rel="noopener noreferrer">解码异或后的排列</a></td>
+                                    <td>中等</td>
+                                    <td>利用 perm 总异或和与编码数组奇偶位异或推导首元素</td>
+                                </tr>
+                                <tr>
+                                    <td>1738</td>
+                                    <td><a href="https://leetcode.cn/problems/find-kth-largest-xor-coordinate-value/" target="_blank" rel="noopener noreferrer">找出第 K 大的异或坐标值</a></td>
+                                    <td>中等</td>
+                                    <td>二维前缀异或 + 快速选择</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-13-章-leetcode-习题集-lowbit-与位计数篇">第 13 章 LeetCode 习题集 —— lowbit 与位计数篇</h3>
+
+                    <h4 id="131-lowbit-的应用">13.1 lowbit 的应用</h4>
+
+                    <p>lowbit（<code>x &amp; -x</code>）是位运算中极其重要的技巧，最著名的应用是树状数组。</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>231</td>
+                                    <td><a href="https://leetcode.cn/problems/power-of-two/" target="_blank" rel="noopener noreferrer">2 的幂</a></td>
+                                    <td>简单</td>
+                                    <td><code>lowbit(n) == n</code> 即 2 的幂</td>
+                                </tr>
+                                <tr>
+                                    <td>342</td>
+                                    <td><a href="https://leetcode.cn/problems/power-of-four/" target="_blank" rel="noopener noreferrer">4 的幂</a></td>
+                                    <td>简单</td>
+                                    <td>先满足 2 的幂，再检查 1 是否在奇数位上</td>
+                                </tr>
+                                <tr>
+                                    <td>307</td>
+                                    <td><a href="https://leetcode.cn/problems/range-sum-query-mutable/" target="_blank" rel="noopener noreferrer">区域和检索 - 数组可修改</a></td>
+                                    <td>中等</td>
+                                    <td>树状数组模板题：<code>x += lowbit(x)</code> 更新，<code>x -= lowbit(x)</code> 查询</td>
+                                </tr>
+                                <tr>
+                                    <td>315</td>
+                                    <td><a href="https://leetcode.cn/problems/count-of-smaller-numbers-after-self/" target="_blank" rel="noopener noreferrer">计算右侧小于当前元素的个数</a></td>
+                                    <td>困难</td>
+                                    <td>离散化 + 树状数组求逆序对</td>
+                                </tr>
+                                <tr>
+                                    <td>327</td>
+                                    <td><a href="https://leetcode.cn/problems/count-of-range-sum/" target="_blank" rel="noopener noreferrer">区间和的个数</a></td>
+                                    <td>困难</td>
+                                    <td>前缀和 + 离散化 + 树状数组</td>
+                                </tr>
+                                <tr>
+                                    <td>493</td>
+                                    <td><a href="https://leetcode.cn/problems/reverse-pairs/" target="_blank" rel="noopener noreferrer">翻转对</a></td>
+                                    <td>困难</td>
+                                    <td>分治或树状数组统计逆序对</td>
+                                </tr>
+                                <tr>
+                                    <td>1649</td>
+                                    <td><a href="https://leetcode.cn/problems/create-sorted-array-through-instructions/" target="_blank" rel="noopener noreferrer">通过指令创建有序数组</a></td>
+                                    <td>困难</td>
+                                    <td>树状数组 + 离散化</td>
+                                </tr>
+                                <tr>
+                                    <td>2179</td>
+                                    <td><a href="https://leetcode.cn/problems/count-good-triplets-in-an-array/" target="_blank" rel="noopener noreferrer">统计数组中好三元组数目</a></td>
+                                    <td>困难</td>
+                                    <td>映射 + 树状数组求逆序对</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>树状数组模板：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int lowbit(int x) { return x &amp; -x; }
+
+// 单点更新：a[i] += delta
+void add(int i, int delta) {
+    for (; i &lt;= n; i += lowbit(i)) tree[i] += delta;
+}
+
+// 前缀和查询：sum(a[1..i])
+int query(int i) {
+    int s = 0;
+    for (; i &gt; 0; i -= lowbit(i)) s += tree[i];
+    return s;
+}</code></pre>
+                    </div>
+
+                    <h4 id="132-位计数与进制转换">13.2 位计数与进制转换</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1356</td>
+                                    <td><a href="https://leetcode.cn/problems/sort-integers-by-the-number-of-1-bits/" target="_blank" rel="noopener noreferrer">根据数字二进制下 1 的数目排序</a></td>
+                                    <td>简单</td>
+                                    <td>按 popcount 排序，相同时按数值排序</td>
+                                </tr>
+                                <tr>
+                                    <td>762</td>
+                                    <td><a href="https://leetcode.cn/problems/prime-number-of-set-bits-in-binary-representation/" target="_blank" rel="noopener noreferrer">二进制表示中质数个计算置位</a></td>
+                                    <td>简单</td>
+                                    <td>枚举区间，判断 popcount 是否为质数</td>
+                                </tr>
+                                <tr>
+                                    <td>868</td>
+                                    <td><a href="https://leetcode.cn/problems/binary-gap/" target="_blank" rel="noopener noreferrer">二进制间距</a></td>
+                                    <td>简单</td>
+                                    <td>逐位扫描或 <code>countr_zero</code> 迭代</td>
+                                </tr>
+                                <tr>
+                                    <td>1017</td>
+                                    <td><a href="https://leetcode.cn/problems/convert-to-base-2/" target="_blank" rel="noopener noreferrer">负二进制转换</a></td>
+                                    <td>中等</td>
+                                    <td>取余和除法，注意负基数处理</td>
+                                </tr>
+                                <tr>
+                                    <td>504</td>
+                                    <td><a href="https://leetcode.cn/problems/base-7/" target="_blank" rel="noopener noreferrer">七进制数</a></td>
+                                    <td>简单</td>
+                                    <td>常规进制转换</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-14-章-leetcode-习题集-位图与状态压缩篇">第 14 章 LeetCode 习题集 —— 位图与状态压缩篇</h3>
+
+                    <h4 id="141-状态压缩-dp">14.1 状态压缩 DP</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>847</td>
+                                    <td><a href="https://leetcode.cn/problems/shortest-path-visiting-all-nodes/" target="_blank" rel="noopener noreferrer">访问所有节点的最短路径</a></td>
+                                    <td>困难</td>
+                                    <td>BFS + 状态压缩：<code>(node, mask)</code> 为状态，最短哈密顿路径</td>
+                                </tr>
+                                <tr>
+                                    <td>980</td>
+                                    <td><a href="https://leetcode.cn/problems/unique-paths-iii/" target="_blank" rel="noopener noreferrer">不同路径 III</a></td>
+                                    <td>困难</td>
+                                    <td>DFS + 状态压缩，枚举所有路径</td>
+                                </tr>
+                                <tr>
+                                    <td>691</td>
+                                    <td><a href="https://leetcode.cn/problems/stickers-to-spell-word/" target="_blank" rel="noopener noreferrer">贴纸拼词</a></td>
+                                    <td>困难</td>
+                                    <td>每个目标字符用位表示，DP 枚举子集</td>
+                                </tr>
+                                <tr>
+                                    <td>698</td>
+                                    <td><a href="https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/" target="_blank" rel="noopener noreferrer">划分为 k 个相等的子集</a></td>
+                                    <td>中等</td>
+                                    <td>状态压缩 + DFS + 记忆化：<code>mask</code> 表示已选元素</td>
+                                </tr>
+                                <tr>
+                                    <td>1125</td>
+                                    <td><a href="https://leetcode.cn/problems/smallest-sufficient-team/" target="_blank" rel="noopener noreferrer">最小的必要团队</a></td>
+                                    <td>困难</td>
+                                    <td>技能用位表示，DP 求最小集合覆盖</td>
+                                </tr>
+                                <tr>
+                                    <td>1879</td>
+                                    <td><a href="https://leetcode.cn/problems/minimum-xor-sum-of-two-arrays/" target="_blank" rel="noopener noreferrer">两个数组最小的异或值之和</a></td>
+                                    <td>困难</td>
+                                    <td><code>dp[mask]</code> = nums1 前 k 个元素配对的 XOR 最小值，k = popcount(mask)</td>
+                                </tr>
+                                <tr>
+                                    <td>2172</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-and-sum-of-array/" target="_blank" rel="noopener noreferrer">数组的最大与和</a></td>
+                                    <td>困难</td>
+                                    <td>篮子编号用位表示，DP 枚举分配</td>
+                                </tr>
+                                <tr>
+                                    <td>1947</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-compatibility-score-sum/" target="_blank" rel="noopener noreferrer">最大兼容性评分和</a></td>
+                                    <td>中等</td>
+                                    <td>全排列用位掩码表示，DP 求最大匹配</td>
+                                </tr>
+                                <tr>
+                                    <td>1986</td>
+                                    <td><a href="https://leetcode.cn/problems/minimum-number-of-work-sessions-to-finish-the-tasks/" target="_blank" rel="noopener noreferrer">完成任务的最少工作时间段</a></td>
+                                    <td>中等</td>
+                                    <td>任务集合用 mask 表示，DP 求最少分段数</td>
+                                </tr>
+                                <tr>
+                                    <td>1434</td>
+                                    <td><a href="https://leetcode.cn/problems/number-of-ways-to-wear-different-hats-to-each-other/" target="_blank" rel="noopener noreferrer">每个人戴不同帽子的方案数</a></td>
+                                    <td>困难</td>
+                                    <td>帽子分配给人的状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>1799</td>
+                                    <td><a href="https://leetcode.cn/problems/maximize-score-after-n-operations/" target="_blank" rel="noopener noreferrer">N 次操作后的最大分数和</a></td>
+                                    <td>困难</td>
+                                    <td><code>mask</code> 记录已删除数字，DP 求最大分数</td>
+                                </tr>
+                                <tr>
+                                    <td>996</td>
+                                    <td><a href="https://leetcode.cn/problems/number-of-squareful-arrays/" target="_blank" rel="noopener noreferrer">正方形数组的数目</a></td>
+                                    <td>困难</td>
+                                    <td>状态压缩 DP 求哈密顿路径数</td>
+                                </tr>
+                                <tr>
+                                    <td>464</td>
+                                    <td><a href="https://leetcode.cn/problems/can-i-win/" target="_blank" rel="noopener noreferrer">我能赢吗</a></td>
+                                    <td>中等</td>
+                                    <td>博弈 + 状态压缩 + 记忆化搜索</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>847 题状态定义示例：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 状态: (当前节点, 已访问集合 mask)
+// dp[mask][u] = 访问集合 mask、当前在 u 的最短路径
+// 实际用 BFS 求最短：queue&lt;pair&lt;int,int&gt;&gt; q; // {node, mask}</code></pre>
+                    </div>
+
+                    <h4 id="142-位图与集合操作">14.2 位图与集合操作</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>266</td>
+                                    <td><a href="https://leetcode.cn/problems/palindrome-permutation/" target="_blank" rel="noopener noreferrer">回文排列</a></td>
+                                    <td>简单</td>
+                                    <td>统计每个字符出现次数的奇偶性，最多一个奇数</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 01.01</td>
+                                    <td><a href="https://leetcode.cn/problems/is-unique-lcci/" target="_blank" rel="noopener noreferrer">判定字符是否唯一</a></td>
+                                    <td>简单</td>
+                                    <td>26 位位图代替哈希表，<code>bitMap &gt;&gt; x &amp; 1</code> 判重</td>
+                                </tr>
+                                <tr>
+                                    <td>1178</td>
+                                    <td><a href="https://leetcode.cn/problems/number-of-valid-words-for-each-puzzle/" target="_blank" rel="noopener noreferrer">猜字谜</a></td>
+                                    <td>困难</td>
+                                    <td>每个单词压成 26 位掩码，枚举 puzzle 子集统计</td>
+                                </tr>
+                                <tr>
+                                    <td>1542</td>
+                                    <td><a href="https://leetcode.cn/problems/find-longest-awesome-substring/" target="_blank" rel="noopener noreferrer">找出最长的超赞子字符串</a></td>
+                                    <td>困难</td>
+                                    <td>前缀异或 + 状态压缩（0~9 出现次数的奇偶性用 10 位表示）</td>
+                                </tr>
+                                <tr>
+                                    <td>982</td>
+                                    <td><a href="https://leetcode.cn/problems/triples-with-bitwise-and-equal-to-zero/" target="_blank" rel="noopener noreferrer">按位与为零的三元组</a></td>
+                                    <td>困难</td>
+                                    <td>两两 AND 结果用哈希/数组计数，再枚举第三个数</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-15-章-leetcode-习题集-位运算与数学篇">第 15 章 LeetCode 习题集 —— 位运算与数学篇</h3>
+
+                    <h4 id="151-无进位与进位思维">15.1 无进位与进位思维</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>371</td>
+                                    <td><a href="https://leetcode.cn/problems/sum-of-two-integers/" target="_blank" rel="noopener noreferrer">两整数之和</a></td>
+                                    <td>中等</td>
+                                    <td>异或 = 无进位和，与+左移 = 进位（见案例 5）</td>
+                                </tr>
+                                <tr>
+                                    <td>29</td>
+                                    <td><a href="https://leetcode.cn/problems/divide-two-integers/" target="_blank" rel="noopener noreferrer">两数相除</a></td>
+                                    <td>中等</td>
+                                    <td>移位逼近，注意 <code>INT_MIN</code> 和 <code>INT_MAX</code> 边界</td>
+                                </tr>
+                                <tr>
+                                    <td>67</td>
+                                    <td><a href="https://leetcode.cn/problems/add-binary/" target="_blank" rel="noopener noreferrer">二进制求和</a></td>
+                                    <td>简单</td>
+                                    <td>逐位模拟二进制加法</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 17.01</td>
+                                    <td><a href="https://leetcode.cn/problems/add-without-plus-lcci/" target="_blank" rel="noopener noreferrer">不用加号的加法</a></td>
+                                    <td>简单</td>
+                                    <td>同 371 题</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 08.05</td>
+                                    <td><a href="https://leetcode.cn/problems/recursive-mulitply-lcci/" target="_blank" rel="noopener noreferrer">递归乘法</a></td>
+                                    <td>中等</td>
+                                    <td>递归：<code>A * B = A * (B &gt;&gt; 1) &lt;&lt; 1</code></td>
+                                </tr>
+                                <tr>
+                                    <td>50</td>
+                                    <td><a href="https://leetcode.cn/problems/powx-n/" target="_blank" rel="noopener noreferrer">Pow(x, n)</a></td>
+                                    <td>中等</td>
+                                    <td>快速幂（案例 6 的浮点版），负指数处理</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="152-位运算与排列组合">15.2 位运算与排列组合</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>784</td>
+                                    <td><a href="https://leetcode.cn/problems/letter-case-permutation/" target="_blank" rel="noopener noreferrer">字母大小写全排列</a></td>
+                                    <td>中等</td>
+                                    <td>大小写差 32（0x20），位运算翻转为一种解法</td>
+                                </tr>
+                                <tr>
+                                    <td>526</td>
+                                    <td><a href="https://leetcode.cn/problems/beautiful-arrangement/" target="_blank" rel="noopener noreferrer">优美的排列</a></td>
+                                    <td>中等</td>
+                                    <td>状态压缩 + 回溯/DP</td>
+                                </tr>
+                                <tr>
+                                    <td>351</td>
+                                    <td><a href="https://leetcode.cn/problems/android-unlock-patterns/" target="_blank" rel="noopener noreferrer">安卓系统手势解锁</a></td>
+                                    <td>中等</td>
+                                    <td>状态压缩 + DFS 枚举手势路径</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-16-章-leetcode-习题集-与或性质篇">第 16 章 LeetCode 习题集 —— 与/或性质篇</h3>
+
+                    <h4 id="161-按位与的性质">16.1 按位与的性质</h4>
+
+                    <p><strong>核心性质：</strong> 与的数越多，结果越小（bits 只减不增）。</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>201</td>
+                                    <td><a href="https://leetcode.cn/problems/bitwise-and-of-numbers-range/" target="_blank" rel="noopener noreferrer">数字范围按位与</a></td>
+                                    <td>中等</td>
+                                    <td>找 left 和 right 的公共前缀；或 <code>right &amp;= right - 1</code> 直到 <code>right &lt;= left</code></td>
+                                </tr>
+                                <tr>
+                                    <td>2044</td>
+                                    <td><a href="https://leetcode.cn/problems/count-number-of-maximum-bitwise-or-subsets/" target="_blank" rel="noopener noreferrer">统计按位或能得到最大值的子集数目</a></td>
+                                    <td>中等</td>
+                                    <td>枚举子集</td>
+                                </tr>
+                                <tr>
+                                    <td>898</td>
+                                    <td><a href="https://leetcode.cn/problems/bitwise-ors-of-subarrays/" target="_blank" rel="noopener noreferrer">子数组按位或操作</a></td>
+                                    <td>中等</td>
+                                    <td>LogTrick：每个右端点维护去重后的或值集合</td>
+                                </tr>
+                                <tr>
+                                    <td>1521</td>
+                                    <td><a href="https://leetcode.cn/problems/find-a-value-of-a-mysterious-function-closest-to-target/" target="_blank" rel="noopener noreferrer">找到最接近目标值的函数值</a></td>
+                                    <td>困难</td>
+                                    <td>LogTrick + 二分</td>
+                                </tr>
+                                <tr>
+                                    <td>3171</td>
+                                    <td><a href="https://leetcode.cn/problems/find-subarray-with-bitwise-or-closest-to-k/" target="_blank" rel="noopener noreferrer">找到按位或最接近 K 的子数组</a></td>
+                                    <td>困难</td>
+                                    <td>LogTrick</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>201 题核心代码：</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>int rangeBitwiseAnd(int left, int right) {
+    while (left &lt; right) right &amp;= right - 1;   // 消掉 right 最低位的 1
+    return right;                               // 直到 right &lt;= left
+}</code></pre>
+                    </div>
+
+                    <h4 id="162-按位或与按位异或的贪心">16.2 按位或与按位异或的贪心</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>100268</td>
+                                    <td><a href="https://leetcode.cn/problems/minimize-or-of-remaining-elements-using-operations/" target="_blank" rel="noopener noreferrer">给定操作次数内使剩余元素的或值最小</a></td>
+                                    <td>困难</td>
+                                    <td>拆位贪心，从高位到低位考虑消除</td>
+                                </tr>
+                                <tr>
+                                    <td>2546</td>
+                                    <td><a href="https://leetcode.cn/problems/apply-bitwise-operations-to-make-strings-equal/" target="_blank" rel="noopener noreferrer">执行逐位运算使字符串相等</a></td>
+                                    <td>中等</td>
+                                    <td>脑筋急转弯：只需看是否有 '1'</td>
+                                </tr>
+                                <tr>
+                                    <td>982</td>
+                                    <td><a href="https://leetcode.cn/problems/triples-with-bitwise-and-equal-to-zero/" target="_blank" rel="noopener noreferrer">按位与为零的三元组</a></td>
+                                    <td>困难</td>
+                                    <td>两两 AND 计数 + 枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>1835</td>
+                                    <td><a href="https://leetcode.cn/problems/find-xor-sum-of-all-pairs-bitwise-and/" target="_blank" rel="noopener noreferrer">所有数对按位与结果的异或和</a></td>
+                                    <td>困难</td>
+                                    <td>推导：结果 = 数组异或和的按位与 + 个数奇偶性</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-17-章-leetcode-习题集-综合与竞赛篇">第 17 章 LeetCode 习题集 —— 综合与竞赛篇</h3>
+
+                    <h4 id="171-综合难度题">17.1 综合难度题</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>核心思路</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>89</td>
+                                    <td><a href="https://leetcode.cn/problems/gray-code/" target="_blank" rel="noopener noreferrer">格雷编码</a></td>
+                                    <td>中等</td>
+                                    <td><code>i ^ (i &gt;&gt; 1)</code>，或用镜像反射法构造</td>
+                                </tr>
+                                <tr>
+                                    <td>1238</td>
+                                    <td><a href="https://leetcode.cn/problems/circular-permutation-in-binary-representation/" target="_blank" rel="noopener noreferrer">循环码排列</a></td>
+                                    <td>中等</td>
+                                    <td>格雷码 + 旋转</td>
+                                </tr>
+                                <tr>
+                                    <td>1611</td>
+                                    <td><a href="https://leetcode.cn/problems/minimum-one-bit-operations-to-make-integers-zero/" target="_blank" rel="noopener noreferrer">使整数变为 0 的最少操作次数</a></td>
+                                    <td>困难</td>
+                                    <td>格雷码逆变换，每步只能翻转最高位或最低位</td>
+                                </tr>
+                                <tr>
+                                    <td>957</td>
+                                    <td><a href="https://leetcode.cn/problems/prison-cells-after-n-days/" target="_blank" rel="noopener noreferrer">N 天后的牢房</a></td>
+                                    <td>中等</td>
+                                    <td>8 位状态用 <code>int</code> 表示，找循环节</td>
+                                </tr>
+                                <tr>
+                                    <td>1178</td>
+                                    <td><a href="https://leetcode.cn/problems/number-of-valid-words-for-each-puzzle/" target="_blank" rel="noopener noreferrer">猜字谜</a></td>
+                                    <td>困难</td>
+                                    <td>位掩码 + 子集枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>1255</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-score-words-formed-by-letters/" target="_blank" rel="noopener noreferrer">得分最高的单词集合</a></td>
+                                    <td>困难</td>
+                                    <td>单词用 26 位掩码表示，枚举子集判可行</td>
+                                </tr>
+                                <tr>
+                                    <td>1723</td>
+                                    <td><a href="https://leetcode.cn/problems/find-minimum-time-to-finish-all-jobs/" target="_blank" rel="noopener noreferrer">完成所有工作的最短时间</a></td>
+                                    <td>困难</td>
+                                    <td>状态压缩 DP + 二分</td>
+                                </tr>
+                                <tr>
+                                    <td>1434</td>
+                                    <td><a href="https://leetcode.cn/problems/number-of-ways-to-wear-different-hats-to-each-other/" target="_blank" rel="noopener noreferrer">每个人戴不同帽子的方案数</a></td>
+                                    <td>困难</td>
+                                    <td>帽子分配给人的状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>1349</td>
+                                    <td><a href="https://leetcode.cn/problems/maximum-students-taking-exam/" target="_blank" rel="noopener noreferrer">参加考试的最大学生数</a></td>
+                                    <td>困难</td>
+                                    <td>行状态压缩 DP，检查相邻行冲突</td>
+                                </tr>
+                                <tr>
+                                    <td>1655</td>
+                                    <td><a href="https://leetcode.cn/problems/distribute-repeating-integers/" target="_blank" rel="noopener noreferrer">分配重复整数</a></td>
+                                    <td>困难</td>
+                                    <td>顾客需求用位掩码表示，DP 判断可行性</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="172-线性基竞赛向">17.2 线性基（竞赛向）</h4>
+
+                    <p><strong>线性基</strong>是处理异或最大和/最小和问题的核心工具，本质是用一组基向量张成原数组的异或空间。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>class XorBasis {
+    static constexpr int N = 31;   // 值域 &lt;= 2^31
+    int b[N]{};
+public:
+    void insert(int x) {
+        for (int i = N - 1; i &gt;= 0; --i) {
+            if (!(x &gt;&gt; i)) continue;
+            if (!b[i]) { b[i] = x; return; }
+            x ^= b[i];
+        }
+    }
+    int max_xor() const {
+        int res = 0;
+        for (int i = N - 1; i &gt;= 0; --i)
+            if ((res ^ b[i]) &gt; res) res ^= b[i];
+        return res;
+    }
+    int min_xor() const {
+        for (int i = 0; i &lt; N; ++i)
+            if (b[i]) return b[i];
+        return 0;
+    }
+};</code></pre>
+                    </div>
+
+                    <blockquote>
+                        <p>线性基相关 LeetCode 题较少，主要出现在竞赛中。核心应用：最大异或子集和、最小异或子集和、第 k 大异或和。</p>
+                    </blockquote>
+
+                    <h3 id="第-18-章-leetcode-位运算完整题单按难度排序">第 18 章 LeetCode 位运算完整题单（按难度排序）</h3>
+
+                    <h4 id="简单easy">简单（Easy）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>标签</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>136</td>
+                                    <td>只出现一次的数字</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>190</td>
+                                    <td>颠倒二进制位</td>
+                                    <td>位操作</td>
+                                </tr>
+                                <tr>
+                                    <td>191</td>
+                                    <td>位 1 的个数</td>
+                                    <td>位计数</td>
+                                </tr>
+                                <tr>
+                                    <td>231</td>
+                                    <td>2 的幂</td>
+                                    <td>lowbit</td>
+                                </tr>
+                                <tr>
+                                    <td>268</td>
+                                    <td>丢失的数字</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>338</td>
+                                    <td>比特位计数</td>
+                                    <td>DP + 位计数</td>
+                                </tr>
+                                <tr>
+                                    <td>342</td>
+                                    <td>4 的幂</td>
+                                    <td>lowbit</td>
+                                </tr>
+                                <tr>
+                                    <td>389</td>
+                                    <td>找不同</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>401</td>
+                                    <td>二进制手表</td>
+                                    <td>枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>405</td>
+                                    <td>数字转换为十六进制数</td>
+                                    <td>进制转换</td>
+                                </tr>
+                                <tr>
+                                    <td>461</td>
+                                    <td>汉明距离</td>
+                                    <td>异或 + popcount</td>
+                                </tr>
+                                <tr>
+                                    <td>476</td>
+                                    <td>数字的补数</td>
+                                    <td>掩码构造</td>
+                                </tr>
+                                <tr>
+                                    <td>504</td>
+                                    <td>七进制数</td>
+                                    <td>进制转换</td>
+                                </tr>
+                                <tr>
+                                    <td>645</td>
+                                    <td>错误的集合</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>693</td>
+                                    <td>交替位二进制数</td>
+                                    <td>位操作</td>
+                                </tr>
+                                <tr>
+                                    <td>762</td>
+                                    <td>二进制表示中质数个计算置位</td>
+                                    <td>位计数</td>
+                                </tr>
+                                <tr>
+                                    <td>832</td>
+                                    <td>翻转图像</td>
+                                    <td>位操作</td>
+                                </tr>
+                                <tr>
+                                    <td>868</td>
+                                    <td>二进制间距</td>
+                                    <td>位扫描</td>
+                                </tr>
+                                <tr>
+                                    <td>1356</td>
+                                    <td>根据数字二进制下 1 的数目排序</td>
+                                    <td>排序 + popcount</td>
+                                </tr>
+                                <tr>
+                                    <td>1486</td>
+                                    <td>数组异或操作</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 01.01</td>
+                                    <td>判定字符是否唯一</td>
+                                    <td>位图</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 17.01</td>
+                                    <td>不用加号的加法</td>
+                                    <td>位运算加法</td>
+                                </tr>
+                                <tr>
+                                    <td>LCR 173</td>
+                                    <td>点名</td>
+                                    <td>异或</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="中等medium">中等（Medium）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>标签</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>29</td>
+                                    <td>两数相除</td>
+                                    <td>移位</td>
+                                </tr>
+                                <tr>
+                                    <td>67</td>
+                                    <td>二进制求和</td>
+                                    <td>加法</td>
+                                </tr>
+                                <tr>
+                                    <td>78</td>
+                                    <td>子集</td>
+                                    <td>子集枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>89</td>
+                                    <td>格雷编码</td>
+                                    <td>格雷码</td>
+                                </tr>
+                                <tr>
+                                    <td>90</td>
+                                    <td>子集 II</td>
+                                    <td>子集枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>137</td>
+                                    <td>只出现一次的数字 II</td>
+                                    <td>三进制状态</td>
+                                </tr>
+                                <tr>
+                                    <td>201</td>
+                                    <td>数字范围按位与</td>
+                                    <td>前缀与</td>
+                                </tr>
+                                <tr>
+                                    <td>260</td>
+                                    <td>只出现一次的数字 III</td>
+                                    <td>异或分组</td>
+                                </tr>
+                                <tr>
+                                    <td>287</td>
+                                    <td>寻找重复数</td>
+                                    <td>位运算/二分</td>
+                                </tr>
+                                <tr>
+                                    <td>318</td>
+                                    <td>最大单词长度乘积</td>
+                                    <td>位图</td>
+                                </tr>
+                                <tr>
+                                    <td>371</td>
+                                    <td>两整数之和</td>
+                                    <td>位运算加法</td>
+                                </tr>
+                                <tr>
+                                    <td>421</td>
+                                    <td>数组中两个数的最大异或值</td>
+                                    <td>Trie/贪心</td>
+                                </tr>
+                                <tr>
+                                    <td>477</td>
+                                    <td>汉明距离总和</td>
+                                    <td>拆位贡献</td>
+                                </tr>
+                                <tr>
+                                    <td>526</td>
+                                    <td>优美的排列</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>693</td>
+                                    <td>交替位二进制数</td>
+                                    <td>位操作</td>
+                                </tr>
+                                <tr>
+                                    <td>698</td>
+                                    <td>划分为 k 个相等的子集</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>784</td>
+                                    <td>字母大小写全排列</td>
+                                    <td>位运算</td>
+                                </tr>
+                                <tr>
+                                    <td>861</td>
+                                    <td>翻转矩阵后的得分</td>
+                                    <td>贪心 + 位运算</td>
+                                </tr>
+                                <tr>
+                                    <td>898</td>
+                                    <td>子数组按位或操作</td>
+                                    <td>LogTrick</td>
+                                </tr>
+                                <tr>
+                                    <td>957</td>
+                                    <td>N 天后的牢房</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>1239</td>
+                                    <td>串联字符串的最大长度</td>
+                                    <td>位图</td>
+                                </tr>
+                                <tr>
+                                    <td>1310</td>
+                                    <td>子数组异或查询</td>
+                                    <td>前缀异或</td>
+                                </tr>
+                                <tr>
+                                    <td>1442</td>
+                                    <td>形成两个异或相等数组的三元组数目</td>
+                                    <td>前缀异或</td>
+                                </tr>
+                                <tr>
+                                    <td>1486</td>
+                                    <td>数组异或操作</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>1521</td>
+                                    <td>找到最接近目标值的函数值</td>
+                                    <td>LogTrick</td>
+                                </tr>
+                                <tr>
+                                    <td>1734</td>
+                                    <td>解码异或后的排列</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>1738</td>
+                                    <td>找出第 K 大的异或坐标值</td>
+                                    <td>前缀异或</td>
+                                </tr>
+                                <tr>
+                                    <td>1829</td>
+                                    <td>每个查询的最大异或值</td>
+                                    <td>前缀异或</td>
+                                </tr>
+                                <tr>
+                                    <td>1947</td>
+                                    <td>最大兼容性评分和</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>1986</td>
+                                    <td>完成任务的最少工作时间段</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>2044</td>
+                                    <td>统计按位或能得到最大值的子集数目</td>
+                                    <td>子集枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>2172</td>
+                                    <td>数组的最大与和</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>2546</td>
+                                    <td>执行逐位运算使字符串相等</td>
+                                    <td>脑筋急转弯</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 08.04</td>
+                                    <td>幂集</td>
+                                    <td>子集枚举</td>
+                                </tr>
+                                <tr>
+                                    <td>面试题 08.05</td>
+                                    <td>递归乘法</td>
+                                    <td>位运算</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="困难hard">困难（Hard）</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>标签</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1542</td>
+                                    <td>找出最长的超赞子字符串</td>
+                                    <td>前缀异或 + 状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>1611</td>
+                                    <td>使整数变为 0 的最少操作次数</td>
+                                    <td>格雷码</td>
+                                </tr>
+                                <tr>
+                                    <td>1649</td>
+                                    <td>通过指令创建有序数组</td>
+                                    <td>树状数组</td>
+                                </tr>
+                                <tr>
+                                    <td>1723</td>
+                                    <td>完成所有工作的最短时间</td>
+                                    <td>状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>1799</td>
+                                    <td>N 次操作后的最大分数和</td>
+                                    <td>状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>1879</td>
+                                    <td>两个数组最小的异或值之和</td>
+                                    <td>状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>1947</td>
+                                    <td>最大兼容性评分和</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>315</td>
+                                    <td>计算右侧小于当前元素的个数</td>
+                                    <td>树状数组</td>
+                                </tr>
+                                <tr>
+                                    <td>327</td>
+                                    <td>区间和的个数</td>
+                                    <td>树状数组</td>
+                                </tr>
+                                <tr>
+                                    <td>493</td>
+                                    <td>翻转对</td>
+                                    <td>树状数组</td>
+                                </tr>
+                                <tr>
+                                    <td>691</td>
+                                    <td>贴纸拼词</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>810</td>
+                                    <td>黑板异或游戏</td>
+                                    <td>数学</td>
+                                </tr>
+                                <tr>
+                                    <td>847</td>
+                                    <td>访问所有节点的最短路径</td>
+                                    <td>BFS + 状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>980</td>
+                                    <td>不同路径 III</td>
+                                    <td>DFS + 状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>1125</td>
+                                    <td>最小的必要团队</td>
+                                    <td>状态压缩</td>
+                                </tr>
+                                <tr>
+                                    <td>1178</td>
+                                    <td>猜字谜</td>
+                                    <td>位掩码</td>
+                                </tr>
+                                <tr>
+                                    <td>1255</td>
+                                    <td>得分最高的单词集合</td>
+                                    <td>位掩码</td>
+                                </tr>
+                                <tr>
+                                    <td>1349</td>
+                                    <td>参加考试的最大学生数</td>
+                                    <td>状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>1434</td>
+                                    <td>每个人戴不同帽子的方案数</td>
+                                    <td>状态压缩 DP</td>
+                                </tr>
+                                <tr>
+                                    <td>2179</td>
+                                    <td>统计数组中好三元组数目</td>
+                                    <td>树状数组</td>
+                                </tr>
+                                <tr>
+                                    <td>3171</td>
+                                    <td>找到按位或最接近 K 的子数组</td>
+                                    <td>LogTrick</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="第-19-章-刷题路线与建议">第 19 章 刷题路线与建议</h3>
+
+                    <h4 id="191-分阶段刷题路线">19.1 分阶段刷题路线</h4>
+
+                    <p><strong>阶段一：基础巩固（2 周）</strong></p>
+
+                    <p>目标：掌握 6 大运算符、lowbit、popcount、异或基本性质。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>191 → 338 → 231 → 342 → 461 → 136 → 268 → 190 → 476 → 405</code></pre>
+                    </div>
+
+                    <p><strong>阶段二：核心技巧（2 周）</strong></p>
+
+                    <p>目标：掌握异或消元、位图、子集枚举。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>137 → 260 → 78 → 面试题 01.01 → 318 → 1239 → 371 → 89</code></pre>
+                    </div>
+
+                    <p><strong>阶段三：状态压缩（3 周）</strong></p>
+
+                    <p>目标：掌握状态压缩 DP，理解 mask 作为状态的设计。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>847 → 698 → 1947 → 1879 → 2172 → 1986 → 1723</code></pre>
+                    </div>
+
+                    <p><strong>阶段四：树状数组与综合（2 周）</strong></p>
+
+                    <p>目标：掌握 lowbit 在树状数组中的应用。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>307 → 315 → 327 → 1649 → 493 → 2179</code></pre>
+                    </div>
+
+                    <p><strong>阶段五：竞赛进阶（持续）</strong></p>
+
+                    <p>目标：LogTrick、线性基、格雷码逆变换等高阶技巧。</p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre><code>898 → 1521 → 3171 → 1611 → 1542 → 线性基练习</code></pre>
+                    </div>
+
+                    <h4 id="192-刷题建议">19.2 刷题建议</h4>
+
+                    <ol>
+                        <li><strong>按模式刷，不按题号刷。</strong> 位运算题的核心是模式识别——看到“只出现一次”就想到异或，看到“子集”就想到位掩码，看到“范围与”就想到公共前缀。</li>
+                        <li><strong>先自己想 10 分钟再看题解。</strong> 位运算题的特点是一旦想到就很简单，想不到了解思路后要能默写。</li>
+                        <li><strong>手算验证。</strong> 拿几个小数字（如 5、6、7）在纸上写出二进制，手动模拟位运算过程，比盯着代码看有效得多。</li>
+                        <li><strong>总结模板。</strong> 状态压缩 DP 的枚举子集模板、树状数组的 lowbit 模板、LogTrick 的维护模板，都是可以背下来直接用的。</li>
+                    </ol>
+
+                    <h3 id="第-20-章-一页速查表">第 20 章 一页速查表</h3>
 
                     <h4 id="运算符">运算符</h4>
 
@@ -1984,6 +3487,33 @@ c &amp; 0x0F                  // '0'~'9' 转数字
 mask = n &gt;&gt; 31; (n^mask)-mask   // 取绝对值</code></pre>
                     </div>
 
+                    <h4 id="常用子集枚举模板">常用子集枚举模板</h4>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>// 枚举所有子集
+for (int s = 0; s &lt; (1 &lt;&lt; n); ++s) { /* ... */ }
+
+// 枚举 mask 的所有子集（不重不漏）
+for (unsigned s = mask; ; s = (s - 1) &amp; mask) {
+    /* 处理子集 s */
+    if (s == 0) break;
+}
+
+// 状态压缩 DP 典型框架
+vector&lt;int&gt; dp(1 &lt;&lt; n, INF);
+dp[0] = 0;
+for (int mask = 0; mask &lt; (1 &lt;&lt; n); ++mask)
+    for (int i = 0; i &lt; n; ++i) {
+        if (!(mask &gt;&gt; i &amp; 1)) continue;
+        dp[mask] = min(dp[mask], dp[mask ^ (1 &lt;&lt; i)] + cost[i]);
+    }</code></pre>
+                    </div>
+
                     <h4 id="头文件与工具">头文件与工具</h4>
 
                     <div class="code-block">
@@ -2008,8 +3538,6 @@ mask = n &gt;&gt; 31; (n^mask)-mask   // 取绝对值</code></pre>
                         <pre data-lang="bash"><code>g++ -std=c++20 -O2 -Wall -Wextra -Wconversion -Wsign-conversion main.cpp</code></pre>
                     </div>
 
-                    <hr>
-
                     <h3 id="参考">参考</h3>
 
                     <ul>
@@ -2017,14 +3545,15 @@ mask = n &gt;&gt; 31; (n^mask)-mask   // 取绝对值</code></pre>
                         <li>cppreference, <a href="https://en.cppreference.com/w/cpp/language/operators" target="_blank" rel="noopener noreferrer">Operators — Bitwise logic and shift</a></li>
                         <li>Hacker's Delight（Henry S. Warren），位运算算法经典著作</li>
                         <li>GCC Builtins: <code>__builtin_popcount</code> / <code>__builtin_clz</code> / <code>__builtin_ctz</code></li>
+                        <li>LeetCode <a href="https://leetcode.cn/problem-list/bit-manipulation/" target="_blank" rel="noopener noreferrer">位运算题目列表</a></li>
+                        <li>力扣 <a href="https://leetcode.cn/discuss/post/3580371/" target="_blank" rel="noopener noreferrer">位运算算法题单</a>（基础/性质/拆位/试填/恒等式/思维）</li>
                     </ul>
 
-                    <hr>
-
                     <blockquote>
-                        <p><strong>文档版本</strong>：v1.0
+                        <p><strong>文档版本</strong>：v2.0（增强版）
                         <strong>验证环境</strong>：GCC 11.4.0，<code>-std=c++20 -O2</code>
-                        所有示例代码均可直接复制编译运行。</p>
+                        所有示例代码均可直接复制编译运行。
+                        v2.0 新增：第 11-20 章 LeetCode 习题集（按技巧分类，共 100+ 道题），第 19 章分阶段刷题路线，第 20 章一页速查表。</p>
                     </blockquote>
                 </div>
 
