@@ -63,13 +63,14 @@
                 </p>
 
             <div class="article-body prose text-gray-700 dark:text-gray-300" data-toc-content>
-                    <h2 id="c11-现代-c-开发指南">C++11 现代 C++ 开发指南</h2>
+                    <h2 id="c11-现代-c-开发指南增强版">C++11 现代 C++ 开发指南（增强版）</h2>
 
                     <blockquote>
                         <p><strong>读者定位</strong>：已经学完「面向对象（OOP）+ STL 基础」的 C++ 新手。
                         你已经会写 <code>class</code>、会继承多态、会用 <code>vector</code> / <code>map</code> / <code>sort</code> / <code>find</code>，但写出来的代码还停留在「C++98 的味道」。
                         本文的目标：让你<strong>系统掌握 C++11 到底新增了什么、为什么要有它、怎么写才地道</strong>，并能在日常开发中稳定输出现代风格代码。</p>
                         <p><strong>版本约定</strong>：本文主体为 <strong>C++11</strong>。凡是标记 <code>C++14</code> / <code>C++17</code> / <code>C++20</code> 的特性，都只是顺带提示，不会作为正文要求。</p>
+                        <p><strong>增强版新增</strong>：第 13 章「C++11 习题与 LeetCode 实战」，按特性分类补充 100+ 道练习题与项目练习。</p>
                     </blockquote>
 
                     <hr>
@@ -90,6 +91,7 @@
                         <li><a href="#第-10-章-20-个高频陷阱清单" target="_blank" rel="noopener noreferrer">第 10 章 20 个高频陷阱清单</a></li>
                         <li><a href="#第-11-章-代码风格与工程实践" target="_blank" rel="noopener noreferrer">第 11 章 代码风格与工程实践</a></li>
                         <li><a href="#第-12-章-综合实战并发词频统计器" target="_blank" rel="noopener noreferrer">第 12 章 综合实战：并发词频统计器</a></li>
+                        <li><a href="#第-13-章-c11-习题与-leetcode-实战" target="_blank" rel="noopener noreferrer">第 13 章 C++11 习题与 LeetCode 实战</a></li>
                         <li><a href="#附录-a-特性速查表" target="_blank" rel="noopener noreferrer">附录 A 特性速查表</a></li>
                         <li><a href="#附录-b-自检题含答案提示" target="_blank" rel="noopener noreferrer">附录 B 自检题（含答案提示）</a></li>
                         <li><a href="#附录-c-进阶学习路线" target="_blank" rel="noopener noreferrer">附录 C 进阶学习路线</a></li>
@@ -745,7 +747,7 @@ private:
                                 </tr>
                                 <tr>
                                     <td><strong>Rule of Zero</strong>（现代推荐 ⭐）</td>
-                                    <td><strong>根本别手动管理资源</strong>：用 <code>std::vector</code>、<code>std::string</code>、<code>std::unique_ptr</code> 等 RAII 成员成员拼装你的类，编译器自动生成的 5 个函数就都是对的，你一个都不用写</td>
+                                    <td><strong>根本别手动管理资源</strong>：用 <code>std::vector</code>、<code>std::string</code>、<code>std::unique_ptr</code> 等 RAII 成员拼装你的类，编译器自动生成的 5 个函数就都是对的，你一个都不用写</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -3260,6 +3262,732 @@ int main(int argc, char** argv) {
                         <li><strong>分块并行</strong>：单个大文件切成 N 段，用线程池并行统计再合并（注意多字节字符的切分边界）。</li>
                         <li><strong>输出为 JSON / CSV</strong>：练习 <code>ostringstream</code> 与格式化。</li>
                         <li><strong>加单元测试</strong>：写一个极简的 <code>assert</code> 测试框架（或用 GoogleTest）。</li>
+                    </ol>
+
+                    <hr>
+
+                    <h3 id="第-13-章-c11-习题与-leetcode-实战">第 13 章 C++11 习题与 LeetCode 实战</h3>
+
+                    <blockquote>
+                        <p>本章把 C++11 特性映射到 LeetCode 题单与项目练习。
+                        LeetCode 主要练算法，但你可以<strong>强制自己只用 C++11</strong> 编写：<code>auto</code>、范围 for、lambda、<code>unordered_map</code>、<code>unique_ptr</code>（本地重构）、<code>mutex</code>/<code>condition_variable</code>（并发题）。
+                        建议编译命令：</p>
+                        <div class="code-block">
+                            <button class="copy-btn" aria-label="复制代码">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                            <pre data-lang="bash"><code>g++ -std=c++11 -O2 -Wall -Wextra -pthread main.cpp -o main</code></pre>
+                        </div>
+                    </blockquote>
+
+                    <h4 id="131-语法糖与-stl-基础题单">13.1 语法糖与 STL 基础题单</h4>
+
+                    <p>目标：把 <code>auto</code>、范围 for、<code>nullptr</code>、统一初始化、<code>unordered_map</code>、<code>stack</code>、<code>queue</code>、<code>sort</code>、<code>nth_element</code> 用熟。</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>训练特性</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>两数之和</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code>、<code>auto</code></td>
+                                </tr>
+                                <tr>
+                                    <td>20</td>
+                                    <td>有效的括号</td>
+                                    <td>简单</td>
+                                    <td><code>stack</code>、范围 for</td>
+                                </tr>
+                                <tr>
+                                    <td>26</td>
+                                    <td>删除有序数组中的重复项</td>
+                                    <td>简单</td>
+                                    <td>双指针、范围 for</td>
+                                </tr>
+                                <tr>
+                                    <td>27</td>
+                                    <td>移除元素</td>
+                                    <td>简单</td>
+                                    <td>双指针</td>
+                                </tr>
+                                <tr>
+                                    <td>49</td>
+                                    <td>字母异位词分组</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code>、<code>sort</code>、lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>56</td>
+                                    <td>合并区间</td>
+                                    <td>中等</td>
+                                    <td><code>sort</code> + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>75</td>
+                                    <td>颜色分类</td>
+                                    <td>中等</td>
+                                    <td>三指针</td>
+                                </tr>
+                                <tr>
+                                    <td>88</td>
+                                    <td>合并两个有序数组</td>
+                                    <td>简单</td>
+                                    <td>逆向双指针</td>
+                                </tr>
+                                <tr>
+                                    <td>102</td>
+                                    <td>二叉树的层序遍历</td>
+                                    <td>中等</td>
+                                    <td><code>queue</code>、范围 for</td>
+                                </tr>
+                                <tr>
+                                    <td>104</td>
+                                    <td>二叉树的最大深度</td>
+                                    <td>简单</td>
+                                    <td>递归、<code>max</code></td>
+                                </tr>
+                                <tr>
+                                    <td>136</td>
+                                    <td>只出现一次的数字</td>
+                                    <td>简单</td>
+                                    <td>异或</td>
+                                </tr>
+                                <tr>
+                                    <td>155</td>
+                                    <td>最小栈</td>
+                                    <td>中等</td>
+                                    <td>设计、<code>stack</code></td>
+                                </tr>
+                                <tr>
+                                    <td>206</td>
+                                    <td>反转链表</td>
+                                    <td>简单</td>
+                                    <td>指针、<code>unique_ptr</code> 本地重构</td>
+                                </tr>
+                                <tr>
+                                    <td>215</td>
+                                    <td>数组中的第 K 个最大元素</td>
+                                    <td>中等</td>
+                                    <td><code>nth_element</code>、优先队列</td>
+                                </tr>
+                                <tr>
+                                    <td>232</td>
+                                    <td>用栈实现队列</td>
+                                    <td>简单</td>
+                                    <td>设计、<code>stack</code></td>
+                                </tr>
+                                <tr>
+                                    <td>347</td>
+                                    <td>前 K 个高频元素</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + 优先队列</td>
+                                </tr>
+                                <tr>
+                                    <td>692</td>
+                                    <td>前 K 个高频单词</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>sort</code> + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>704</td>
+                                    <td>二分查找</td>
+                                    <td>简单</td>
+                                    <td>范围 for、二分</td>
+                                </tr>
+                                <tr>
+                                    <td>977</td>
+                                    <td>有序数组的平方</td>
+                                    <td>简单</td>
+                                    <td>双指针</td>
+                                </tr>
+                                <tr>
+                                    <td>1047</td>
+                                    <td>删除字符串中的所有相邻重复项</td>
+                                    <td>简单</td>
+                                    <td><code>stack</code>、范围 for</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="132-lambda-与自定义排序">13.2 Lambda 与自定义排序</h4>
+
+                    <p>目标：掌握 lambda 捕获、自定义比较器、优先队列比较器。</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>训练点</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>179</td>
+                                    <td>最大数</td>
+                                    <td>中等</td>
+                                    <td>lambda 比较 <code>a+b &gt; b+a</code></td>
+                                </tr>
+                                <tr>
+                                    <td>973</td>
+                                    <td>最接近原点的 K 个点</td>
+                                    <td>中等</td>
+                                    <td><code>sort</code> + lambda、优先队列</td>
+                                </tr>
+                                <tr>
+                                    <td>1029</td>
+                                    <td>两地调度</td>
+                                    <td>中等</td>
+                                    <td><code>sort</code> + lambda 贪心</td>
+                                </tr>
+                                <tr>
+                                    <td>1356</td>
+                                    <td>根据数字二进制下 1 的数目排序</td>
+                                    <td>简单</td>
+                                    <td>lambda + <code>__builtin_popcount</code></td>
+                                </tr>
+                                <tr>
+                                    <td>23</td>
+                                    <td>合并 K 个升序链表</td>
+                                    <td>困难</td>
+                                    <td>优先队列 + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>347</td>
+                                    <td>前 K 个高频元素</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + 优先队列 + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>692</td>
+                                    <td>前 K 个高频单词</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>sort</code> + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>1046</td>
+                                    <td>最后一块石头的重量</td>
+                                    <td>简单</td>
+                                    <td>优先队列 + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>1337</td>
+                                    <td>矩阵中战斗力最弱的 K 行</td>
+                                    <td>简单</td>
+                                    <td><code>sort</code> + lambda</td>
+                                </tr>
+                                <tr>
+                                    <td>1636</td>
+                                    <td>按照频率将数组升序排序</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code> + <code>sort</code> + lambda</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>示例：179 最大数</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>std::string largestNumber(std::vector&lt;int&gt;&amp; nums) {
+    std::vector&lt;std::string&gt; strs;
+    for (int x : nums) strs.push_back(std::to_string(x));   // C++11 to_string
+    std::sort(strs.begin(), strs.end(),
+              [](const std::string&amp; a, const std::string&amp; b) {
+                  return a + b &gt; b + a;                        // 自定义比较
+              });
+    if (strs[0] == "0") return "0";
+    std::string ans;
+    for (const auto&amp; s : strs) ans += s;                       // 范围 for
+    return ans;
+}</code></pre>
+                    </div>
+
+                    <h4 id="133-智能指针与设计题本地重构练习">13.3 智能指针与设计题（本地重构练习）</h4>
+
+                    <p>LeetCode 的链表/树节点通常是裸指针，但你可以<strong>在本地把节点改成 <code>unique_ptr</code></strong>，练习现代 C++ 所有权管理。</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>训练特性</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>146</td>
+                                    <td>LRU 缓存</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>list</code>、<code>unique_ptr</code> 可选</td>
+                                </tr>
+                                <tr>
+                                    <td>460</td>
+                                    <td>LFU 缓存</td>
+                                    <td>困难</td>
+                                    <td>复杂设计、哈希 + 双向链表</td>
+                                </tr>
+                                <tr>
+                                    <td>208</td>
+                                    <td>实现 Trie（前缀树）</td>
+                                    <td>中等</td>
+                                    <td><code>unique_ptr</code> 节点、<code>array</code></td>
+                                </tr>
+                                <tr>
+                                    <td>705</td>
+                                    <td>设计哈希集合</td>
+                                    <td>简单</td>
+                                    <td><code>vector&lt;list&gt;</code>、<code>unique_ptr</code></td>
+                                </tr>
+                                <tr>
+                                    <td>706</td>
+                                    <td>设计哈希映射</td>
+                                    <td>简单</td>
+                                    <td>同上</td>
+                                </tr>
+                                <tr>
+                                    <td>707</td>
+                                    <td>设计链表</td>
+                                    <td>中等</td>
+                                    <td><code>unique_ptr</code> 节点</td>
+                                </tr>
+                                <tr>
+                                    <td>355</td>
+                                    <td>设计推特</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>list</code></td>
+                                </tr>
+                                <tr>
+                                    <td>295</td>
+                                    <td>数据流的中位数</td>
+                                    <td>困难</td>
+                                    <td>双优先队列</td>
+                                </tr>
+                                <tr>
+                                    <td>380</td>
+                                    <td>O(1) 时间插入、删除和获取随机元素</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>vector</code></td>
+                                </tr>
+                                <tr>
+                                    <td>381</td>
+                                    <td>O(1) 时间插入、删除和获取随机元素 - 允许重复</td>
+                                    <td>困难</td>
+                                    <td><code>unordered_map</code> + <code>vector</code> + <code>unordered_set</code></td>
+                                </tr>
+                                <tr>
+                                    <td>622</td>
+                                    <td>设计循环队列</td>
+                                    <td>中等</td>
+                                    <td><code>vector</code>/<code>array</code></td>
+                                </tr>
+                                <tr>
+                                    <td>641</td>
+                                    <td>设计循环双端队列</td>
+                                    <td>中等</td>
+                                    <td><code>deque</code>/<code>vector</code></td>
+                                </tr>
+                                <tr>
+                                    <td>933</td>
+                                    <td>最近的请求次数</td>
+                                    <td>简单</td>
+                                    <td><code>queue</code></td>
+                                </tr>
+                                <tr>
+                                    <td>703</td>
+                                    <td>数据流中的第 K 大元素</td>
+                                    <td>简单</td>
+                                    <td>优先队列</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>本地重构示例：把单链表节点改成 <code>unique_ptr</code></strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>struct ListNode {
+    int val;
+    std::unique_ptr&lt;ListNode&gt; next;
+    explicit ListNode(int v) : val(v), next(nullptr) {}
+};
+
+// 反转链表（本地练习，LeetCode 提交时改回裸指针）
+std::unique_ptr&lt;ListNode&gt; reverseList(std::unique_ptr&lt;ListNode&gt; head) {
+    std::unique_ptr&lt;ListNode&gt; prev;
+    while (head) {
+        auto next = std::move(head-&gt;next);   // 偷出 next
+        head-&gt;next = std::move(prev);        // 反转指向
+        prev = std::move(head);              // prev 前进
+        head = std::move(next);              // head 前进
+    }
+    return prev;
+}</code></pre>
+                    </div>
+
+                    <h4 id="134-stl-新容器与算法题">13.4 STL 新容器与算法题</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>训练容器/算法</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>49</td>
+                                    <td>字母异位词分组</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code></td>
+                                </tr>
+                                <tr>
+                                    <td>217</td>
+                                    <td>存在重复元素</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_set</code></td>
+                                </tr>
+                                <tr>
+                                    <td>219</td>
+                                    <td>存在重复元素 II</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code>/<code>unordered_set</code></td>
+                                </tr>
+                                <tr>
+                                    <td>220</td>
+                                    <td>存在重复元素 III</td>
+                                    <td>困难</td>
+                                    <td><code>set</code>/桶排序</td>
+                                </tr>
+                                <tr>
+                                    <td>349</td>
+                                    <td>两个数组的交集</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_set</code></td>
+                                </tr>
+                                <tr>
+                                    <td>350</td>
+                                    <td>两个数组的交集 II</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code></td>
+                                </tr>
+                                <tr>
+                                    <td>383</td>
+                                    <td>赎金信</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code>/数组</td>
+                                </tr>
+                                <tr>
+                                    <td>387</td>
+                                    <td>字符串中的第一个唯一字符</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code></td>
+                                </tr>
+                                <tr>
+                                    <td>451</td>
+                                    <td>根据字符出现频率排序</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>sort</code></td>
+                                </tr>
+                                <tr>
+                                    <td>506</td>
+                                    <td>相对名次</td>
+                                    <td>简单</td>
+                                    <td><code>sort</code> + <code>unordered_map</code></td>
+                                </tr>
+                                <tr>
+                                    <td>692</td>
+                                    <td>前 K 个高频单词</td>
+                                    <td>中等</td>
+                                    <td><code>unordered_map</code> + <code>sort</code></td>
+                                </tr>
+                                <tr>
+                                    <td>819</td>
+                                    <td>最常见的单词</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code> + <code>unordered_set</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1207</td>
+                                    <td>独一无二的出现次数</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code> + <code>unordered_set</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1748</td>
+                                    <td>唯一元素的和</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code></td>
+                                </tr>
+                                <tr>
+                                    <td>2053</td>
+                                    <td>数组中第 K 个独一无二的字符串</td>
+                                    <td>简单</td>
+                                    <td><code>unordered_map</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="135-并发编程-leetcode-题">13.5 并发编程 LeetCode 题</h4>
+
+                    <p>C++11 并发特性在 LeetCode 有专门的多线程题单。建议用 <code>mutex</code>、<code>condition_variable</code>、<code>atomic</code>、<code>promise/future</code> 完成。</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>题号</th>
+                                    <th>题目</th>
+                                    <th>难度</th>
+                                    <th>训练特性</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1114</td>
+                                    <td>按序打印</td>
+                                    <td>简单</td>
+                                    <td><code>mutex</code>、<code>condition_variable</code>、<code>atomic</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1115</td>
+                                    <td>交替打印 FooBar</td>
+                                    <td>中等</td>
+                                    <td><code>condition_variable</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1116</td>
+                                    <td>打印零与奇偶数</td>
+                                    <td>中等</td>
+                                    <td><code>condition_variable</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1117</td>
+                                    <td>H2O 生成</td>
+                                    <td>中等</td>
+                                    <td><code>mutex</code>、<code>condition_variable</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1195</td>
+                                    <td>交替打印字符串</td>
+                                    <td>中等</td>
+                                    <td><code>mutex</code>、<code>condition_variable</code></td>
+                                </tr>
+                                <tr>
+                                    <td>1226</td>
+                                    <td>哲学家进餐</td>
+                                    <td>中等</td>
+                                    <td><code>mutex</code>、<code>std::lock</code> 避免死锁</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>示例：1114 按序打印（C++11 条件变量版）</strong></p>
+
+                    <div class="code-block">
+                        <button class="copy-btn" aria-label="复制代码">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <pre data-lang="cpp"><code>#include &lt;condition_variable&gt;
+#include &lt;mutex&gt;
+
+class Foo {
+    std::mutex mtx;
+    std::condition_variable cv;
+    int stage = 0;   // 0: first, 1: second, 2: third
+public:
+    void first(std::function&lt;void()&gt; printFirst) {
+        std::unique_lock&lt;std::mutex&gt; lock(mtx);
+        cv.wait(lock, [this] { return stage == 0; });
+        printFirst();
+        stage = 1;
+        cv.notify_all();
+    }
+    void second(std::function&lt;void()&gt; printSecond) {
+        std::unique_lock&lt;std::mutex&gt; lock(mtx);
+        cv.wait(lock, [this] { return stage == 1; });
+        printSecond();
+        stage = 2;
+        cv.notify_all();
+    }
+    void third(std::function&lt;void()&gt; printThird) {
+        std::unique_lock&lt;std::mutex&gt; lock(mtx);
+        cv.wait(lock, [this] { return stage == 2; });
+        printThird();
+        stage = 0;
+        cv.notify_all();
+    }
+};</code></pre>
+                    </div>
+
+                    <h4 id="136-模板与类型萃取练习">13.6 模板与类型萃取练习</h4>
+
+                    <p>这些练习没有直接 LeetCode 题号，但能让你真正读懂 STL 源码。</p>
+
+                    <ol>
+                        <li>
+                            <p><strong>实现 <code>my_move</code></strong></p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="cpp"><code>template &lt;typename T&gt;
+typename std::remove_reference&lt;T&gt;::type&amp;&amp; my_move(T&amp;&amp; t) noexcept {
+    return static_cast&lt;typename std::remove_reference&lt;T&gt;::type&amp;&amp;&gt;(t);
+}</code></pre>
+                            </div>
+                        </li>
+                        <li>
+                            <p><strong>实现 <code>my_forward</code></strong></p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="cpp"><code>template &lt;typename T&gt;
+T&amp;&amp; my_forward(typename std::remove_reference&lt;T&gt;::type&amp; t) noexcept {
+    return static_cast&lt;T&amp;&amp;&gt;(t);
+}</code></pre>
+                            </div>
+                        </li>
+                        <li>
+                            <p><strong>实现 C++11 版 <code>make_unique</code></strong></p>
+                            <div class="code-block">
+                                <button class="copy-btn" aria-label="复制代码">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <pre data-lang="cpp"><code>template &lt;typename T, typename... Args&gt;
+std::unique_ptr&lt;T&gt; make_unique(Args&amp;&amp;... args) {
+    return std::unique_ptr&lt;T&gt;(new T(std::forward&lt;Args&gt;(args)...));
+}</code></pre>
+                            </div>
+                        </li>
+                        <li><strong>实现简化版 <code>unique_ptr</code></strong>：支持移动构造、移动赋值、<code>reset</code>、<code>release</code>、<code>get</code>、<code>operator*</code>、<code>operator-&gt;</code>。</li>
+                        <li><strong>实现简化版 <code>shared_ptr</code></strong>：引用计数、<code>use_count</code>、<code>reset</code>。</li>
+                        <li><strong>实现 <code>is_same</code> / <code>remove_reference</code> / <code>enable_if</code> 简化版</strong>。</li>
+                        <li><strong>实现 <code>ScopeGuard</code></strong>：析构时执行指定回调（RAII 通用工具）。</li>
+                        <li><strong>实现 <code>ThreadPool</code></strong>：参考第 12 章，独立默写一遍。</li>
+                        <li><strong>实现 <code>printAll</code> 变参模板</strong>：用递归和初始化列表两种方式。</li>
+                        <li><strong>实现 <code>tuple</code> 打印</strong>：用变参模板 + <code>std::get</code>。</li>
+                    </ol>
+
+                    <h4 id="137-综合项目练习">13.7 综合项目练习</h4>
+
+                    <ol>
+                        <li>
+                            <p><strong>改造第 12 章词频统计器</strong>：</p>
+                            <ul>
+                                <li>忽略停用词；</li>
+                                <li>支持中文 UTF-8；</li>
+                                <li>单文件分块并行；</li>
+                                <li>输出 JSON/CSV；</li>
+                                <li>加单元测试。</li>
+                            </ul>
+                        </li>
+                        <li><strong>写一个 HTTP 客户端</strong>：RAII socket、<code>unique_ptr</code>、lambda 回调、线程池、<code>chrono</code> 超时。</li>
+                        <li><strong>写一个 JSON 解析器</strong>：<code>variant</code>/<code>unique_ptr</code>、递归下降、异常安全、移动语义。</li>
+                        <li><strong>写一个日志库</strong>：线程安全、异步、<code>chrono</code>、格式化、RAII 文件句柄。</li>
+                        <li><strong>写一个简易游戏</strong>：状态机、智能指针、lambda 事件、范围 for 渲染。</li>
+                    </ol>
+
+                    <h4 id="138-刷题路线建议">13.8 刷题路线建议</h4>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>周次</th>
+                                    <th>目标</th>
+                                    <th>题单</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>第 1 周</td>
+                                    <td>语法糖 + STL 基础</td>
+                                    <td>1、20、49、56、75、102、104、136、155、206、215、232、347、692、704、977、1047</td>
+                                </tr>
+                                <tr>
+                                    <td>第 2 周</td>
+                                    <td>lambda + 排序 + 优先队列</td>
+                                    <td>179、973、1029、1356、23、347、692、1046、1337、1636</td>
+                                </tr>
+                                <tr>
+                                    <td>第 3 周</td>
+                                    <td>设计题 + 智能指针重构</td>
+                                    <td>146、208、705、706、707、355、295、380、381、622、641、933、703</td>
+                                </tr>
+                                <tr>
+                                    <td>第 4 周</td>
+                                    <td>并发题</td>
+                                    <td>1114、1115、1116、1117、1195、1226</td>
+                                </tr>
+                                <tr>
+                                    <td>第 5 周</td>
+                                    <td>模板与项目</td>
+                                    <td>实现 <code>my_move</code>、<code>my_forward</code>、<code>make_unique</code>、<code>unique_ptr</code>、<code>ThreadPool</code>、改造词频统计器</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 id="139-自检题扩展c11-面试高频">13.9 自检题扩展（C++11 面试高频）</h4>
+
+                    <ol>
+                        <li><code>auto</code> 推导会丢掉什么？→ 引用和顶层 <code>const</code>。</li>
+                        <li><code>decltype(a)</code> 和 <code>decltype((a))</code> 有什么区别？→ 前者是 <code>int</code>，后者是 <code>int&amp;</code>。</li>
+                        <li><code>std::move</code> 和 <code>std::forward</code> 的区别？→ <code>move</code> 无条件转右值；<code>forward</code> 按原始类型有条件转发。</li>
+                        <li>为什么移动构造要 <code>noexcept</code>？→ 否则 <code>vector</code> 扩容不敢用移动。</li>
+                        <li>Rule of Zero 是什么？→ 用 RAII 成员拼装类，不手写析构/拷贝/移动。</li>
+                        <li><code>unique_ptr</code> 能拷贝吗？→ 不能，只能移动。</li>
+                        <li><code>shared_ptr</code> 循环引用怎么破？→ <code>weak_ptr</code>。</li>
+                        <li><code>enable_shared_from_this</code> 能在构造函数里用吗？→ 不能，抛 <code>bad_weak_ptr</code>。</li>
+                        <li>lambda <code>[=]</code> 在成员函数里捕获了什么？→ 隐式捕获 <code>this</code>。</li>
+                        <li><code>condition_variable::wait</code> 为什么要谓词？→ 防虚假唤醒。</li>
+                        <li><code>std::async</code> 默认启动策略？→ <code>async | deferred</code>，由实现决定。</li>
+                        <li><code>emplace_back</code> 一定比 <code>push_back</code> 快吗？→ 不一定。</li>
+                        <li><code>vector&lt;bool&gt;</code> 有什么问题？→ 代理引用，<code>auto</code> 拿到代理类型。</li>
+                        <li><code>const</code> 和 <code>constexpr</code> 的区别？→ <code>const</code> 运行时不可改；<code>constexpr</code> 编译期已知。</li>
+                        <li>为什么析构函数不能抛异常？→ 栈展开时抛异常会导致 <code>std::terminate</code>。</li>
                     </ol>
 
                     <hr>
