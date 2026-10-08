@@ -1281,7 +1281,9 @@ main {
     padding: clamp(32px, 5vw, 52px);
     border-radius: 28px;
     border: none;
-    background: #e0e5ec;
+    /* 半透明：背后那层「海」透过既有 backdrop-filter 隐隐显出来，
+       海水就漫进卡片内部了（底色不透明时，卡片会把海完全挡住） */
+    background: rgba(224, 229, 236, 0.78);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     box-shadow:
@@ -1716,5 +1718,108 @@ main {
     .hero-subtitle .letter,
     .split-line {
         will-change: auto;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   汪洋大海 + 象征友谊的小船
+   ═══════════════════════════════════════════ */
+.ocean {
+    position: relative;
+    /* 沉到内容层之下：文字、图标会浮在海面上，和波浪形成交叉，
+       而不是在内容下方再摆一块独立的区域（那样就成 footer 了） */
+    z-index: 0;
+    width: 100%;
+    height: clamp(470px, 66vh, 700px);
+    /* 实际位置由 JS 按「Hi there 👋」卡片的实测高度算出来（见 initOceanLayout）：
+       海面落在卡片内部，且随视口高度自适应。这里只是 JS 未执行前的兜底值。 */
+    margin-top: -46vh;
+    overflow: hidden;
+    pointer-events: none;
+    /* 顶部用 alpha 蒙版化开：海水像是从页面底色里长出来，
+       不依赖某个固定颜色，所以页面背景怎么变都不会出现接缝 */
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 100%);
+}
+
+/* 四层海浪：同尺寸叠放，靠波峰高度 + 配色 + 速度差造出纵深 */
+.ocean-wave {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 200%;
+    height: 100%;
+}
+.ocean-wave path { fill: currentColor; }
+.ocean-wave--1 { color: #cfe6f5; animation: waveSlide 42s linear infinite; }
+.ocean-wave--2 { color: #9cc9e6; animation: waveSlide 30s linear infinite; }
+.ocean-wave--3 { color: #5e9bc9; animation: waveSlide 21s linear infinite; }
+.ocean-wave--4 { color: #2f6ea6; animation: waveSlide 14s linear infinite; }
+
+/* 画布是 2 倍宽，位移 -50% 正好等于一个循环周期，接缝不可见 */
+@keyframes waveSlide {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* 小船：外层横向漫游，内层上下起伏 + 轻微摇摆，两层分开避免争抢 transform */
+.ocean-boat {
+    position: absolute;
+    left: 0;
+    bottom: 30%;
+    width: clamp(84px, 11vw, 138px);
+    z-index: 7;
+    animation: boatRoam 52s linear infinite;
+}
+.ocean-boat__bob {
+    animation: boatBob 3.8s ease-in-out infinite;
+    transform-origin: 50% 88%;
+}
+.boat-svg { display: block; width: 100%; height: auto; }
+
+/* 两端都在屏幕外，循环时看不见跳变 */
+@keyframes boatRoam {
+    from { transform: translateX(-22vw); }
+    to   { transform: translateX(116vw); }
+}
+
+@keyframes boatBob {
+    0%, 100% { transform: translateY(0) rotate(-2.2deg); }
+    50%      { transform: translateY(-9px) rotate(2.2deg); }
+}
+
+/* ── "comrade," 往外冒的黄色小星星 ── */
+.star-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 60;
+}
+
+.comrade-star {
+    position: absolute;
+    color: #ffd633;
+    line-height: 1;
+    will-change: transform, opacity;
+    /* 黑边：先描边再填色，浅色背景上也一眼看清 */
+    -webkit-text-stroke: 1.3px #111111;
+    paint-order: stroke fill;
+    text-shadow:
+        0 0 6px rgba(255, 205, 64, 0.95),
+        0 0 16px rgba(255, 190, 40, 0.6);
+}
+
+/* 这句里唯一一次「朋友」，让它微微发光，与飘出的星星呼应 */
+.comrade-word {
+    color: #b8730a;
+    text-shadow: 0 0 12px rgba(255, 200, 64, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ocean-wave,
+    .ocean-boat,
+    .ocean-boat__bob {
+        animation: none;
     }
 }

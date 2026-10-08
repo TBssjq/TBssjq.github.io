@@ -250,7 +250,7 @@
                     <div class="about-content">
                         <p>I am an ordinary man.</p>
                         <p>I have many daydreams — cool, yet unreal.</p>
-                        <p>I spent long years trying to find a comrade, but I found nothing.</p>
+                        <p>I spent long years trying to find a <span class="comrade-word">comrade,</span> but I found nothing.</p>
                         <p>I may be a loser, and in the end, I proved to be a loser among losers.</p>
                         <p>Somewhere out there, I hope a cool friend is waiting for me —</p>
                         <p>tall, robust, outgoing, and maybe just a little like the me I imagine.</p>
@@ -283,6 +283,45 @@
             </div>
         </main>
     </div>
+
+    <!-- ══════ 汪洋大海：底部的一整片海，与一只象征友谊的小船 ══════ -->
+    <section class="ocean" aria-hidden="true">
+        <!-- 四层海浪：越远越浅、越慢，叠出纵深与视差 -->
+        <svg class="ocean-wave ocean-wave--1" viewBox="0 0 2400 600" preserveAspectRatio="none">
+            <path d="M0 84 Q150 40 300 84 T600 84 T900 84 T1200 84 T1500 84 T1800 84 T2100 84 T2400 84 L2400 600 L0 600 Z"/>
+        </svg>
+        <svg class="ocean-wave ocean-wave--2" viewBox="0 0 2400 600" preserveAspectRatio="none">
+            <path d="M0 150 Q150 106 300 150 T600 150 T900 150 T1200 150 T1500 150 T1800 150 T2100 150 T2400 150 L2400 600 L0 600 Z"/>
+        </svg>
+        <svg class="ocean-wave ocean-wave--3" viewBox="0 0 2400 600" preserveAspectRatio="none">
+            <path d="M0 240 Q150 190 300 240 T600 240 T900 240 T1200 240 T1500 240 T1800 240 T2100 240 T2400 240 L2400 600 L0 600 Z"/>
+        </svg>
+        <svg class="ocean-wave ocean-wave--4" viewBox="0 0 2400 600" preserveAspectRatio="none">
+            <path d="M0 348 Q150 298 300 348 T600 348 T900 348 T1200 348 T1500 348 T1800 348 T2100 348 T2400 348 L2400 600 L0 600 Z"/>
+        </svg>
+
+        <!-- 象征友谊的小船 -->
+        <div class="ocean-boat">
+            <div class="ocean-boat__bob">
+                <svg class="boat-svg" viewBox="0 0 120 152" role="img" aria-label="友谊的小船">
+                    <!-- 帆 -->
+                    <path d="M55 120 L55 34 L16 112 Z" fill="#eaf4fb"/>
+                    <path d="M61 122 L61 24 L104 110 Z" fill="#ffffff"/>
+                    <!-- 桅杆 -->
+                    <rect x="56" y="16" width="4" height="108" rx="2" fill="#b08a5a"/>
+                    <!-- 小旗 -->
+                    <path d="M60 16 L86 25 L60 36 Z" fill="#fd79a8"/>
+                    <!-- 帆上的友谊之心 -->
+                    <path d="M70 72c-2-5-10-5-11 1-1-6-9-6-11-1-2 4 2 8 11 15 9-7 13-11 11-15z" fill="#fd79a8"/>
+                    <!-- 吃水阴影 -->
+                    <ellipse cx="60" cy="145" rx="56" ry="5" fill="#123a5e" opacity=".25"/>
+                    <!-- 船身 -->
+                    <path d="M10 124 L110 124 L94 146 Q60 152 26 146 Z" fill="#c65b3c"/>
+                    <path d="M10 124 L110 124 L107 130 L13 130 Z" fill="#e07a55"/>
+                </svg>
+            </div>
+        </div>
+    </section>
 
     <!-- 右键菜单 -->
     <nav id="contextMenu" class="context-menu" role="menu" aria-label="快捷操作">
@@ -415,7 +454,7 @@
             initTypewriterCaret, initAboutCard, initPillNav, initNavEntrance,
             initSocialLinks, initScrollProgress, initBackToTop,
             initParallax, initMagnetic, initNavScramble, initLetterWave,
-            initCursorTrail, initAboutContentReveal
+            initCursorTrail, initAboutContentReveal, initComradeStars, initOceanLayout
         ].forEach(init => {
             try {
                 const result = init();
@@ -1029,6 +1068,106 @@
                 toggleActions: 'play none none reverse'
             } : undefined
         });
+    }
+
+    /* ── "comrade," 往外冒黄色小星星 ──
+       星星放在 body 下的 fixed 图层里，从单词的矩形范围内随机一点飘出、
+       向上并向两侧散开，动画结束自动移除；离开视口或切到后台就停，不空转。 */
+    function initComradeStars() {
+        const target = document.querySelector('.comrade-word');
+        if (!target || prefersReducedMotion()) return;
+
+        const layer = document.createElement('div');
+        layer.className = 'star-layer';
+        layer.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(layer);
+
+        const rand = (min, max) => min + Math.random() * (max - min);
+
+        const spawn = () => {
+            const r = target.getBoundingClientRect();
+            // 不在视口内就不喷
+            if (!r.width || r.bottom < 0 || r.top > window.innerHeight) return;
+
+            const count = Math.random() < 0.45 ? 1 : 2;
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('span');
+                star.className = 'comrade-star';
+                star.textContent = '★';
+                star.style.left = rand(r.left, r.right).toFixed(1) + 'px';
+                star.style.top = (r.top + r.height * rand(0.15, 0.85)).toFixed(1) + 'px';
+                star.style.fontSize = rand(11, 17).toFixed(1) + 'px';
+                layer.appendChild(star);
+
+                // 以「向上」为主、向两侧散开
+                const angle = (-90 + rand(-78, 78)) * Math.PI / 180;
+                const dist = rand(42, 108);
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const rot = rand(-200, 200);
+
+                const anim = star.animate([
+                    { transform: 'translate(-50%, -50%) translate(0, 0) scale(.35) rotate(0deg)', opacity: 0 },
+                    { opacity: 1, offset: 0.18 },
+                    {
+                        transform: 'translate(-50%, -50%) translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(1) rotate(' + rot.toFixed(0) + 'deg)',
+                        opacity: 0
+                    }
+                ], { duration: rand(1100, 2000), easing: 'cubic-bezier(.2, .7, .3, 1)' });
+
+                const drop = () => star.remove();
+                anim.onfinish = drop;
+                anim.oncancel = drop;
+            }
+        };
+
+        let inView = false;
+        let timer = null;
+        const sync = () => {
+            const wanted = inView && !document.hidden;
+            if (wanted && !timer) timer = setInterval(spawn, 380);
+            else if (!wanted && timer) { clearInterval(timer); timer = null; }
+        };
+
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(entries => {
+                entries.forEach(en => { inView = en.isIntersecting; });
+                sync();
+            }, { threshold: 0.15 }).observe(target);
+        } else {
+            inView = true;
+            sync();
+        }
+        document.addEventListener('visibilitychange', sync);
+    }
+
+    /* ── 把海面抬到「Hi there 👋」卡片内部 ──
+       用固定的负 vh 在不同视口高度下会飘，所以按卡片的实测高度算出海面位置，
+       再换算成相对 .container 底部的偏移（视口坐标相减，滚动不影响结果）。 */
+    function initOceanLayout() {
+        const ocean = document.querySelector('.ocean');
+        const about = document.querySelector('.about');
+        const container = document.querySelector('.container');
+        if (!ocean || !about || !container) return;
+
+        // 海面落在卡片高度的这个比例处：越大，海水漫进卡片越多
+        const RATIO = 0.66;
+
+        const apply = () => {
+            const card = about.getBoundingClientRect();
+            const box = container.getBoundingClientRect();
+            if (!card.height || !box.height) return;
+            const surface = card.top + card.height * RATIO;
+            ocean.style.marginTop = Math.round(surface - box.bottom) + 'px';
+        };
+
+        apply();
+        window.addEventListener('resize', apply, { passive: true });
+        window.addEventListener('orientationchange', apply);
+        // style.css 是异步加载的，首帧量到的尺寸可能还没样式：等样式与字体就绪后再量一次
+        window.addEventListener('load', apply);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(apply).catch(() => {});
+        if ('ResizeObserver' in window) new ResizeObserver(apply).observe(about);
     }
 
     /* ── PillNav ── */
