@@ -7,7 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"></noscript>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -29,10 +32,10 @@
 .toolbar {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            backdrop-filter: blur(12px);
+            /* 背景是不透明的 var(--bg-secondary)，模糊看不到任何东西 */
         }
         .toolbar-btn {
-            transition: all 0.2s var(--ease);
+            transition: color 0.2s var(--ease), background-color 0.2s var(--ease), box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
         }
         .toolbar-btn:hover {
             background: rgba(249, 115, 22, 0.1);
@@ -123,7 +126,7 @@
             outline: none;
             min-width: 40px;
             text-align: center;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
             z-index: 1;
         }
         .editor-content .pre-wrapper .code-lang-label:focus {
@@ -149,7 +152,7 @@
         .editor-content s { text-decoration: line-through; }
         .btn-generate {
             background: linear-gradient(135deg, var(--accent), #fb923c);
-            transition: all 0.3s var(--ease);
+            transition: color 0.3s var(--ease), background-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
         }
         .btn-generate:hover {
             transform: translateY(-2px);
@@ -219,7 +222,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.3s ease;
+            transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
         }
         .modal-close:hover { background: rgba(0, 0, 0, 0.2); transform: rotate(90deg); }
         .save-badge {
@@ -296,7 +299,7 @@
             border-radius: 12px !important;
             color: #5a6a7a !important;
             box-shadow: none !important;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            transition: color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         }
 
         .dark .toolbar-btn { color: #94a3b8 !important; }
@@ -324,7 +327,7 @@
             box-shadow:
                 inset 4px 4px 10px rgba(163, 177, 198, 0.42),
                 inset -4px -4px 10px rgba(255, 255, 255, 0.65) !important;
-            transition: all 0.35s ease !important;
+            transition: color 0.35s ease, background-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease !important;
         }
 
         .dark #articleTitle {
@@ -349,7 +352,7 @@
                 10px 10px 26px rgba(163, 177, 198, 0.48),
                 -10px -10px 26px rgba(255, 255, 255, 0.72),
                 inset 0 0 0 rgba(163, 177, 198, 0);
-            transition: all 0.4s ease;
+            transition: color 0.4s ease, background-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
         }
 
         .dark .editor-area {
@@ -434,7 +437,7 @@
             box-shadow:
                 5px 5px 14px rgba(163, 177, 198, 0.48),
                 -4px -4px 12px rgba(255, 255, 255, 0.65);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            transition: color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         }
 
         .dark main button:not(.btn-generate):not(.modal-close):not([onclick^="copy"]) {
@@ -491,7 +494,7 @@
             box-shadow:
                 4px 4px 10px rgba(163, 177, 198, 0.5),
                 -3px -3px 8px rgba(255, 255, 255, 0.65);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            transition: color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         }
 
         .dark .modal-close {
@@ -536,7 +539,7 @@
             border-radius: 12px;
             border: 3px solid transparent;
             background-clip: content-box;
-            transition: all 0.3s ease;
+            transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
         }
 
         .code-output::-webkit-scrollbar-thumb:hover {
@@ -570,7 +573,7 @@
             box-shadow:
                 4px 4px 10px rgba(163, 177, 198, 0.45),
                 -3px -3px 8px rgba(255, 255, 255, 0.6);
-            transition: all 0.35s ease !important;
+            transition: color 0.35s ease, background-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease !important;
         }
 
         .dark .modal-content button[onclick^="copy"] {
@@ -589,7 +592,7 @@
             box-shadow:
                 4px 4px 12px rgba(16, 185, 129, 0.35),
                 -2px -2px 8px rgba(255, 255, 255, 0.4) !important;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            transition: color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         }
 
         .modal-content button[onclick^="download"]:hover {
@@ -604,6 +607,20 @@
 
         .dark .w-px.h-8.bg-gray-600 {
             background: rgba(50, 60, 80, 0.5) !important;
+        }
+
+        /* 键盘焦点：编辑器里大量按钮，没有焦点环完全没法用键盘操作 */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+            border-radius: 8px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
         }
     </style>
 </head>
@@ -1097,7 +1114,10 @@
     <script src="https://cdn.tailwindcss.com"><\/script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"></noscript>
     <script>
         tailwind.config = {
             darkMode: 'class',

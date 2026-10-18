@@ -12,20 +12,24 @@ const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@4
 const FONTS = [
   '    <link rel="preconnect" href="https://fonts.googleapis.com">',
   '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
-  // preload 让字体 CSS 以高优先级尽早下载，缩短「后备字体 → Noto Serif SC」的
-  // 切换窗口，减少目录页在字体到位时的回流抖动（排版时好时坏）。
-  '    <link rel="preload" as="style" href="' + FONT_HREF + '">',
-  '    <link href="' + FONT_HREF + '" rel="stylesheet">',
+  // 只留一条 preload，并在 onload 里直接切成 stylesheet：
+  // 原来的「preload + 再写一条 stylesheet」等于同一份字体 CSS 请求两次，
+  // 而且 stylesheet 会阻塞首屏，字体没到位就一直白屏。
+  '    <link rel="preload" as="style" href="' + FONT_HREF + '"' +
+  ' onload="this.onload=null;this.rel=\'stylesheet\'">',
+  '    <noscript><link rel="stylesheet" href="' + FONT_HREF + '"></noscript>',
 ].join('\n');
 
 // GSAP 动效库（核心 + 插件）。CDN 加载，JS 中均做 typeof gsap 防御，
 // 加载失败也能正常浏览，只是没有动画。
+// 全部 defer：defer 脚本按文档顺序执行，article.js / toc.js 仍在它们之后跑，
+// 但 HTML 解析不必再等 4 个 CDN 往返。
 const GSAP_CDN = 'https://cdn.jsdelivr.net/npm/gsap@3.13.0';
 const GSAP_SCRIPTS = [
-  '    <script src="' + GSAP_CDN + '/dist/gsap.min.js"><\/script>',
-  '    <script src="' + GSAP_CDN + '/dist/ScrollToPlugin.min.js"><\/script>',
-  '    <script src="' + GSAP_CDN + '/dist/Flip.min.js"><\/script>',
-  '    <script src="' + GSAP_CDN + '/dist/SplitText.min.js"><\/script>',
+  '    <script defer src="' + GSAP_CDN + '/dist/gsap.min.js"><\/script>',
+  '    <script defer src="' + GSAP_CDN + '/dist/ScrollToPlugin.min.js"><\/script>',
+  '    <script defer src="' + GSAP_CDN + '/dist/Flip.min.js"><\/script>',
+  '    <script defer src="' + GSAP_CDN + '/dist/SplitText.min.js"><\/script>',
 ].join('\n');
 
 // 原 doc 文章页用的 Tailwind 配置（darkMode=class，accent 橙）
@@ -84,7 +88,7 @@ function articleHeader(brand) {
     '            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white" target="_blank" rel="noopener noreferrer">' + md.escapeHtml(brand) + '</a>',
     '            <div class="flex items-center gap-3">',
     '                <div class="music-player music-player--top">',
-    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"><\/iframe>',
+    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"><\/iframe>',
     '                </div>',
     '                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">',
     '                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
@@ -114,7 +118,7 @@ function indexHeader(brand) {
     '                    <span>返回主页</span>',
     '                </a>',
     '                <div class="music-player music-player--top">',
-    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"><\/iframe>',
+    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"><\/iframe>',
     '                </div>',
     '                <button id="themeToggle" class="theme-toggle" aria-label="切换主题">',
     '                    <svg id="sunIcon" class="icon sun" fill="none" stroke="currentColor" viewBox="0 0 24 24">',

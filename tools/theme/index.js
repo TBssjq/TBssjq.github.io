@@ -148,29 +148,69 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     }
 
     // ── 卡片悬停：轻微跟随光标的 3D 倾斜（仅桌面、非减弱动效）──
+    // 原来每张卡各挂 3 个监听（16 张 = 48 个），且每次移动都量一次 rect。
+    // 现在改成容器委托 + rect 缓存，一个 mousemove 解决全部卡片。
     const mm = gsap.matchMedia();
     mm.add('(hover: hover) and (min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
-        const setters = new WeakMap();
-        const cleanups = [];
-        all('.article-card').forEach((card) => {
-            const rotX = gsap.quickTo(card, 'rotationX', { duration: 0.4, ease: 'power2.out' });
-            const rotY = gsap.quickTo(card, 'rotationY', { duration: 0.4, ease: 'power2.out' });
-            setters.set(card, { rotX, rotY });
+        const cards = all('.article-card');
+        if (!cards.length) return;
+
+        const states = new Map();
+        cards.forEach((card) => {
             gsap.set(card, { transformPerspective: 800, transformOrigin: 'center' });
-            const enter = () => gsap.to(card, { z: 18, duration: 0.4, ease: 'power2.out' });
-            const move = (e) => {
-                const r = card.getBoundingClientRect();
-                const px = (e.clientX - r.left) / r.width - 0.5;
-                const py = (e.clientY - r.top) / r.height - 0.5;
-                rotY(px * 8); rotX(-py * 8);
-            };
-            const leave = () => { rotX(0); rotY(0); gsap.to(card, { z: 0, duration: 0.5 }); };
-            card.addEventListener('mouseenter', enter);
-            card.addEventListener('mousemove', move);
-            card.addEventListener('mouseleave', leave);
-            cleanups.push(() => { card.removeEventListener('mouseenter', enter); card.removeEventListener('mousemove', move); card.removeEventListener('mouseleave', leave); });
+            states.set(card, {
+                rect: null,
+                rotX: gsap.quickTo(card, 'rotationX', { duration: 0.4, ease: 'power2.out' }),
+                rotY: gsap.quickTo(card, 'rotationY', { duration: 0.4, ease: 'power2.out' })
+            });
         });
-        return () => cleanups.forEach((fn) => fn());
+
+        let active = null;
+        const invalidate = () => states.forEach((s) => { s.rect = null; });
+
+        const onOver = (e) => {
+            const card = e.target.closest('.article-card');
+            if (!card || !states.has(card) || active === card) return;
+            active = card;
+            gsap.to(card, { z: 18, duration: 0.4, ease: 'power2.out' });
+        };
+
+        const onMove = (e) => {
+            if (!active) return;
+            const s = states.get(active);
+            if (!s.rect) s.rect = active.getBoundingClientRect();
+            const r = s.rect;
+            if (!r.width || !r.height) return;
+            const px = (e.clientX - r.left) / r.width - 0.5;
+            const py = (e.clientY - r.top) / r.height - 0.5;
+            s.rotY(px * 8);
+            s.rotX(-py * 8);
+        };
+
+        const onOut = (e) => {
+            const card = e.target.closest('.article-card');
+            if (!card || card !== active) return;
+            if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+            const s = states.get(card);
+            if (s) { s.rotX(0); s.rotY(0); s.rect = null; }
+            gsap.to(card, { z: 0, duration: 0.5 });
+            active = null;
+        };
+
+        const host = document.querySelector('.article-list') || document.body;
+        host.addEventListener('mouseover', onOver);
+        host.addEventListener('mousemove', onMove);
+        host.addEventListener('mouseout', onOut);
+        window.addEventListener('scroll', invalidate, { passive: true });
+        window.addEventListener('resize', invalidate, { passive: true });
+
+        return () => {
+            host.removeEventListener('mouseover', onOver);
+            host.removeEventListener('mousemove', onMove);
+            host.removeEventListener('mouseout', onOut);
+            window.removeEventListener('scroll', invalidate);
+            window.removeEventListener('resize', invalidate);
+        };
     });
 
     // ── 返回顶部按钮 ──
@@ -187,13 +227,18 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
         else window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
+    // 只在「显示/隐藏」真正翻转时补一个 tween，而不是每帧都新建一个
     let ticking = false;
+    let shown = false;
     window.addEventListener('scroll', () => {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
             const show = window.scrollY > 320;
-            gsap.to(btt, { autoAlpha: show ? 1 : 0, scale: show ? 1 : 0.6, y: show ? 0 : 10, duration: 0.3, overwrite: 'auto' });
+            if (show !== shown) {
+                shown = show;
+                gsap.to(btt, { autoAlpha: show ? 1 : 0, scale: show ? 1 : 0.6, y: show ? 0 : 10, duration: 0.3, overwrite: 'auto' });
+            }
             ticking = false;
         });
     }, { passive: true });

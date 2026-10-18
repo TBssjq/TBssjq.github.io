@@ -6,7 +6,7 @@
     <title>水神崛起</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"></noscript>
     <style>
         :root {
             --font-display: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
@@ -53,9 +53,11 @@
         .clock {
             font-family: 'Courier New', monospace;
             font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.5);
+            /* 深色底上 0.5 的白字对比度只有 4:1 出头，抬到 0.68 */
+            color: rgba(255, 255, 255, 0.68);
             letter-spacing: 0.15em;
             margin-top: 10px;
+            font-variant-numeric: tabular-nums;
         }
 
         /* ── Main Card ── */
@@ -83,27 +85,33 @@
             border: 2px solid rgba(255, 255, 255, 0.2);
             background: rgba(100, 200, 255, 0.08);
             border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%;
-            animation: morph 10s ease-in-out infinite;
+            /* 原来 morph 同时改 border-radius：圆角不是合成属性，每帧都得把三个
+               380px 的模糊块重新栅格化。现在只转 transform —— 不对称圆角转起来
+               本身就有"形状在变"的错觉，观感几乎一样，开销降到合成层级别。 */
+            animation: blobSpin 26s linear infinite;
             box-shadow: 0 0 60px rgba(100, 200, 255, 0.08), inset 0 0 60px rgba(100, 200, 255, 0.04);
+            will-change: transform;
         }
 
         .blob:nth-child(2) {
-            animation-delay: -3s;
+            animation-delay: -9s;
+            animation-duration: 32s;
+            animation-direction: reverse;
             background: rgba(162, 155, 254, 0.06);
             border-radius: 60% 40% 35% 65% / 50% 55% 45% 50%;
         }
 
         .blob:nth-child(3) {
-            animation-delay: -6s;
+            animation-delay: -17s;
+            animation-duration: 38s;
             background: rgba(129, 236, 236, 0.05);
             border-radius: 35% 65% 50% 50% / 60% 40% 60% 40%;
         }
 
-        @keyframes morph {
-            0%, 100% { border-radius: 40% 60% 65% 35% / 45% 50% 55% 50%; transform: rotate(0deg) scale(1); }
-            25%      { border-radius: 65% 35% 40% 60% / 55% 45% 50% 50%; transform: rotate(90deg) scale(1.04); }
-            50%      { border-radius: 35% 65% 50% 50% / 50% 60% 40% 60%; transform: rotate(180deg) scale(1); }
-            75%      { border-radius: 50% 50% 35% 65% / 45% 55% 60% 40%; transform: rotate(270deg) scale(1.04); }
+        @keyframes blobSpin {
+            0%   { transform: rotate(0deg) scale(1); }
+            50%  { transform: rotate(180deg) scale(1.04); }
+            100% { transform: rotate(360deg) scale(1); }
         }
 
         .card-content {
@@ -117,7 +125,7 @@
             font-size: 1.2rem;
             font-weight: 400;
             letter-spacing: 0.25em;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 20px;
         }
 
@@ -132,9 +140,13 @@
             font-family: var(--font-display);
             font-size: 1.4rem;
             letter-spacing: 0.2em;
-            color: rgba(255, 255, 255, 0.9);
-            cursor: pointer;
-            transition: all 0.4s var(--ease-spring);
+            color: rgba(255, 255, 255, 0.92);
+            /* 号牌只是展示，不能点；用 text 光标 + 全选更方便直接复制 */
+            cursor: text;
+            user-select: all;
+            transition: background-color 0.4s var(--ease-spring),
+                        transform 0.4s var(--ease-spring),
+                        box-shadow 0.4s var(--ease-spring);
         }
 
         .qq-badge:hover {
@@ -172,8 +184,30 @@
             padding: 20px;
             text-align: center;
             font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.25);
+            /* 0.25 的白字在深底上等于看不见 */
+            color: rgba(255, 255, 255, 0.48);
             letter-spacing: 0.1em;
+        }
+
+        /* 键盘焦点 */
+        :focus-visible {
+            outline: 2px solid rgba(129, 236, 236, 0.9);
+            outline-offset: 3px;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .blob { animation-duration: 34s; }
+            .dot:nth-child(n+17) { display: none; }   /* 小屏粒子减半 */
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .blob,
+            .dot {
+                animation: none;
+            }
+            .blob { will-change: auto; }
+            .qq-badge { transition: none; }
         }
     </style>
 </head>
@@ -202,30 +236,51 @@
     <script>
         /* ── Clock ── */
         const pad = n => String(n).padStart(2, '0');
+        const clockEl = document.getElementById('clock');
+        let lastClock = '';
         function tick() {
             const d = new Date();
-            document.getElementById('clock').textContent =
-                `${d.getFullYear()}年${pad(d.getMonth() + 1)}月${pad(d.getDate())}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            const text = `${d.getFullYear()}年${pad(d.getMonth() + 1)}月${pad(d.getDate())}日 `
+                + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            // 只有文本真的变了才写 DOM
+            if (text !== lastClock) { lastClock = text; clockEl.textContent = text; }
         }
         tick();
-        setInterval(tick, 1000);
+        let clockTimer = setInterval(tick, 1000);
+        // 页面切到后台就停表，回来再补一次
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(clockTimer);
+                clockTimer = null;
+            } else if (!clockTimer) {
+                tick();
+                clockTimer = setInterval(tick, 1000);
+            }
+        });
 
         /* ── Particles ── */
         const box = document.getElementById('particles');
-        for (let i = 0; i < 40; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'dot';
-            dot.style.left = Math.random() * 100 + '%';
-            dot.style.animationDelay = Math.random() * 18 + 's';
-            dot.style.animationDuration = (12 + Math.random() * 10) + 's';
-            const s = 2 + Math.random() * 3;
-            dot.style.width = dot.style.height = s + 'px';
-            box.appendChild(dot);
+        const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const COUNT = window.matchMedia('(max-width: 768px)').matches ? 16 : 40;
+        if (!noMotion) {
+            for (let i = 0; i < COUNT; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.left = Math.random() * 100 + '%';
+                dot.style.animationDelay = Math.random() * 18 + 's';
+                dot.style.animationDuration = (12 + Math.random() * 10) + 's';
+                const s = 2 + Math.random() * 3;
+                dot.style.width = dot.style.height = s + 'px';
+                box.appendChild(dot);
+            }
         }
     </script>
 
     <div style="display:flex;justify-content:center;align-items:center;margin:32px auto 0;padding-bottom:env(safe-area-inset-bottom,0);">
-        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66" style="border-radius:12px;max-width:100%;"></iframe>
+        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86"
+                loading="lazy" title="网易云音乐播放器"
+                src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"
+                style="border-radius:12px;max-width:100%;"></iframe>
     </div>
 </body>
 </html>

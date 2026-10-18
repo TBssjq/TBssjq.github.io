@@ -120,7 +120,7 @@ body {
 .article-card__title:hover { color: var(--accent); }
 .dark .article-card__title { color: #f9fafb; }
 .article-card__excerpt {
-    font-size: .875rem; color: #6b7280; margin: 0;
+    font-size: .875rem; color: #4b5563; margin: 0;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .dark .article-card__excerpt { color: #9ca3af; }
@@ -153,7 +153,8 @@ body { background: #d8dde6; }
     color: #5a6a7a !important;
     border-radius: 14px !important;
     box-shadow: 4px 4px 10px rgba(163,177,198,.5), -3px -3px 10px rgba(255,255,255,.65);
-    transition: all .35s cubic-bezier(.34,1.56,.64,1) !important;
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .35s cubic-bezier(.34,1.56,.64,1) !important;
 }
 .dark .site-header a[href*="index.html"] {
     background: #242e42 !important;
@@ -172,7 +173,8 @@ body { background: #d8dde6; }
     background: #e0e5ec !important;
     border-radius: 50% !important;
     box-shadow: 4px 4px 10px rgba(163,177,198,.5), -3px -3px 10px rgba(255,255,255,.65);
-    transition: all .4s cubic-bezier(.34,1.56,.64,1) !important;
+    transition: transform .4s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .4s cubic-bezier(.34,1.56,.64,1) !important;
 }
 .dark .theme-toggle {
     background: #242e42 !important;
@@ -209,9 +211,10 @@ body { background: #d8dde6; }
 /* 日期标签 —— 陶土凹陷 */
 .date-tag {
     background: #e0e5ec !important;
-    color: var(--accent) !important;
+    /* #f97316 压在这个灰底上只有 2.9:1，日期这种小字必须压深一档 */
+    color: #c2410c !important;
     border-radius: 9999px !important;
-    font-size: .73rem !important;
+    font-size: .78rem !important;
     box-shadow: inset 3px 3px 8px rgba(163,177,198,.45), inset -3px -3px 8px rgba(255,255,255,.65);
 }
 .dark .date-tag {
@@ -240,7 +243,9 @@ body { background: #d8dde6; }
     color: #5a6a7a; background: #e0e5ec;
     border-radius: 9999px;
     box-shadow: 4px 4px 10px rgba(163,177,198,.5), -3px -3px 10px rgba(255,255,255,.65);
-    transition: all .35s cubic-bezier(.34,1.56,.64,1);
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .35s cubic-bezier(.34,1.56,.64,1),
+                background-color .35s ease, color .35s ease;
 }
 .dark .filter-chip {
     color: #94a3b8; background: #1a2030;
@@ -257,7 +262,7 @@ body { background: #d8dde6; }
 .filter-chip__count {
     padding: 0 .4rem;
     min-width: 1.25rem; text-align: center;
-    font-size: .6875rem; font-weight: 600;
+    font-size: .72rem; font-weight: 600;
     border-radius: 9999px;
     background: rgba(90,106,122,.12);
 }
@@ -266,7 +271,7 @@ body { background: #d8dde6; }
 
 .filter-empty {
     margin: 0 0 1.5rem; text-align: center;
-    font-size: .875rem; color: #94a3b8;
+    font-size: .875rem; color: #64748b;
 }
 
 .article-card.is-hidden { display: none; }
@@ -311,11 +316,26 @@ body { background: #d8dde6; }
     .page-title { font-size: 1.6rem; }
     .article-card { padding: 1rem; border-radius: .65rem; }
     .card-row { gap: .65rem; }
-    .date-tag { font-size: .68rem; padding: .2rem .55rem; }
+    .date-tag { font-size: .72rem; padding: .2rem .55rem; }
     .filter-bar { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding-bottom: .4rem; -webkit-overflow-scrolling: touch; }
     .filter-chip { flex: none; }
     .back-to-top { right: .9rem; bottom: .9rem; width: 2.75rem; height: 2.75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
     .article-list { animation: none; }
+    .article-card,
+    .site-header a[href*="index.html"],
+    .theme-toggle,
+    .filter-chip,
+    .back-to-top {
+        transition-duration: .01ms !important;
+        animation: none !important;
+    }
+}
+
+/* 键盘焦点：目录页原先没有焦点环 */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 10px;
 }

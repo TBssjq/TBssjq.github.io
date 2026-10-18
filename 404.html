@@ -6,8 +6,14 @@
     <title>404 · 页面走失了</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Caveat:wght@500;600&family=Noto+Serif+SC:wght@400;600;900&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&family=Pacifico&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://tbssjq.github.io/style.css">
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=DM+Sans:wght@300;400;500&family=Playfair+Display:wght@600;700&display=swap"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=DM+Sans:wght@300;400;500&family=Playfair+Display:wght@600;700&display=swap">
+    </noscript>
+    <!-- 原来写的是绝对地址，换域名 / 本地预览都会白屏 -->
+    <link rel="stylesheet" href="style.css">
     <style>
         .notfound-code {
             font-family: var(--font-display);
@@ -42,7 +48,8 @@
         .notfound-sub {
             font-family: var(--font-en);
             font-size: clamp(0.85rem, 1.8vw, 1.05rem);
-            font-weight: 300;
+            /* 300 的字重在浅底上太虚，和首页副标题保持一致 */
+            font-weight: 400;
             letter-spacing: 0.3em;
             color: var(--color-text-muted);
             margin-top: 28px;
@@ -102,6 +109,26 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* 键盘导航也能看见焦点 */
+        :focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 3px;
+            border-radius: 8px;
+        }
+
+        /* 播放器固定 330px，小屏上就是横向滚动条的来源 */
+        @media (max-width: 768px) {
+            .music-player { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .notfound-code::before,
+            .loading-ripple,
+            .loading-text {
+                animation: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -117,7 +144,7 @@
 
     <!-- 顶部音乐播放器 -->
     <div class="music-player music-player--top">
-        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66"></iframe>
+        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"></iframe>
     </div>
 
     <!-- 返回主页 -->
@@ -151,14 +178,19 @@
             setMeta();
         })();
 
-        // 加载屏淡出
-        window.addEventListener('load', function () {
+        // 加载屏淡出：不等 window.load —— 网易云 iframe 慢起来会把整页一起拖住
+        (function () {
             const screen = document.getElementById('loadingScreen');
             if (!screen) return;
-            setTimeout(function () {
-                screen.classList.add('hidden');
-            }, 500);
-        });
+            const hide = function () {
+                setTimeout(function () { screen.classList.add('hidden'); }, 150);
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', hide, { once: true });
+            } else {
+                hide();
+            }
+        })();
     </script>
 </body>
 </html>

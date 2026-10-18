@@ -32,8 +32,9 @@ body{
 
 /* ── 水彩晕染：整页的呼吸 ── */
 .washfield{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.wash{position:absolute;border-radius:50%;filter:blur(60px);mix-blend-mode:multiply;
-  opacity:.5;animation:drift 24s ease-in-out infinite alternate}
+/* blur 半径每加一档，颜色晕开的预处理成本几乎翻倍；46px 在大色块上看不出差别 */
+.wash{position:absolute;border-radius:50%;filter:blur(46px);mix-blend-mode:multiply;
+  opacity:.5;animation:drift 24s ease-in-out infinite alternate;will-change:transform}
 .w1{width:520px;height:470px;background:#7aa6d6;top:-8%;left:-6%}
 .w2{width:440px;height:420px;background:#c4a6d0;top:18%;right:-8%;animation-delay:-6s}
 .w3{width:480px;height:420px;background:#8cc4b2;top:44%;left:10%;animation-delay:-12s}
@@ -84,7 +85,7 @@ body{
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 
 .kicker{
-  font-size:10.5px;letter-spacing:.5em;font-weight:300;color:rgba(36,48,64,.55);
+  font-size:11.5px;letter-spacing:.5em;font-weight:400;color:rgba(36,48,64,.72);
   display:flex;align-items:center;gap:14px;margin-bottom:22px;position:relative;z-index:4;
 }
 .kicker::after{content:"";flex:1;height:1px;background:rgba(36,48,64,.2);max-width:260px}
@@ -112,21 +113,22 @@ body{
   background-size:220% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 16px 30px rgba(30,50,80,.2));
-  animation:rise3d 1.15s cubic-bezier(.2,.9,.2,1) backwards, sheen 6.5s linear infinite;
+  /* 去掉了 background-position 的流光：它每帧都要把这些巨大的标题字连同
+     drop-shadow 一起重新栅格化，是这一页最持续的绘制开销。静态渐变本身已经够亮。 */
+  animation:rise3d 1.15s cubic-bezier(.2,.9,.2,1) backwards;
   text-shadow:
     1px 1px 0 rgba(120,150,190,.5),2px 2px 0 rgba(105,135,175,.45),
     3px 3px 0 rgba(90,120,160,.4),4px 4px 0 rgba(78,105,142,.35),
     5px 5px 0 rgba(66,90,124,.3),6px 6px 0 rgba(55,75,105,.24),
     8px 10px 24px rgba(30,50,80,.26);
 }
-.title3d h1 span:nth-child(1){animation-delay:.12s,.6s;--z:52px}
-.title3d h1 span:nth-child(2){animation-delay:.26s,1.2s;--z:38px}
-.title3d h1 span:nth-child(3){animation-delay:.40s,1.8s;--z:24px}
+.title3d h1 span:nth-child(1){animation-delay:.12s;--z:52px}
+.title3d h1 span:nth-child(2){animation-delay:.26s;--z:38px}
+.title3d h1 span:nth-child(3){animation-delay:.40s;--z:24px}
 @keyframes rise3d{
   from{transform:translateZ(0) translateY(96px) rotateX(-58deg) scale(.85);opacity:0}
   to{transform:translateZ(var(--z,34px)) translateY(0) rotateX(0) scale(1);opacity:1}
 }
-@keyframes sheen{to{background-position:220% 0}}
 .title3d h1 span.outline{
   background:none;-webkit-text-stroke:2px rgba(91,127,166,.8);color:transparent;
   text-shadow:0 20px 38px rgba(30,50,80,.16);
@@ -138,7 +140,7 @@ body{
   margin-top:20px;position:relative;z-index:4;
   opacity:0;animation:fade 1.4s 1.1s ease forwards;
 }
-.latin{font-size:12.5px;letter-spacing:.42em;text-transform:uppercase;color:rgba(36,48,64,.5)}
+.latin{font-size:12.5px;letter-spacing:.42em;text-transform:uppercase;color:rgba(36,48,64,.66)}
 .hand-date{font-family:'Caveat';font-size:22px;color:var(--blue);letter-spacing:.04em;transform:rotate(-2deg)}
 @keyframes fade{to{opacity:1}}
 
@@ -203,7 +205,7 @@ body{
 }
 .specimen svg{width:100%;display:block}
 .specimen figcaption{
-  margin-top:16px;font-size:9.5px;letter-spacing:.2em;color:var(--gold);
+  margin-top:16px;font-size:10.5px;letter-spacing:.2em;color:var(--gold-deep);
   text-transform:uppercase;text-align:center;
 }
 @media(max-width:680px){.specimen{float:none;width:72%;margin:0 auto 20px}}
@@ -219,7 +221,7 @@ body{
   border:1px solid rgba(185,168,131,.5);
 }
 .dl-inline dl{display:grid;grid-template-columns:74px 1fr;gap:5px 14px;font-size:13.5px;line-height:1.7}
-.dl-inline dt{font-size:9.5px;letter-spacing:.18em;color:var(--gold-deep);
+.dl-inline dt{font-size:10.5px;letter-spacing:.18em;color:var(--gold-deep);
   text-transform:uppercase;padding-top:5px;font-family:sans-serif}
 .dl-inline dd{border-bottom:1px dotted rgba(140,120,90,.5);padding-bottom:4px;color:#4a4132}
 
@@ -248,7 +250,7 @@ body{
 .tate{
   float:right;writing-mode:vertical-rl;text-orientation:upright;
   font-size:12.5px;letter-spacing:.26em;line-height:2;
-  color:rgba(36,48,64,.5);font-weight:300;
+  color:rgba(36,48,64,.66);font-weight:400;
   border-left:1px solid rgba(122,104,69,.28);padding-left:12px;
   margin:6px 0 14px 18px;height:190px;break-inside:avoid;
 }
@@ -273,7 +275,7 @@ body{
 /* 小标题：栏内的分节标记 */
 .sub-mark{
   break-inside:avoid;display:block;margin:2px 0 12px;
-  font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;
+  font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;
   color:var(--gold-deep);font-family:sans-serif;font-weight:600;
 }
 
@@ -309,7 +311,7 @@ body{
 
 /* 虚线圆角标签（04）：贴在页面边缘 */
 .tag-dash{
-  position:absolute;font-size:9.5px;letter-spacing:.26em;color:#8a93a2;
+  position:absolute;font-size:10.5px;letter-spacing:.26em;color:#68717f;
   border:1px dashed rgba(140,150,165,.7);padding:6px 13px;border-radius:22px;
   z-index:5;white-space:nowrap;
 }
@@ -350,14 +352,14 @@ body{
   transform:rotate(-2deg);
 }
 .colophon .fine{
-  font-size:10px;letter-spacing:.3em;color:rgba(36,48,64,.45);
+  font-size:10.5px;letter-spacing:.3em;color:rgba(36,48,64,.6);
   text-align:right;line-height:2;
 }
 
 /* ═══════ 页眉左上：回到主页 ═══════ */
 .back-home{
   position:absolute;left:0;top:0;z-index:6;
-  font-size:10.5px;letter-spacing:.28em;color:rgba(36,48,64,.5);
+  font-size:11px;letter-spacing:.28em;color:rgba(36,48,64,.68);
   text-decoration:none;padding-bottom:3px;
   border-bottom:1px solid rgba(36,48,64,.18);
   transition:color .3s ease,border-color .3s ease;
@@ -407,8 +409,16 @@ body{
 
 @media(max-width:680px){
   .letter p{font-size:14.5px}
-  .echo-links a{font-size:10px;padding:6px 12px}
+  .echo-links a{font-size:11px;padding:6px 12px}
+  /* 小屏上「blur + multiply 全屏叠加」最吃 GPU：减两个色块、关掉纸纹噪声层 */
+  .wash{filter:blur(38px)}
+  .w4,.w5{display:none}
+  .sheet::before{display:none}
+  .conic{filter:blur(48px) saturate(120%)}
 }
+
+/* 键盘焦点 */
+:focus-visible{outline:2px solid var(--blue-deep);outline-offset:3px;border-radius:6px}
 
 /* 滚动淡入 */
 .reveal{opacity:0;transform:translateY(26px);
@@ -531,7 +541,7 @@ body{
       <em>其实是留给还没出现的人。</em>
     </div>
 
-    <p>这些话原本挂在主页的自我介绍里。搬到这里，是因为它们本来就该长在一朵花旁边——一个前端开发者、游戏爱好者、自封的「动态视觉魔法师」，白天写代码，晚上等一个还没出现的同类。</p>
+    <p>这些话原本挂在主页的自我介绍里。搬到这里，是因为它们本来就该长在一朵花旁边——一个前端开发者、C++爱好者、自封的「动态视觉魔法师」，白天写代码，晚上等一个还没出现的同类。</p>
 
     <p>所以这朵花是给他的：<span class="underline-hand">如果你就是那个人，你早该认出这句话</span>。</p>
   </div>
@@ -560,7 +570,7 @@ body{
     <div class="sig">— 水神崛起</div>
     <div class="fine">
       —— 请不要忘记我<br>
-      前端开发者 · 游戏爱好者 · 动态视觉魔法师<br>
+      前端开发者 · C++爱好者 · 动态视觉魔法师<br>
       海内存知己，天涯若比邻
     </div>
   </div>
@@ -620,11 +630,11 @@ body{
 /* ══════ 09 的 3D 标题动态 ══════ */
 const t3d=document.getElementById('t3d');
 const chars=t3d.querySelectorAll('span');
-let idle=true,t=0;
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const finePointer=window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+let idle=true,t=0,pointerPending=false,mx=0,my=0;
 
-document.addEventListener('mousemove',e=>{
-  idle=false;
-  const nx=(e.clientX/innerWidth-.5), ny=(e.clientY/innerHeight-.5);
+function applyTilt(nx,ny){
   t3d.style.setProperty('--rx',(-ny*14).toFixed(2)+'deg');
   t3d.style.setProperty('--ry',(nx*22).toFixed(2)+'deg');
   chars.forEach((c,i)=>{
@@ -632,20 +642,41 @@ document.addEventListener('mousemove',e=>{
     c.style.setProperty('--z',(38+nx*30*depth).toFixed(1)+'px');
     c.style.transform=`translateZ(var(--z)) rotateY(${(nx*8*depth).toFixed(2)}deg)`;
   });
-});
+}
 
-setInterval(()=>{
-  t+=0.02;
-  if(idle){
-    t3d.style.setProperty('--rx',(-Math.cos(t*0.7)*13*0.35).toFixed(2)+'deg');
-    t3d.style.setProperty('--ry',(Math.sin(t)*9).toFixed(2)+'deg');
-  }
-},60);
+if(finePointer&&!reduceMotion){
+  // 原来每次 mousemove 都同步写 5 处样式；收成「一帧一次」
+  document.addEventListener('pointermove',e=>{
+    if(e.pointerType==='touch') return;
+    idle=false;
+    mx=e.clientX/innerWidth-.5;
+    my=e.clientY/innerHeight-.5;
+    if(pointerPending) return;
+    pointerPending=true;
+    requestAnimationFrame(()=>{pointerPending=false;applyTilt(mx,my)});
+  },{passive:true});
 
-document.addEventListener('mouseleave',()=>{idle=true});
-window.addEventListener('scroll',()=>{
-  if(idle) t3d.style.setProperty('--rx',(-(scrollY/innerHeight)*7).toFixed(2)+'deg');
-},{passive:true});
+  document.addEventListener('pointerleave',()=>{idle=true});
+
+  // 待机呼吸：80ms 一次已经足够顺滑（原先 60ms），不可见时停掉
+  let breatheTimer=null;
+  const startBreathe=()=>{
+    if(breatheTimer) return;
+    breatheTimer=setInterval(()=>{
+      if(!idle) return;
+      t+=0.02;
+      t3d.style.setProperty('--rx',(-Math.cos(t*0.7)*13*0.35).toFixed(2)+'deg');
+      t3d.style.setProperty('--ry',(Math.sin(t)*9).toFixed(2)+'deg');
+    },80);
+  };
+  const stopBreathe=()=>{clearInterval(breatheTimer);breatheTimer=null};
+  startBreathe();
+  document.addEventListener('visibilitychange',()=>{document.hidden?stopBreathe():startBreathe()});
+
+  window.addEventListener('scroll',()=>{
+    if(idle) t3d.style.setProperty('--rx',(-(scrollY/innerHeight)*7).toFixed(2)+'deg');
+  },{passive:true});
+}
 
 /* 滚动淡入 */
 const io=new IntersectionObserver(es=>{

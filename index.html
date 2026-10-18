@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="水神崛起的个人主页 - 前端开发者 | 游戏爱好者 | 动态视觉魔法师">
+    <meta name="description" content="水神崛起的个人主页 - 前端开发者 | C++爱好者 | 动态视觉魔法师">
     <meta name="author" content="水神崛起">
     <title>水神崛起</title>
 
@@ -11,15 +11,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- Web 字体非阻塞加载：media="print" 期间浏览器不拿它做渲染阻塞资源，加载完再切 all。
+         即使 fonts.googleapis.com 不可达，首屏也照常用系统字体渲染，不会被挂住。
+         只保留真正用到的家族与字重，中文正文交给系统字体（原来的 Noto Serif SC 五个字重
+         体积巨大却几乎没被正文用到）。 -->
+    <link rel="stylesheet" media="print" onload="this.media='all'"
+          href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=DM+Sans:wght@300;400;500;700&family=Playfair+Display:wght@400;600&display=swap">
+
     <!-- ── 关键 CSS（内联）──
          首屏只被不透明的加载遮罩占据，因此关键样式只需「背景 + 加载画面」。
          把它们内联进 <head> 后，首屏不再等 style.css 下载完才渲染。 -->
     <style>
         :root {
-            --font-display: 'ZCOOL KuaiLe', 'Playfair Display', serif;
-            --font-body: 'Noto Serif SC', 'PingFang SC', serif;
-            --font-en: 'DM Sans', 'Segoe UI', sans-serif;
-            --font-serif-en: 'Playfair Display', Georgia, serif;
+            --font-display: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', serif;
+            --font-body: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+            --font-en: 'DM Sans', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-serif-en: 'Playfair Display', Georgia, 'Times New Roman', serif;
 
             --bg-deep: #e8f1f8;
             --bg-mid: #d6e4f0;
@@ -88,12 +95,12 @@
             align-items: center;
             z-index: 99999;
             background: var(--bg-deep);
-            transition: opacity 1.8s var(--ease-out-expo), filter 1.8s var(--ease-out-expo), visibility 0s 2s;
+            transition: opacity 0.6s var(--ease-out-expo), filter 0.6s var(--ease-out-expo), visibility 0s 0.6s;
         }
 
         .loading-screen.hidden {
             opacity: 0;
-            filter: blur(16px);
+            filter: blur(8px);
             pointer-events: none;
             visibility: hidden;
         }
@@ -105,7 +112,7 @@
             text-shadow:
                 0 0 80px rgba(0, 158, 142, 0.3),
                 0 0 160px rgba(0, 158, 142, 0.1);
-            animation: loadPulse 3s ease-in-out forwards;
+            animation: loadPulse 1.8s ease-in-out infinite;
             position: relative;
         }
 
@@ -123,23 +130,23 @@
         }
 
         @keyframes loadPulse {
-            0%   { opacity: 0; transform: scale(0.85); filter: blur(8px); }
-            25%  { opacity: 1; transform: scale(1); filter: blur(0); }
-            75%  { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(1.05); filter: blur(4px); }
+            0%, 100% { opacity: 0.72; transform: scale(0.99); filter: blur(1.2px); }
+            50%      { opacity: 1; transform: scale(1); filter: blur(0); }
         }
     </style>
 
-    <!-- 其余样式异步加载：preload 拉取完成后才切成 stylesheet，首屏不被它阻塞 -->
-    <link rel="preload" href="style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- 其余样式异步加载：preload 拉取完成后才切成 stylesheet，首屏不被它阻塞。
+         onload 里打一个「样式就绪」标记，加载遮罩据此决定何时揭开，避免闪一下无样式内容。 -->
+    <link rel="preload" href="style.css" as="style"
+          onload="this.onload=null;this.rel='stylesheet';window.__cssReady=true;">
     <noscript><link rel="stylesheet" href="style.css"></noscript>
 
-    <!-- GSAP 3.13+：SplitText 等原 Club 插件已全部免费，直接走公共 CDN 即可 -->
+    <!-- GSAP 3.13+：只留真正用到的三个。
+         ScrollToPlugin 由原生 scrollTo({behavior:'smooth'}) 替代，
+         ScrambleTextPlugin 由下面十几行原生乱码实现替代，少两个请求、少一份解析。 -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollToPlugin.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrambleTextPlugin.min.js"></script>
     <noscript>
         <style>.animate-in{opacity:1 !important;transform:none !important;}</style>
     </noscript>
@@ -174,9 +181,13 @@
     </div>
 
     <div class="container">
-        <!-- 音乐播放器（顶部） -->
+        <!-- 音乐播放器（顶部）
+             第三方 iframe 会拉一整套播放器资源，放在首屏和字体/脚本抢带宽不划算：
+             src 先挂在 data-src 上，等浏览器空闲（最多 2.5s）再注入。 -->
         <div class="music-player music-player--top">
-            <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"></iframe>
+            <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86"
+                    title="网易云音乐播放器"
+                    data-src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"></iframe>
         </div>
 
         <!-- 顶部导航 — PillNav -->
@@ -286,39 +297,127 @@
 
     <!-- ══════ 汪洋大海：底部的一整片海，与一只象征友谊的小船 ══════ -->
     <section class="ocean" aria-hidden="true">
-        <!-- 四层海浪：越远越浅、越慢，叠出纵深与视差 -->
+        <!-- 四层海浪：越远越浅、越慢，叠出纵深与视差；每层带一道会呼吸的浪脊高光 -->
         <svg class="ocean-wave ocean-wave--1" viewBox="0 0 2400 600" preserveAspectRatio="none">
-            <path d="M0 84 Q150 40 300 84 T600 84 T900 84 T1200 84 T1500 84 T1800 84 T2100 84 T2400 84 L2400 600 L0 600 Z"/>
+            <defs>
+                <linearGradient id="ocWater1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#e2f2fd"/>
+                    <stop offset=".45" stop-color="#d0e9fa"/>
+                    <stop offset="1" stop-color="#b3d5ec"/>
+                </linearGradient>
+                <linearGradient id="ocSheen1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+                    <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="ocean-wave__body" fill="url(#ocWater1)" d="M0 84 Q150 40 300 84 T600 84 T900 84 T1200 84 T1500 84 T1800 84 T2100 84 T2400 84 L2400 600 L0 600 Z"/>
+            <path class="ocean-wave__sheen" fill="url(#ocSheen1)" d="M0 84 Q150 40 300 84 T600 84 T900 84 T1200 84 T1500 84 T1800 84 T2100 84 T2400 84 L2400 104 L0 104 Z"/>
+            <path class="ocean-wave__glint" d="M0 84 Q150 40 300 84 T600 84 T900 84 T1200 84 T1500 84 T1800 84 T2100 84 T2400 84"/>
         </svg>
         <svg class="ocean-wave ocean-wave--2" viewBox="0 0 2400 600" preserveAspectRatio="none">
-            <path d="M0 150 Q150 106 300 150 T600 150 T900 150 T1200 150 T1500 150 T1800 150 T2100 150 T2400 150 L2400 600 L0 600 Z"/>
-        </svg>
-        <svg class="ocean-wave ocean-wave--3" viewBox="0 0 2400 600" preserveAspectRatio="none">
-            <path d="M0 240 Q150 190 300 240 T600 240 T900 240 T1200 240 T1500 240 T1800 240 T2100 240 T2400 240 L2400 600 L0 600 Z"/>
-        </svg>
-        <svg class="ocean-wave ocean-wave--4" viewBox="0 0 2400 600" preserveAspectRatio="none">
-            <path d="M0 348 Q150 298 300 348 T600 348 T900 348 T1200 348 T1500 348 T1800 348 T2100 348 T2400 348 L2400 600 L0 600 Z"/>
+            <defs>
+                <linearGradient id="ocWater2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#b6ddf4"/>
+                    <stop offset=".5" stop-color="#94c7e7"/>
+                    <stop offset="1" stop-color="#76afd6"/>
+                </linearGradient>
+                <linearGradient id="ocSheen2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffffff" stop-opacity=".45"/>
+                    <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="ocean-wave__body" fill="url(#ocWater2)" d="M0 150 Q150 106 300 150 T600 150 T900 150 T1200 150 T1500 150 T1800 150 T2100 150 T2400 150 L2400 600 L0 600 Z"/>
+            <path class="ocean-wave__sheen" fill="url(#ocSheen2)" d="M0 150 Q150 106 300 150 T600 150 T900 150 T1200 150 T1500 150 T1800 150 T2100 150 T2400 150 L2400 168 L0 168 Z"/>
+            <path class="ocean-wave__glint" d="M0 150 Q150 106 300 150 T600 150 T900 150 T1200 150 T1500 150 T1800 150 T2100 150 T2400 150"/>
         </svg>
 
-        <!-- 象征友谊的小船 -->
+        <!-- 水雾：远海与近海之间的空气层，柔化层与层之间的硬边 -->
+        <div class="ocean-haze"></div>
+
+        <svg class="ocean-wave ocean-wave--3" viewBox="0 0 2400 600" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="ocWater3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#7db4dd"/>
+                    <stop offset=".5" stop-color="#5e9bc9"/>
+                    <stop offset="1" stop-color="#4685b6"/>
+                </linearGradient>
+                <linearGradient id="ocSheen3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffffff" stop-opacity=".34"/>
+                    <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="ocean-wave__body" fill="url(#ocWater3)" d="M0 240 Q150 190 300 240 T600 240 T900 240 T1200 240 T1500 240 T1800 240 T2100 240 T2400 240 L2400 600 L0 600 Z"/>
+            <path class="ocean-wave__sheen" fill="url(#ocSheen3)" d="M0 240 Q150 190 300 240 T600 240 T900 240 T1200 240 T1500 240 T1800 240 T2100 240 T2400 240 L2400 262 L0 262 Z"/>
+            <path class="ocean-wave__glint" d="M0 240 Q150 190 300 240 T600 240 T900 240 T1200 240 T1500 240 T1800 240 T2100 240 T2400 240"/>
+        </svg>
+        <svg class="ocean-wave ocean-wave--4" viewBox="0 0 2400 600" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="ocWater4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#3f80b5"/>
+                    <stop offset=".45" stop-color="#2f6ea6"/>
+                    <stop offset="1" stop-color="#1f5a8d"/>
+                </linearGradient>
+                <linearGradient id="ocSheen4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffffff" stop-opacity=".26"/>
+                    <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="ocean-wave__body" fill="url(#ocWater4)" d="M0 348 Q150 298 300 348 T600 348 T900 348 T1200 348 T1500 348 T1800 348 T2100 348 T2400 348 L2400 600 L0 600 Z"/>
+            <path class="ocean-wave__sheen" fill="url(#ocSheen4)" d="M0 348 Q150 298 300 348 T600 348 T900 348 T1200 348 T1500 348 T1800 348 T2100 348 T2400 348 L2400 374 L0 374 Z"/>
+            <path class="ocean-wave__glint" d="M0 348 Q150 298 300 348 T600 348 T900 348 T1200 348 T1500 348 T1800 348 T2100 348 T2400 348"/>
+        </svg>
+
+        <!-- 象征友谊的小船：船身渐变 + 舷边高光，水线泡沫 / 尾迹 / 水中投影让它"浮"起来 -->
         <div class="ocean-boat">
+            <span class="boat-shadow"></span>
+            <span class="boat-wake"></span>
             <div class="ocean-boat__bob">
                 <svg class="boat-svg" viewBox="0 0 120 152" role="img" aria-label="友谊的小船">
-                    <!-- 帆 -->
-                    <path d="M55 120 L55 34 L16 112 Z" fill="#eaf4fb"/>
-                    <path d="M61 122 L61 24 L104 110 Z" fill="#ffffff"/>
+                    <defs>
+                        <linearGradient id="boatSailLeftGrad" x1="1" y1="0" x2="0" y2=".7">
+                            <stop offset="0" stop-color="#fbfdff"/>
+                            <stop offset=".55" stop-color="#e7f2fa"/>
+                            <stop offset="1" stop-color="#c2d8e9"/>
+                        </linearGradient>
+                        <linearGradient id="boatSailRightGrad" x1="0" y1="0" x2="1" y2=".8">
+                            <stop offset="0" stop-color="#ffffff"/>
+                            <stop offset=".6" stop-color="#f1f8fd"/>
+                            <stop offset="1" stop-color="#cfe1ef"/>
+                        </linearGradient>
+                        <linearGradient id="boatMastGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#cda57a"/>
+                            <stop offset=".55" stop-color="#b08a5a"/>
+                            <stop offset="1" stop-color="#8a6740"/>
+                        </linearGradient>
+                        <linearGradient id="boatHullGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#e98a62"/>
+                            <stop offset=".32" stop-color="#c65b3c"/>
+                            <stop offset="1" stop-color="#8a3b23"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- 帆：外缘带一点吃风的弧度 -->
+                    <path d="M55 120 L55 34 Q31 63 16 112 Z" fill="url(#boatSailLeftGrad)"/>
+                    <path d="M61 122 L61 24 Q96 57 104 110 Z" fill="url(#boatSailRightGrad)"/>
+                    <!-- 帆面暗部（背光一侧）与受光边 -->
+                    <path d="M55 120 L55 34 Q40 52 30 64 L44 120 Z" fill="#9dbcd4" opacity=".22"/>
+                    <path d="M61 122 L61 24 Q73 33 82 44 L95 122 Z" fill="#ffffff" opacity=".5"/>
                     <!-- 桅杆 -->
-                    <rect x="56" y="16" width="4" height="108" rx="2" fill="#b08a5a"/>
-                    <!-- 小旗 -->
-                    <path d="M60 16 L86 25 L60 36 Z" fill="#fd79a8"/>
+                    <rect x="56" y="16" width="4" height="108" rx="2" fill="url(#boatMastGrad)"/>
+                    <!-- 小旗：尾端飘起来 -->
+                    <path d="M60 16 Q74 20 86 25 Q74 30 60 36 Z" fill="#fd79a8"/>
                     <!-- 帆上的友谊之心 -->
                     <path d="M70 72c-2-5-10-5-11 1-1-6-9-6-11-1-2 4 2 8 11 15 9-7 13-11 11-15z" fill="#fd79a8"/>
-                    <!-- 吃水阴影 -->
-                    <ellipse cx="60" cy="145" rx="56" ry="5" fill="#123a5e" opacity=".25"/>
                     <!-- 船身 -->
-                    <path d="M10 124 L110 124 L94 146 Q60 152 26 146 Z" fill="#c65b3c"/>
-                    <path d="M10 124 L110 124 L107 130 L13 130 Z" fill="#e07a55"/>
+                    <path d="M10 124 L110 124 L94 146 Q60 152 26 146 Z" fill="url(#boatHullGrad)"/>
+                    <!-- 舷边高光 -->
+                    <path d="M10 124 L110 124 L107 130 L13 130 Z" fill="#f2a077"/>
+                    <!-- 吃水线：一条更深的腰带，把船身压进水里 -->
+                    <path d="M14 133 L106 133 L101 142 Q60 148 31 142 Z" fill="#782f1b" opacity=".3"/>
+                    <!-- 船身反光 -->
+                    <path d="M20 126 L52 126 L48 133 L24 133 Z" fill="#ffffff" opacity=".16"/>
                 </svg>
+                <span class="boat-foam"></span>
             </div>
         </div>
     </section>
@@ -370,16 +469,48 @@
     </button>
 
     <script>
-    /* ── 全局时序配置：集中管理，避免魔法数字散落各处 ── */
+    /* ── 全局时序配置：集中管理，避免魔法数字散落各处 ──
+       加载遮罩不再固定卡 3 秒：样式就绪后 0.4s 内就揭开，
+       LCP 从 3s+ 直接回到首帧可交互。 */
     const TIMING = Object.freeze({
-        loadingHold: 3000,   // 加载画面停留时长
-        loadingFade: 2000,   // 加载画面淡出时长
-        modalDelay: 2000     // 博客弹窗弹出延时
+        loadingHold: 400,    // 遮罩最短停留（防闪烁）
+        loadingFade: 600,    // 遮罩淡出时长
+        modalDelay: 4200     // 博客弹窗弹出延时（等入场动画播完，不抢戏）
     });
 
     /* 与 CSS 的 prefers-reduced-motion 媒体查询保持一致，供 JS 动画降级使用 */
     const prefersReducedMotion = () =>
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* 只有精确指针设备（鼠标 / 触控板）才值得跑跟随类特效。
+       触摸设备没有 hover，跑这些只会白烧 GPU。 */
+    const hasFinePointer = () =>
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    /* ── 指针事件统一调度 ──
+       原来 cursorGlow / cursorRing / cursorTrail / magnetic / 3D 标题 / 视差
+       各自挂一个 mousemove，同一次移动要跑 6 遍逻辑、写 6 次样式。
+       这里收成「一个监听 + 每帧一次合批」，位移再密也只处理一帧一次。 */
+    const pointerSubs = new Set();
+    const pointerState = { x: 0, y: 0 };
+    let pointerQueued = false;
+
+    function onPointerMove(fn) { pointerSubs.add(fn); }
+
+    function flushPointer() {
+        pointerQueued = false;
+        pointerSubs.forEach(fn => fn(pointerState.x, pointerState.y));
+    }
+
+    window.addEventListener('pointermove', e => {
+        if (e.pointerType === 'touch') return;
+        pointerState.x = e.clientX;
+        pointerState.y = e.clientY;
+        if (!pointerQueued) {
+            pointerQueued = true;
+            requestAnimationFrame(flushPointer);
+        }
+    }, { passive: true });
 
     /* ── 博客弹窗的「已看过」标记：写进 cookie，保证只弹第一次 ── */
     const MODAL_SEEN_COOKIE = 'blogModalSeen';
@@ -433,13 +564,36 @@
         return { start, stop };
     }
 
+    /* ── 发光贴图缓存 ──
+       径向渐变的「柔光圆」在运行时反复用 createRadialGradient + arc 画是很贵的，
+       更贵的是 shadowBlur。这里一次性把每个颜色烘焙成一张小贴图，
+       之后每帧只做一次 drawImage —— 光晕效果不变，绘制成本降一个数量级。 */
+    const glowSpriteCache = new Map();
+
+    function getGlowSprite(rgb, size = 64) {
+        const key = rgb + '@' + size;
+        const hit = glowSpriteCache.get(key);
+        if (hit) return hit;
+
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        const r = size / 2;
+        const grad = g.createRadialGradient(r, r, 0, r, r, r);
+        grad.addColorStop(0, `rgba(${rgb},1)`);
+        grad.addColorStop(0.32, `rgba(${rgb},0.78)`);
+        grad.addColorStop(0.62, `rgba(${rgb},0.26)`);
+        grad.addColorStop(1, `rgba(${rgb},0)`);
+        g.fillStyle = grad;
+        g.fillRect(0, 0, size, size);
+        glowSpriteCache.set(key, c);
+        return c;
+    }
+
     /* 插件集中注册一次：gsap.registerPlugin 是幂等的，重复调用无副作用 */
     function registerGsapPlugins() {
         if (typeof gsap === 'undefined') return;
-        const plugins = [
-            window.ScrollTrigger, window.ScrollToPlugin,
-            window.SplitText, window.ScrambleTextPlugin
-        ].filter(Boolean);
+        const plugins = [window.ScrollTrigger, window.SplitText].filter(Boolean);
         if (plugins.length) gsap.registerPlugin(...plugins);
     }
 
@@ -454,7 +608,8 @@
             initTypewriterCaret, initAboutCard, initPillNav, initNavEntrance,
             initSocialLinks, initScrollProgress, initBackToTop,
             initParallax, initMagnetic, initNavScramble, initLetterWave,
-            initCursorTrail, initAboutContentReveal, initComradeStars, initOceanLayout
+            initCursorTrail, initAboutContentReveal, initComradeStars, initOceanLayout,
+            initMusicPlayer
         ].forEach(init => {
             try {
                 const result = init();
@@ -471,13 +626,12 @@
     /* ── 鼠标跟随光效 ── */
     function initCursorGlow() {
         const glow = document.getElementById('cursorGlow');
-        if (!glow) return;
+        if (!glow || !hasFinePointer()) return;
 
-        // GSAP 不可用时退回 CSS 过渡（left/top），保证效果不整体失效
+        // GSAP 不可用时退回直接写 transform，保证效果不整体失效
         if (typeof gsap === 'undefined') {
-            document.addEventListener('mousemove', e => {
-                glow.style.left = `${e.clientX}px`;
-                glow.style.top = `${e.clientY}px`;
+            onPointerMove((x, y) => {
+                glow.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
             });
             return;
         }
@@ -488,24 +642,58 @@
         const moveX = gsap.quickTo(glow, 'x', { duration: 0.45, ease: 'power3' });
         const moveY = gsap.quickTo(glow, 'y', { duration: 0.45, ease: 'power3' });
 
-        document.addEventListener('mousemove', e => {
-            moveX(e.clientX);
-            moveY(e.clientY);
-        });
+        onPointerMove((x, y) => { moveX(x); moveY(y); });
     }
 
-    /* ── 加载画面 ── */
+    /* ── 加载画面 ──
+       不再固定等 3 秒：样式表一就绪就开始计时，最多再停留 loadingHold 防闪烁。
+       （不等 window.load —— 网易云 iframe 可能迟迟不返回，会把整页拖住） */
     function initLoadingScreen() {
         const screen = document.querySelector('.loading-screen');
         if (!screen) return;
 
-        setTimeout(() => {
-            screen.classList.add('hidden');
+        let dismissed = false;
+        const start = performance.now();
+
+        const dismiss = () => {
+            if (dismissed) return;
+            dismissed = true;
+            const wait = Math.max(0, TIMING.loadingHold - (performance.now() - start));
             setTimeout(() => {
-                screen.remove();
-                startTypewriter();
-            }, TIMING.loadingFade);
-        }, TIMING.loadingHold);
+                screen.classList.add('hidden');
+                setTimeout(() => {
+                    screen.remove();
+                    startTypewriter();
+                }, TIMING.loadingFade);
+            }, wait);
+        };
+
+        if (window.__cssReady) {
+            dismiss();
+        } else {
+            // 样式表还在路上：等它到位再揭开，避免闪一下裸 HTML
+            const timer = setInterval(() => {
+                if (window.__cssReady) { clearInterval(timer); dismiss(); }
+            }, 40);
+            // 兜底：样式表异常时也不能让遮罩卡住页面
+            setTimeout(() => { clearInterval(timer); dismiss(); }, 1200);
+        }
+    }
+
+    /* ── 音乐播放器：延迟注入 src ──
+       网易云 iframe 会自己拉一整套播放器资源，放在首屏和字体 / GSAP 抢带宽很不划算。
+       等首屏稳定、浏览器空闲后再挂上去，听感上只晚一两秒。 */
+    function initMusicPlayer() {
+        const frame = document.querySelector('.music-player iframe');
+        if (!frame || !frame.dataset.src) return;
+
+        const load = () => { frame.src = frame.dataset.src; };
+
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(load, { timeout: 2500 });
+        } else {
+            setTimeout(load, 2000);
+        }
     }
 
     /* ── 打字机 ── */
@@ -513,9 +701,11 @@
         const el = document.querySelector('.typewriter-text');
         if (!el) return;
 
-        const STEP = 100;   // 敲入一个拼音字母的间隔
-        const HOLD = 300;   // 拼音补全后的停留
-        const GAP = 500;    // 替换为汉字后的停顿
+        // 原来整套打完要 9.6 秒（24 个字母 + 9 次停顿），首屏观感很拖；
+        // 这里压到 3.4 秒左右，仍看得清拼音逐个敲入的过程。
+        const STEP = 45;    // 敲入一个拼音字母的间隔
+        const HOLD = 110;   // 拼音补全后的停留
+        const GAP = 150;    // 替换为汉字后的停顿
 
         const pairs = [
             { pin: 'NI',   ch: '你' },
@@ -597,25 +787,30 @@
     function initParticles() {
         const cvs = document.createElement('canvas');
         Object.assign(cvs.style, { position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 });
+        cvs.setAttribute('aria-hidden', 'true');
         document.body.appendChild(cvs);
-        const ctx = cvs.getContext('2d');
+
+        const ctx = cvs.getContext('2d', { desynchronized: true });
         const resize = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; };
         resize();
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', resize, { passive: true });
 
-        const colors = ['#009e8e', '#40c9b8', '#007a6d', '#6c5ce7', '#a29bfe', '#fd79a8', '#009e8e'];
+        // 颜色改成贴图：每帧只 drawImage，不再逐粒子设置 shadowBlur
+        const COLORS = ['0,158,142', '64,201,184', '0,122,109', '108,92,231', '162,155,254', '253,121,168'];
+        const sprites = COLORS.map(rgb => getGlowSprite(rgb));
         const particles = [];
 
         function spawn(x, y) {
-            for (let i = 0; i < 30; i++) {
-                const angle = (Math.PI * 2 * i) / 30 + (Math.random() - 0.5) * 0.5;
+            const n = prefersReducedMotion() ? 10 : 26;
+            for (let i = 0; i < n; i++) {
+                const angle = (Math.PI * 2 * i) / n + (Math.random() - 0.5) * 0.5;
                 const speed = Math.random() * 5 + 2;
                 particles.push({
                     x, y,
-                    r: Math.random() * 3 + 1.5,
+                    r: Math.random() * 3 + 1.6,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
-                    color: colors[Math.random() * colors.length | 0],
+                    sprite: sprites[Math.random() * sprites.length | 0],
                     life: 1,
                     decay: Math.random() * 0.015 + 0.008
                 });
@@ -637,16 +832,11 @@
                 p.life -= p.decay;
                 p.r *= 0.985;
                 if (p.life <= 0) { particles.splice(i, 1); continue; }
+                const d = p.r * 6;
                 ctx.globalAlpha = p.life;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = p.color;
-                ctx.fill();
+                ctx.drawImage(p.sprite, p.x - d / 2, p.y - d / 2, d, d);
             }
             ctx.globalAlpha = 1;
-            ctx.shadowBlur = 0;
         });
         loop.stop();
 
@@ -702,66 +892,66 @@
         // 樱花是纯装饰层，用户要求减少动效时直接不绘制
         if (prefersReducedMotion()) return;
 
-        const ctx = cvs.getContext('2d');
-        const resize = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; };
+        const ctx = cvs.getContext('2d', { desynchronized: true });
+        if (!ctx) return;
+
+        // 按 CSS 像素绘制：光点本身就是柔光，不需要 DPR 放大，填充像素直接省一半以上
+        const resize = () => {
+            cvs.width = window.innerWidth;
+            cvs.height = window.innerHeight;
+        };
         resize();
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', resize, { passive: true });
 
-        const colors = [
-            'rgba(255, 183, 197, ',   // 樱花粉
-            'rgba(255, 150, 180, ',   // 深樱粉
-            'rgba(255, 209, 220, ',   // 浅樱粉
-            'rgba(255, 182, 193, ',   // 浅粉红
-            'rgba(248, 187, 208, ',   // 玫瑰粉
-            'rgba(237, 159, 176, ',   // 桃粉
-            'rgba(0, 229, 199, ',    // accent青（少量点缀）
-            'rgba(253, 121, 168, ',  // warm粉
+        // 颜色改成预烘焙贴图：原来每帧要做 95 次 shadowBlur(20) + arc + 字符串拼接，
+        // 现在每帧只是 95 次 drawImage，光晕观感一致，开销降一个数量级。
+        const COLORS = [
+            '255,183,197',   // 樱花粉
+            '255,150,180',   // 深樱粉
+            '255,209,220',   // 浅樱粉
+            '255,182,193',   // 浅粉红
+            '248,187,208',   // 玫瑰粉
+            '237,159,176',   // 桃粉
+            '0,229,199',     // accent青（少量点缀）
+            '253,121,168'    // warm粉
         ];
+        const sprites = COLORS.map(rgb => getGlowSprite(rgb));
 
-        const petals = Array.from({ length: 95 }, () => {
-            const colorBase = colors[Math.random() * colors.length | 0];
-            return {
-                x: Math.random() * cvs.width,
-                y: Math.random() * cvs.height,
-                r: Math.random() * 5 + 2.5,
-                vx: (Math.random() - 0.5) * 0.8,
-                vy: Math.random() * 0.8 + 0.35,
-                o: Math.random() * 0.4 + 0.35,
-                rot: Math.random() * Math.PI * 2,
-                rv: (Math.random() - 0.5) * 0.02,
-                color: colorBase,
-                pulse: Math.random() * Math.PI * 2,
-                pulseSpeed: Math.random() * 0.025 + 0.008
-            };
-        });
+        // 小屏 / 低核心设备减量：视觉密度不变太多，帧率优先级更高
+        const small = window.matchMedia('(max-width: 768px)').matches;
+        const COUNT = small ? 40 : 70;
+
+        const petals = Array.from({ length: COUNT }, () => ({
+            x: Math.random() * cvs.width,
+            y: Math.random() * cvs.height,
+            r: Math.random() * 4.5 + 2.5,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: Math.random() * 0.8 + 0.35,
+            o: Math.random() * 0.4 + 0.35,
+            sprite: sprites[Math.random() * sprites.length | 0],
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.025 + 0.008
+        }));
 
         createLoop(() => {
-            ctx.clearRect(0, 0, cvs.width, cvs.height);
-            petals.forEach(p => {
+            const w = cvs.width, h = cvs.height;
+            ctx.clearRect(0, 0, w, h);
+
+            for (let i = 0; i < petals.length; i++) {
+                const p = petals[i];
                 p.x += p.vx + Math.sin(p.pulse) * 0.4;
                 p.y += p.vy;
-                p.rot += p.rv;
                 p.pulse += p.pulseSpeed;
 
-                if (p.y > cvs.height + p.r) { p.y = -p.r; p.x = Math.random() * cvs.width; }
-                if (p.x > cvs.width + p.r) p.x = -p.r;
-                if (p.x < -p.r) p.x = cvs.width + p.r;
+                if (p.y > h + p.r) { p.y = -p.r; p.x = Math.random() * w; }
+                if (p.x > w + p.r) p.x = -p.r;
+                if (p.x < -p.r) p.x = w + p.r;
 
-                const currentO = p.o * (0.65 + 0.35 * Math.sin(p.pulse));
-
-                ctx.save();
-                ctx.globalAlpha = currentO;
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rot);
-                ctx.beginPath();
-                ctx.arc(0, 0, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = p.color + currentO + ')';
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = p.color + '0.6)';
-                ctx.fill();
-                ctx.restore();
-            });
-            ctx.shadowBlur = 0;
+                const d = p.r * 6;
+                ctx.globalAlpha = p.o * (0.65 + 0.35 * Math.sin(p.pulse));
+                ctx.drawImage(p.sprite, p.x - d / 2, p.y - d / 2, d, d);
+            }
+            ctx.globalAlpha = 1;
         });
     }
 
@@ -990,18 +1180,16 @@
         }
 
         btn.addEventListener('click', () => {
-            if (hasGsap && window.ScrollToPlugin) {
-                gsap.to(window, { duration: 0.8, ease: 'power2.inOut', scrollTo: { y: 0 } });
-            } else {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            // 原生平滑滚动就够用，不必再为这一处引入 ScrollToPlugin
+            window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
         });
     }
 
     /* ── About 卡片：光斑跟随 + 3D 倾斜 ── */
     function initAboutCard() {
         const card = document.getElementById('spotlightCard');
-        if (!card) return;
+        // 光斑与倾斜都依赖悬停，触摸设备上白算一遍没意义
+        if (!card || !hasFinePointer()) return;
 
         // mousemove 是高频事件，逐次 getBoundingClientRect() 会强制同步布局。
         // 进入时量一次，滚动 / 缩放 / 离开时作废缓存。
@@ -1372,10 +1560,11 @@
                 { opacity: 1, transform: 'scale(1.4) translateY(-5px)', offset: 0.6 },
                 { opacity: 1, transform: 'scale(1) translateY(0)' }
             ], {
-                duration: 800,
+                duration: 700,
                 easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
                 fill: 'forwards',
-                delay: 1600 + index * 150
+                // 原来要等 1.6s+，现在遮罩一揭开就能看到爱心跳出来
+                delay: 120 + index * 120
             });
 
             // 持续心跳动画
@@ -1389,7 +1578,7 @@
                 duration: 1400,
                 iterations: Infinity,
                 easing: 'ease-in-out',
-                delay: index * 150,
+                delay: index * 120,
                 endDelay: 2400
             });
         });
@@ -1404,45 +1593,24 @@
         // 永久压过 GSAP 倾斜写进 inline style 的 transform，导致 3D 倾斜失效。
         // 卡片的入场已由父级 .about 的 ScrollTrigger 渐入负责。
 
-        // 标题动画
+        // 标题动画（只跑一次，不再和 SplitText 的行遮罩抢同一条时间线）
         const heading = document.querySelector('.about-heading');
         if (heading) {
             heading.animate([
-                { opacity: 0, transform: 'translateX(-30px)', filter: 'blur(5px)' },
-                { opacity: 1, transform: 'translateX(0)', filter: 'blur(0px)' }
-            ], {
-                duration: 800,
-                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                fill: 'forwards',
-                delay: 2300
-            });
-        }
-
-        // 内容逐行显示
-        const paragraphs = document.querySelectorAll('.about-content p');
-        paragraphs.forEach((p, index) => {
-            p.animate([
-                { opacity: 0, transform: 'translateY(20px) translateX(-10px)' },
-                { opacity: 0.6, transform: 'translateY(0) translateX(0)' }
+                { opacity: 0, transform: 'translateX(-24px)' },
+                { opacity: 1, transform: 'translateX(0)' }
             ], {
                 duration: 700,
                 easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
                 fill: 'forwards',
-                delay: 2600 + index * 120
+                delay: 400
             });
+        }
 
-            // 悬停时的微动效（使用事件监听）
-            p.addEventListener('mouseenter', () => {
-                p.animate([
-                    { transform: 'translateX(0)' },
-                    { transform: 'translateX(6px)' },
-                    { transform: 'translateX(4px)' }
-                ], {
-                    duration: 300,
-                    easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-                });
-            });
-        });
+        // 段落不再在这里做第二套入场：GSAP 的 initAboutContentReveal 已经跟着滚动
+        // 逐行揭示，两套 WAAPI + GSAP 同时写 opacity/transform 会互相覆盖
+        // （旧的 WAAPI 用 fill:'forwards' 常驻，还会把 GSAP 的进度顶掉）。
+        // 段落 hover 的位移也交回 CSS transition，少一层 JS 监听。
     }
 
     /* ── 社交链接：ScrollTrigger 入场 + GSAP 悬停 ──
@@ -1517,7 +1685,7 @@
 
     /* ── 磁吸：可交互元素被鼠标吸引产生位移 ── */
     function initMagnetic() {
-        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
+        if (typeof gsap === 'undefined' || prefersReducedMotion() || !hasFinePointer()) return;
 
         const targets = gsap.utils.toArray('.social-links a, .pill');
         if (!targets.length) return;
@@ -1545,45 +1713,64 @@
             gsap.utils.clamp(0, 1)
         );
 
-        window.addEventListener('mousemove', e => {
-            items.forEach(it => {
+        onPointerMove((x, y) => {
+            for (let i = 0; i < items.length; i++) {
+                const it = items[i];
                 if (!it.rect) it.rect = it.el.getBoundingClientRect();
                 const r = it.rect;
-                const dx = e.clientX - (r.left + r.width / 2);
-                const dy = e.clientY - (r.top + r.height / 2);
+                const dx = x - (r.left + r.width / 2);
+                const dy = y - (r.top + r.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist > RADIUS) { it.xTo(0); it.yTo(0); return; }
+                if (dist > RADIUS) { it.xTo(0); it.yTo(0); continue; }
                 const k = falloff(dist) * PULL;
                 it.xTo(dx * k);
                 it.yTo(dy * k);
-            });
-        }, { passive: true });
+            }
+        });
     }
 
-    /* ── 导航文字乱码重组（ScrambleTextPlugin）──
-       只改 .pill-label-hover 的文本内容，不动它正在被 PillNav 动画驱动的 transform。 */
+    /* ── 导航文字乱码重组 ──
+       原来依赖 ScrambleTextPlugin（多一个 CDN 请求 + 一份解析）。
+       这里用 rAF 做同样的效果：先满屏乱码，再从左到右逐字收敛，
+       只改 .pill-label-hover 的文本，不碰 PillNav 正在驱动的 transform。 */
     function initNavScramble() {
-        if (typeof gsap === 'undefined' || !window.ScrambleTextPlugin || prefersReducedMotion()) return;
+        if (prefersReducedMotion() || !hasFinePointer()) return;
 
-        gsap.utils.toArray('.pill').forEach(pill => {
+        const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const FRAMES = 22;
+
+        const scramble = (label, text) => {
+            if (label.__scrambleRaf) cancelAnimationFrame(label.__scrambleRaf);
+            let frame = 0;
+
+            const step = () => {
+                frame += 1;
+                const settled = Math.floor((frame / FRAMES) * text.length);
+                let out = '';
+                for (let i = 0; i < text.length; i++) {
+                    const ch = text[i];
+                    if (ch === ' ') { out += ' '; continue; }
+                    out += i < settled ? ch : CHARS[Math.random() * CHARS.length | 0];
+                }
+                label.textContent = out;
+
+                if (frame < FRAMES) {
+                    label.__scrambleRaf = requestAnimationFrame(step);
+                } else {
+                    label.textContent = text;
+                    label.__scrambleRaf = 0;
+                }
+            };
+            step();
+        };
+
+        document.querySelectorAll('.pill').forEach(pill => {
             const label = pill.querySelector('.pill-label-hover');
             if (!label) return;
             const text = label.textContent.trim();
             if (!text) return;
-
-            pill.addEventListener('mouseenter', () => {
-                gsap.to(label, {
-                    duration: 0.6,
-                    scrambleText: {
-                        text: text,
-                        chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                        speed: 0.6,
-                        revealDelay: 0.1
-                    },
-                    overwrite: 'auto'
-                });
-            });
+            pill.addEventListener('mouseenter', () => scramble(label, text));
         });
     }
 
@@ -1616,19 +1803,19 @@
     /* ── 光标跟随环：常态小圆，移到可交互元素上放大吸附 ── */
     function initCursorRing() {
         const ring = document.getElementById('cursorRing');
-        if (!ring || typeof gsap === 'undefined' || prefersReducedMotion()) return;
+        if (!ring || typeof gsap === 'undefined' || prefersReducedMotion() || !hasFinePointer()) return;
 
         const xTo = gsap.quickTo(ring, 'x', { duration: 0.35, ease: 'power3' });
         const yTo = gsap.quickTo(ring, 'y', { duration: 0.35, ease: 'power3' });
         const HOVERABLE = 'a, button, .pill, .about-card, .heart-char';
 
         let shown = false;
-        window.addEventListener('mousemove', e => {
+        onPointerMove((x, y) => {
             // 只在首次移动时建一个淡入 tween，之后每帧仅更新 quickTo
             if (!shown) { shown = true; gsap.to(ring, { opacity: 1, duration: 0.4 }); }
-            xTo(e.clientX);
-            yTo(e.clientY);
-        }, { passive: true });
+            xTo(x);
+            yTo(y);
+        });
 
         document.addEventListener('mouseleave', () => {
             gsap.to(ring, { opacity: 0, duration: 0.3, overwrite: 'auto' });
@@ -1646,12 +1833,15 @@
 
     /* ── 光标粒子拖尾（canvas：渐隐 + lighter 叠加发光）── */
     function initCursorTrail() {
-        if (prefersReducedMotion()) return;            // 减少动效：不建 canvas，零开销
+        if (prefersReducedMotion() || !hasFinePointer()) return;   // 减少动效 / 触摸设备：零开销
         const canvas = document.getElementById('cursorTrail');
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d');
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const ctx = canvas.getContext('2d', { desynchronized: true });
+        if (!ctx) return;
+
+        // 光晕是柔的，1.5 倍采样已经看不出差别，显存与填充率比 2 倍少很多
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         let w = 0, h = 0;
 
         const resize = () => {
@@ -1661,11 +1851,14 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         };
         resize();
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', resize, { passive: true });
 
-        const MAX = 22, LIFE = 1;        // 上限粒子数 / 存活秒数
+        // 一张预烘焙贴图替代每帧 22 次 createRadialGradient
+        const sprite = getGlowSprite('0,200,180');
+
+        const MAX = 20, LIFE = 1;        // 上限粒子数 / 存活秒数
         const particles = [];
-        let last = { x: -1, y: -1 };
+        let lastX = -1, lastY = -1;
         let rafId = null, prevT = 0;
 
         const tick = (t) => {
@@ -1678,30 +1871,24 @@
                 p.age += dt;
                 const k = p.age / LIFE;
                 if (k >= 1) { particles.splice(i, 1); continue; }
-                const r = 9 * (1 - k) + 2;
-                const a = (1 - k) * 0.5;
-                const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-                g.addColorStop(0, `rgba(0, 200, 180, ${a})`);
-                g.addColorStop(1, 'rgba(0, 200, 180, 0)');
-                ctx.fillStyle = g;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-                ctx.fill();
+                const d = (9 * (1 - k) + 2) * 2;       // 直径，随年龄收缩
+                ctx.globalAlpha = (1 - k) * 0.5;
+                ctx.drawImage(sprite, p.x - d / 2, p.y - d / 2, d, d);
             }
+            ctx.globalAlpha = 1;
             ctx.globalCompositeOperation = 'source-over';
             rafId = particles.length ? requestAnimationFrame(tick) : null;
         };
 
         const ensureLoop = () => { if (!rafId) { prevT = performance.now(); rafId = requestAnimationFrame(tick); } };
 
-        document.addEventListener('mousemove', e => {
-            const x = e.clientX, y = e.clientY;
-            if (last.x === x && last.y === y) return;   // 静止不重复生成
-            last = { x, y };
+        onPointerMove((x, y) => {
+            if (lastX === x && lastY === y) return;   // 静止不重复生成
+            lastX = x; lastY = y;
             particles.push({ x, y, age: 0 });
             if (particles.length > MAX) particles.shift();
             ensureLoop();
-        }, { passive: true });
+        });
     }
 
     /* ── 背景视差：环境光球随鼠标与滚动轻微位移 ── */
@@ -1712,30 +1899,28 @@
         const xTo = gsap.quickTo(layer, 'x', { duration: 0.9, ease: 'power3' });
         const yTo = gsap.quickTo(layer, 'y', { duration: 0.9, ease: 'power3' });
 
-        // 视口坐标归一化到 -1 ~ 1
-        const normX = gsap.utils.pipe(
-            gsap.utils.mapRange(0, window.innerWidth, -1, 1),
-            gsap.utils.clamp(-1, 1)
-        );
-        const normY = gsap.utils.pipe(
-            gsap.utils.mapRange(0, window.innerHeight, -1, 1),
-            gsap.utils.clamp(-1, 1)
-        );
-
         // 鼠标与滚动都会写 y，合并到同一个写入口，避免两个来源互相打断
-        let mx = 0, my = 0, progress = 0;
+        let mx = 0, my = 0, progress = 0, shownOpacity = -1;
         const apply = () => {
             xTo(mx * 26);
             yTo(my * 18 + progress * 60);
-            // 滚动进度同时驱动环境光色相，整页配色随阅读深度缓慢流转
-            layer.style.filter = `hue-rotate(${(progress * 60 - 30).toFixed(1)}deg)`;
+            // 原来这里每帧写 filter: hue-rotate()，会让整个全屏光晕层反复重新栅格化，
+            // 是滚动时最重的一笔开销。改成几乎免费的 opacity 微调，观感差别很小。
+            const o = 0.82 + progress * 0.18;
+            if (Math.abs(o - shownOpacity) > 0.02) {
+                shownOpacity = o;
+                layer.style.opacity = o.toFixed(2);
+            }
         };
 
-        window.addEventListener('mousemove', e => {
-            mx = normX(e.clientX);
-            my = normY(e.clientY);
-            apply();
-        }, { passive: true });
+        // 只在精确指针设备上做鼠标视差；触摸设备仅由滚动驱动
+        if (hasFinePointer()) {
+            onPointerMove((x, y) => {
+                mx = (x / window.innerWidth) * 2 - 1;
+                my = (y / window.innerHeight) * 2 - 1;
+                apply();
+            });
+        }
 
         if (window.ScrollTrigger) {
             ScrollTrigger.create({
@@ -1758,7 +1943,7 @@
             duration: 900,
             easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
             fill: 'forwards',
-            delay: 3400
+            delay: 900
         });
     }
 
@@ -1806,18 +1991,19 @@
         window.addEventListener('scroll', invalidate, { passive: true });
         window.addEventListener('resize', invalidate);
 
-        if (!reduced) {
-            window.addEventListener('mousemove', e => {
-                items.forEach(it => {
+        if (!reduced && hasFinePointer()) {
+            onPointerMove((x, y) => {
+                for (let i = 0; i < items.length; i++) {
+                    const it = items[i];
                     if (!it.rect) it.rect = it.el.getBoundingClientRect();
                     const r = it.rect;
-                    if (!r.width || !r.height) return;
-                    const nx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width / 2)));
-                    const ny = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (r.height / 2)));
+                    if (!r.width || !r.height) continue;
+                    const nx = Math.max(-1, Math.min(1, (x - (r.left + r.width / 2)) / (r.width / 2)));
+                    const ny = Math.max(-1, Math.min(1, (y - (r.top + r.height / 2)) / (r.height / 2)));
                     it.inner.style.setProperty('--rx', (-ny * 12).toFixed(2) + 'deg');
                     it.inner.style.setProperty('--ry', (nx * 18).toFixed(2) + 'deg');
-                });
-            }, { passive: true });
+                }
+            });
         }
 
         const init = () => document.querySelectorAll(SELECTOR).forEach(register);
