@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#04070c" />
+<meta name="description" content="RACE_ENGINE — 在霓虹赛道上学习 C++：数据结构与算法、STL、语言机制、OOP、泛型编程与现代 C++。中英双语，可静态部署。" />
+<title>RACE_ENGINE // C++ 学习赛车</title>
+<link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <div class="fx-grain"></div>
+  <div class="fx-scan"></div>
+  <div class="fx-vignette"></div>
+  <div class="fx-speed" id="fxSpeed"></div>
+  <div class="fx-hit" id="fxHit"></div>
+
+  <!-- ══════════ 全局工具条 ══════════ -->
+  <div class="global-tools">
+    <button class="toolbtn" id="codexBtn"><span class="key">TAB</span> <span data-i18n="ui.codex">CODEX</span></button>
+    <button class="toolbtn" id="langBtn" title="switch language">EN</button>
+  </div>
+
+  <!-- ══════════ HUD ══════════ -->
+  <div id="hud" class="hud hidden">
+    <div class="hud-line"><i id="hudProgress"></i></div>
+
+    <div class="hud-left">
+      <div class="panel">
+        <div class="panel__head"><span class="led"></span><span>race_engine / level.cpp</span></div>
+        <div class="panel__body">
+          <div class="kv">
+            <span class="kv__k" data-i18n="hud.level">LEVEL</span>
+            <span class="kv__v"><b id="hudLevel">01</b><small>/ 03</small></span>
+          </div>
+          <div class="codename" id="hudCode">nullptr_drift</div>
+          <div class="cp"><span class="led led--sm" id="cpDot"></span><span id="hudCp">checkpoint 0 / 3</span></div>
+          <div class="cp cp--node"><span class="led led--sm led--node"></span><span id="hudNodes">knowledge 0 / 4</span></div>
+        </div>
+      </div>
+
+      <div class="panel gauge">
+        <div class="gauge__top">
+          <span class="lbl" data-i18n="hud.velocity">velocity</span>
+          <span class="lbl">km / h</span>
+        </div>
+        <div class="gauge__wrap">
+          <svg class="gauge__svg" viewBox="0 0 200 136" aria-hidden="true">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#22e6ff"/>
+                <stop offset="52%" stop-color="#8dffb8"/>
+                <stop offset="100%" stop-color="#ff2f7d"/>
+              </linearGradient>
+            </defs>
+            <path class="gauge__track" d=""/>
+            <path class="gauge__fill" d=""/>
+            <g class="gauge__ticks"></g>
+            <g class="gauge__needle" transform="rotate(60 100 70)">
+              <line x1="100" y1="70" x2="100" y2="16"/>
+              <circle cx="100" cy="70" r="7.5"/>
+            </g>
+          </svg>
+          <div class="gauge__num"><b id="hudSpeed">000</b></div>
+          <div class="gauge__boost" id="hudBoostTag">boost</div>
+        </div>
+      </div>
+
+      <div class="panel minimap">
+        <div class="minimap__head">
+          <span class="lbl" data-i18n="hud.map">track</span>
+          <span class="lbl" id="hudBest">best --</span>
+        </div>
+        <canvas id="minimap" width="300" height="300"></canvas>
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <div class="panel timer" id="timerPanel">
+        <div class="timer__row"><span class="lbl" data-i18n="hud.timeLeft">time_left</span><span class="lbl" id="hudCpMini">0/3</span></div>
+        <div class="timer__num" id="hudTimer">55.0</div>
+        <div class="timer__bar"><i id="hudTimeBar"></i></div>
+      </div>
+
+      <div class="panel nitro">
+        <div class="nitro__row"><span class="lbl"><span data-i18n="hud.nitro">nitro</span> <em>[SHIFT]</em></span><span class="lbl" id="hudNitro">100%</span></div>
+        <div class="nitro__bar"><i id="hudNitroBar"></i></div>
+      </div>
+
+      <div class="log" id="hudLog"></div>
+    </div>
+
+    <div class="toast" id="hudToast"><b></b><span></span></div>
+
+    <div class="hud-foot" id="hudFoot" data-i18n="hud.foot"></div>
+  </div>
+
+  <!-- ══════════ 启动终端 ══════════ -->
+  <section id="boot" class="boot">
+    <div class="boot__frame panel">
+      <div class="boot__bar">
+        <span class="led led--r"></span><span class="led led--y"></span><span class="led led--g"></span>
+        <span class="boot__path">~/race_engine — bash — 120×36</span>
+      </div>
+      <pre id="bootLog"></pre>
+      <div class="boot__hint hidden" id="bootHint"><span class="blink">█</span> press [ ENTER ] to launch</div>
+      <div class="boot__levels" id="bootLevels"></div>
+    </div>
+    <div class="boot__sign">RACE<span>_</span>ENGINE <em>v0.4.0 · c++ learning racer</em></div>
+  </section>
+
+  <!-- ══════════ 结算面板 ══════════ -->
+  <section id="overlay" class="overlay hidden">
+    <div class="overlay__card panel">
+      <div class="panel__head"><span class="led"></span><span id="ovHead">runtime log</span></div>
+      <div class="overlay__body">
+        <div class="overlay__kicker" id="ovKicker">// level cleared</div>
+        <h1 class="overlay__title" id="ovTitle">LEVEL 01</h1>
+        <p class="overlay__sub" id="ovSub"></p>
+        <div class="overlay__stats" id="ovStats"></div>
+        <div class="overlay__actions">
+          <button class="btn" id="ovBtn">[ ENTER ] continue</button>
+          <button class="btn btn--ghost" id="ovCodex"><span class="key">TAB</span> <span data-i18n="ui.openCodex">open codex</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 知识点弹窗 ══════════ -->
+  <section id="study" class="study hidden">
+    <div class="study__card panel">
+      <div class="panel__head">
+        <span class="led led--node"></span>
+        <span id="studyCat">DATA STRUCTURES</span>
+        <span class="study__gain" id="studyGain">+3s</span>
+      </div>
+      <div class="study__body">
+        <div class="study__kicker" id="studyKicker">// knowledge node 01</div>
+        <h2 class="study__title" id="studyTitle"></h2>
+        <p class="study__meta" id="studyMeta"></p>
+        <div class="study__text" id="studyText"></div>
+        <pre class="code code--card" id="studyCode"></pre>
+        <ul class="study__points" id="studyPoints"></ul>
+        <button class="btn" id="studyBtn">[ ENTER ] continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ C++ 知识库 ══════════ -->
+  <section id="codex" class="codex hidden">
+    <div class="codex__panel panel">
+      <div class="codex__head">
+        <span class="led"></span>
+        <span class="codex__title" data-i18n="codex.title">C++ CODEX</span>
+        <span class="codex__sub" id="codexSub"></span>
+        <button class="toolbtn toolbtn--close" id="codexClose"><span class="key">ESC</span> <span data-i18n="ui.close">close</span></button>
+      </div>
+      <div class="codex__body">
+        <nav class="codex__nav" id="codexNav"></nav>
+        <div class="codex__list" id="codexList"></div>
+        <article class="codex__doc" id="codexDoc"></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 触屏控制 ══════════ -->
+  <div class="touch" id="touch">
+    <div class="touch__pad touch__pad--left">
+      <button class="tbtn" data-key="KeyA" aria-label="left">◀</button>
+      <button class="tbtn" data-key="KeyD" aria-label="right">▶</button>
+      <button class="tbtn tbtn--brake" data-key="KeyS" aria-label="brake">▼</button>
+    </div>
+    <div class="touch__pad touch__pad--right">
+      <button class="tbtn tbtn--nitro" data-key="ShiftLeft" aria-label="nitro">N2O</button>
+      <button class="tbtn tbtn--go" data-key="KeyW" aria-label="throttle">▲</button>
+    </div>
+  </div>
+
+  <div id="fatal" class="fatal hidden">
+    <div class="panel">
+      <div class="panel__head"><span class="led led--r"></span><span>fatal error</span></div>
+      <div class="panel__body">
+        <p><b data-i18n="fatal.title">链接失败：无法加载三维引擎。</b></p>
+        <p data-i18n="fatal.body">请通过 HTTP 打开本页（本地用 run.cmd，GitHub Pages 直接访问），并确认可访问 cdn.jsdelivr.net。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.__ENGINE_BOOTED = false;
+  window.addEventListener('error', function (e) {
+    if (e.target && e.target.tagName === 'SCRIPT') { document.getElementById('fatal').classList.remove('hidden'); }
+  }, true);
+  setTimeout(function () {
+    if (!window.__ENGINE_BOOTED) { document.getElementById('fatal').classList.remove('hidden'); }
+  }, 15000);
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

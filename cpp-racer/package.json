@@ -1,0 +1,10 @@
+{
+  "name": "cpp-racer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "C++ 风味 3D 赛车闯关游戏（Three.js 单页游戏）",
+  "scripts": {
+    "start": "python -m http.server 8791"
+  }
+}
