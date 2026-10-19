@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#04070c" />
+<meta name="description" content="RACE_ENGINE 3D 车辆展厅 — C++ 主题赛车的外观、材质与结构细节展示。" />
+<title>RACE_ENGINE // 3D 车辆展厅</title>
+<link rel="stylesheet" href="./css/showroom.css" />
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="fx-scan" aria-hidden="true"></div>
+<div class="fx-vignette" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="./index.html">RACE<span>_</span>ENGINE</a>
+  <div class="topbar__right">
+    <span class="topbar__tag">VEHICLE SHOWROOM · v0.4</span>
+    <a class="topbar__cta" href="./index.html">进入比赛 <b>→</b></a>
+  </div>
+</header>
+
+<aside class="panel specs">
+  <div class="panel__head"><span class="led"></span><span>spec_sheet.hpp</span></div>
+  <div class="specs__body">
+    <h1 class="specs__title">NULLPTR<br><span>DRIFT</span></h1>
+    <p class="specs__sub">LMP-style prototype · C++ racer</p>
+    <dl class="specs__list">
+      <div><dt>length</dt><dd>4.50 <em>m</em></dd></div>
+      <div><dt>width</dt><dd>2.06 <em>m</em></dd></div>
+      <div><dt>height</dt><dd>1.12 <em>m</em></dd></div>
+      <div><dt>wheelbase</dt><dd>2.92 <em>m</em></dd></div>
+      <div><dt>top speed</dt><dd>390 <em>km/h</em></dd></div>
+      <div><dt>0 – 100</dt><dd>2.1 <em>s</em></dd></div>
+      <div><dt>downforce</dt><dd>1 840 <em>kg</em></dd></div>
+      <div><dt>dry mass</dt><dd>1 080 <em>kg</em></dd></div>
+    </dl>
+  </div>
+</aside>
+
+<aside class="panel detail hidden" id="detail">
+  <div class="panel__head"><span class="led led--warm"></span><span id="detailKicker">component</span></div>
+  <div class="detail__body">
+    <h2 id="detailTitle"></h2>
+    <p id="detailText"></p>
+    <div class="detail__meta" id="detailMeta"></div>
+  </div>
+</aside>
+
+<div class="hotspots" id="hotspots"></div>
+
+<footer class="dock">
+  <div class="dock__group">
+    <span class="dock__label">paint</span>
+    <div class="swatches" id="swatches"></div>
+  </div>
+  <div class="dock__group">
+    <span class="dock__label">light rig</span>
+    <div class="chips" id="rigs"></div>
+  </div>
+  <div class="dock__group dock__group--right">
+    <button class="chip chip--toggle is-on" id="spinBtn">auto-spin</button>
+    <button class="chip" id="resetBtn">reset view</button>
+  </div>
+</footer>
+
+<div class="hint">拖拽旋转 · 滚轮缩放 · 点击光点查看部件</div>
+
+<div class="loading" id="loading"><span>loading geometry…</span></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./js/showroom.js"></script>
+</body>
+</html>

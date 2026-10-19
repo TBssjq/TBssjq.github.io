@@ -21,6 +21,7 @@ export class HUD {
       speed: $('hudSpeed'),
       gaugeTrack: document.querySelector('.gauge__track'),
       gaugeFill: document.querySelector('.gauge__fill'),
+      gaugeRed: document.querySelector('.gauge__redline'),
       gaugeTicks: document.querySelector('.gauge__ticks'),
       gaugeNeedle: document.querySelector('.gauge__needle'),
       nitro: $('hudNitro'),
@@ -50,9 +51,16 @@ export class HUD {
     window.addEventListener('langchange', () => this.refreshStatic());
   }
 
-  show() { this.el.hud.classList.remove('hidden'); }
+  show() {
+    this.el.hud.classList.remove('hidden');
+    // 下一帧再上 is-in，保证过渡动画能播出来
+    requestAnimationFrame(() => this.el.hud.classList.add('is-in'));
+  }
 
-  hide() { this.el.hud.classList.add('hidden'); }
+  hide() {
+    this.el.hud.classList.add('hidden');
+    this.el.hud.classList.remove('is-in');
+  }
 
   /** 半圆仪表：150°→-90° 扫过 240°，指针从 7 点钟到 5 点钟 */
   _initGauge() {
@@ -85,6 +93,15 @@ export class HUD {
       ticks.push(`<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" />`);
     }
     this.el.gaugeTicks.innerHTML = ticks.join('');
+
+    // 红线区（最后 22% 量程）
+    const rA0 = A0 - SPAN * 0.78;
+    const [rx0, ry0] = pt(rA0, R);
+    const [rx1, ry1] = pt(A0 - SPAN, R);
+    this.el.gaugeRed.setAttribute(
+      'd',
+      `M ${rx0.toFixed(2)} ${ry0.toFixed(2)} A ${R} ${R} 0 0 0 ${rx1.toFixed(2)} ${ry1.toFixed(2)}`,
+    );
 
     this.gaugeCenter = [CX, CY];
   }

@@ -34,6 +34,7 @@ export class Track {
     this._buildPosts();
     this._buildGates();
     this._buildBillboards();
+    this._buildCity();
   }
 
   /* ── 几何工具 ───────────────────────────── */
@@ -179,6 +180,45 @@ export class Track {
     });
     this._add(this._ribbon(-half - 3.2, -half, 0.05), glowL);
     this._add(this._ribbon(half, half + 3.2, 0.05), glowR);
+
+    // 路缘石（红白相间，真实赛道的标志物）
+    const curbMat = new THREE.MeshStandardMaterial({
+      map: this._curbTexture(),
+      roughness: 0.7,
+      metalness: 0.05,
+      envMapIntensity: 0.3,
+    });
+    this._add(this._ribbon(half + 0.05, half + 1.35, 0.09, 2), curbMat);
+    this._add(this._ribbon(-half - 1.35, -half - 0.05, 0.09, 2), curbMat);
+  }
+
+  _curbTexture() {
+    const c = document.createElement('canvas');
+    c.width = 64;
+    c.height = 128;
+    const g = c.getContext('2d');
+
+    for (let y = 0; y < 128; y += 16) {
+      g.fillStyle = (y / 16) % 2 === 0 ? '#eef4f8' : '#d8435e';
+      g.fillRect(0, y, 64, 16);
+    }
+
+    // 顶部暗边与底部磨损，让条纹有厚度感
+    g.fillStyle = 'rgba(0,0,0,.25)';
+    g.fillRect(0, 0, 64, 2);
+    g.fillRect(0, 126, 64, 2);
+    for (let i = 0; i < 140; i++) {
+      g.fillStyle = `rgba(0,0,0,${Math.random() * 0.22})`;
+      g.fillRect(Math.random() * 64, Math.random() * 128, 1.4, 1.4);
+    }
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    this._disposables.push(tex);
+    return tex;
   }
 
   /* ── 护栏灯柱 ───────────────────────────── */
@@ -190,9 +230,12 @@ export class Track {
     const count = Math.floor(this.length / step) * 2;
 
     const geo = new THREE.BoxGeometry(0.16, 1.5, 0.16);
+    const ballGeo = new THREE.SphereGeometry(0.15, 10, 8);
     const mat = new THREE.MeshBasicMaterial({ toneMapped: false, color: 0xffffff });
     const inst = new THREE.InstancedMesh(geo, mat, count);
+    const balls = new THREE.InstancedMesh(ballGeo, mat, count);
     inst.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+    balls.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 
     const m = new THREE.Matrix4();
     const colL = new THREE.Color(accent);
@@ -204,22 +247,29 @@ export class Track {
       const sm = this.samples[i];
       for (let side = -1; side <= 1; side += 2) {
         if (k >= count) break;
-        m.makeTranslation(
-          sm.pos.x + sm.right.x * half * side,
-          0.75,
-          sm.pos.z + sm.right.z * half * side,
-        );
+        const x = sm.pos.x + sm.right.x * half * side;
+        const z = sm.pos.z + sm.right.z * half * side;
+
+        m.makeTranslation(x, 0.72, z);
         inst.setMatrixAt(k, m);
+        m.makeTranslation(x, 1.56, z);
+        balls.setMatrixAt(k, m);
+
         inst.setColorAt(k, side < 0 ? colL : colR);
+        balls.setColorAt(k, side < 0 ? colL : colR);
         k++;
       }
     }
     inst.count = k;
+    balls.count = k;
     inst.instanceMatrix.needsUpdate = true;
+    balls.instanceMatrix.needsUpdate = true;
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    if (balls.instanceColor) balls.instanceColor.needsUpdate = true;
     inst.frustumCulled = false;
-    this.group.add(inst);
-    this._disposables.push(geo, mat);
+    balls.frustumCulled = false;
+    this.group.add(inst, balls);
+    this._disposables.push(geo, ballGeo, mat);
   }
 
   /* ── 门（起终点 / 检查点） ─────────────── */
@@ -276,8 +326,19 @@ export class Track {
     plate.position.set(0, h - 0.9, 0.3);
     g.add(plate);
 
-    this._disposables.push(pillarGeo, beamGeo, mat, labelMat, plate.geometry);
-    g.userData.materials = [mat];
+    // 地面光带：从门脚下铺一道横向光，标示要通过的位置
+    const floorGeo = new THREE.PlaneGeometry((half + 1.1) * 2, 2.8);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity: 0.26,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    });
+    const floorBeam = new THREE.Mesh(floorGeo, beamMat);
+    floorBeam.rotation.x = -Math.PI / 2;
+    floorBeam.position.set(0, 0.05, 0);
+    g.add(floorBeam);
+
+    this._disposables.push(pillarGeo, beamGeo, mat, labelMat, plate.geometry, floorGeo, beamMat);
+    g.userData.materials = [mat, beamMat];
     g.userData.passed = false;
     return g;
   }
@@ -310,8 +371,70 @@ export class Track {
     this.edgeMats[1].color.copy(this.edgeBase[1]).multiplyScalar(k);
   }
 
-  /* ── 路边霓虹广告牌 ─────────────────────── */
+  /* ── 远景城市剪影 ───────────────────────── */
 
+  _buildCity() {
+    const count = 34;
+
+    let radius = 0;
+    for (const s of this.samples) {
+      const d = Math.hypot(s.pos.x, s.pos.z);
+      if (d > radius) radius = d;
+    }
+    radius += 70;
+
+    const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const boxMat = new THREE.MeshStandardMaterial({
+      color: 0x0a1420,
+      roughness: 0.92,
+      metalness: 0.08,
+      emissive: 0x05101a,
+      emissiveIntensity: 0.55,
+    });
+    const lightGeo = new THREE.BoxGeometry(1, 1, 1);
+    const lightMat = new THREE.MeshBasicMaterial({ toneMapped: false });
+
+    const inst = new THREE.InstancedMesh(boxGeo, boxMat, count);
+    const lights = new THREE.InstancedMesh(lightGeo, lightMat, count);
+    inst.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+    lights.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+
+    const m = new THREE.Matrix4();
+    const palette = [
+      new THREE.Color(this.level.accent),
+      new THREE.Color(this.level.accent2),
+      new THREE.Color(0xffcc66),
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.34;
+      const r = radius + Math.random() * 210;
+      const x = Math.cos(a) * r;
+      const z = Math.sin(a) * r;
+      const w = 12 + Math.random() * 24;
+      const h = 22 + Math.random() * 84;
+      const d = 12 + Math.random() * 24;
+
+      m.makeScale(w, h, d);
+      m.setPosition(x, h / 2 - 2, z);
+      inst.setMatrixAt(i, m);
+
+      m.makeScale(w * 0.42, 1.3, d * 0.42);
+      m.setPosition(x, h - 2.3, z);
+      lights.setMatrixAt(i, m);
+      lights.setColorAt(i, palette[Math.random() * palette.length | 0]);
+    }
+
+    inst.instanceMatrix.needsUpdate = true;
+    lights.instanceMatrix.needsUpdate = true;
+    if (lights.instanceColor) lights.instanceColor.needsUpdate = true;
+    inst.frustumCulled = false;
+    lights.frustumCulled = false;
+    this.group.add(inst, lights);
+    this._disposables.push(boxGeo, boxMat, lightGeo, lightMat);
+  }
+
+  /* ── 路边霓虹广告牌 ─────────────────────── */
   _billboardTexture(text, color) {
     const c = document.createElement('canvas');
     c.width = 1024;

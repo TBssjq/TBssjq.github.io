@@ -2019,3 +2019,139 @@ main {
         background: rgba(230, 236, 243, 0.94);
     }
 }
+
+/* ═══════════════════════════════════════════
+   3D 赛车入口（RACE_ENGINE）
+   ═══════════════════════════════════════════ */
+
+.racer-entry {
+    position: relative;
+    z-index: 2;
+    width: min(780px, calc(100% - 40px));
+    margin: 68px auto 0;
+}
+
+.racer-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    padding: 34px 38px 30px;
+    font-family: var(--font-en);
+    text-decoration: none;
+    color: #eafdff;
+    border-radius: 24px;
+    border: 1px solid rgba(34, 230, 255, 0.26);
+    background: radial-gradient(130% 150% at 12% 0%, #0b2533 0%, #061019 42%, #04070c 100%);
+    box-shadow:
+        0 34px 80px -34px rgba(0, 40, 60, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transition: transform 0.5s var(--ease-out-expo), box-shadow 0.5s var(--ease-out-expo);
+    isolation: isolate;
+}
+
+.racer-card:hover {
+    transform: translateY(-8px);
+    box-shadow:
+        0 54px 100px -34px rgba(0, 60, 80, 0.55),
+        0 0 60px -18px rgba(34, 230, 255, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.racer-card__grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(34, 230, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 230, 255, 0.07) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(90% 90% at 18% 0%, #000 0%, transparent 72%);
+    mask-image: radial-gradient(90% 90% at 18% 0%, #000 0%, transparent 72%);
+}
+
+.racer-card__glow {
+    position: absolute;
+    right: -90px;
+    top: -130px;
+    width: 380px;
+    height: 380px;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(34, 230, 255, 0.26), transparent 68%);
+    filter: blur(14px);
+}
+
+.racer-card__tag {
+    position: relative;
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-accent-light);
+    background: rgba(0, 158, 142, 0.12);
+    border: 1px solid rgba(64, 201, 184, 0.28);
+    border-radius: 999px;
+}
+
+.racer-card__title {
+    position: relative;
+    display: block;
+    margin: 16px 0 8px;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #f2feff;
+    text-shadow: 0 0 34px rgba(34, 230, 255, 0.45);
+}
+
+.racer-card__title em {
+    font-style: normal;
+    color: #ff2f7d;
+}
+
+.racer-card__desc {
+    position: relative;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.8;
+    color: rgba(186, 220, 235, 0.82);
+}
+
+.racer-card__chips {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 22px;
+}
+
+.racer-card__chips span {
+    padding: 5px 9px;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: rgba(160, 215, 235, 0.8);
+    border: 1px solid rgba(34, 230, 255, 0.2);
+}
+
+.racer-card__cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #22e6ff;
+}
+
+.racer-card__cta b {
+    font-weight: 400;
+    transition: transform 0.3s var(--ease-out-expo);
+}
+
+.racer-card:hover .racer-card__cta b { transform: translateX(6px); }
+
+@media (max-width: 640px) {
+    .racer-entry { margin-top: 46px; }
+    .racer-card { padding: 26px 22px 24px; border-radius: 18px; }
+}

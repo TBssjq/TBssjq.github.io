@@ -113,6 +113,9 @@ export class Car {
     const white = new THREE.MeshBasicMaterial({ color: 0xdcf8ff, toneMapped: false });
     D.push(paint, glass, dark, rimMat, tireMat, glow, glow2, white);
 
+    // 供展厅 / 自定义配色使用
+    this.materials = { paint, glass, dark, rim: rimMat, tire: tireMat, glow, glow2, white };
+
     const add = (geo, mat, x, y, z, parent = this.body) => {
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(x, y, z);
@@ -132,7 +135,8 @@ export class Car {
       { z: 1.52, ...section(0.97, 0.15, 0.67, 0.77) },
       { z: 2.14, ...section(0.9, 0.21, 0.58, 0.69) },
     ]);
-    add(shellGeo, paint, 0, 0, 0);
+    const shell = add(shellGeo, paint, 0, 0, 0);
+    shell.name = 'shell';
 
     /* 座舱 */
     const cabinGeo = loft([
@@ -141,7 +145,8 @@ export class Car {
       { z: 0.42, ...section(0.6, 0.82, 1.0, 1.1) },
       { z: 0.9, ...section(0.5, 0.78, 0.86, 0.9) },
     ], false);
-    add(cabinGeo, glass, 0, 0, 0);
+    const cabin = add(cabinGeo, glass, 0, 0, 0);
+    cabin.name = 'cabin';
 
     /* 前分流器 / 后扩散器 */
     add(new THREE.BoxGeometry(1.66, 0.07, 0.42), dark, 0, 0.14, -2.18);
@@ -253,8 +258,31 @@ export class Car {
       this.wheels.push({ hub, spin, front });
     }
 
-    /* 氮气尾焰 */
-    const flameGeo = new THREE.ConeGeometry(0.16, 1.0, 10);
+    /* 接地阴影：贴在路面上的椭圆软阴影，让车真正"落"在地面 */
+    const shCv = document.createElement('canvas');
+    shCv.width = 128;
+    shCv.height = 256;
+    const sg = shCv.getContext('2d');
+    const shGrad = sg.createRadialGradient(64, 128, 4, 64, 128, 124);
+    shGrad.addColorStop(0, 'rgba(0,0,0,.7)');
+    shGrad.addColorStop(0.42, 'rgba(0,0,0,.34)');
+    shGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    sg.setTransform(1, 0, 0, 0.42, 0, 0);
+    sg.fillStyle = shGrad;
+    sg.fillRect(0, 0, 128, 256);
+    const shadowTex = new THREE.CanvasTexture(shCv);
+
+    const shadowGeo = new THREE.PlaneGeometry(3.6, 6);
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTex, transparent: true, opacity: 0.9, depthWrite: false,
+    });
+    this.shadow = new THREE.Mesh(shadowGeo, shadowMat);
+    this.shadow.rotation.x = -Math.PI / 2;
+    this.shadow.position.y = 0.03;
+    this.group.add(this.shadow);
+    D.push(shadowGeo, shadowMat, shadowTex);
+
+    /* 氮气尾焰 */    const flameGeo = new THREE.ConeGeometry(0.16, 1.0, 10);
     const flameMat = new THREE.MeshBasicMaterial({
       color: 0xa8f6ff, transparent: true, opacity: 0,
       blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
