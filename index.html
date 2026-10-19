@@ -141,6 +141,18 @@
           onload="this.onload=null;this.rel='stylesheet';window.__cssReady=true;">
     <noscript><link rel="stylesheet" href="style.css"></noscript>
 
+    <!-- 兜底：preload 偶发失败（CDN 抖动 / 返回类型不对）时 onload 不触发，link 会一直停在
+         preload 状态、样式永不生效，整页裸奔。1.2s 后检查一次，没就绪就补一个同步 stylesheet。 -->
+    <script>
+        setTimeout(function () {
+            if (window.__cssReady) return;
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = 'style.css';
+            document.head.appendChild(l);
+        }, 1200);
+    </script>
+
     <!-- GSAP 3.13+：只留真正用到的三个。
          ScrollToPlugin 由原生 scrollTo({behavior:'smooth'}) 替代，
          ScrambleTextPlugin 由下面十几行原生乱码实现替代，少两个请求、少一份解析。 -->
@@ -266,24 +278,62 @@
 
             <!-- ══════ 3D 赛车入口 ══════ -->
             <section class="racer-entry animate-in">
-                <a class="racer-card" href="cpp-racer/index.html" aria-label="进入 RACE_ENGINE 3D 赛车">
+                <div class="racer-card" role="group" aria-label="RACE_ENGINE 3D 赛车入口">
                     <span class="racer-card__grid" aria-hidden="true"></span>
                     <span class="racer-card__glow" aria-hidden="true"></span>
-                    <span class="racer-card__tag">// new build · playable</span>
-                    <span class="racer-card__title">RACE<em>_</em>ENGINE</span>
-                    <p class="racer-card__desc">
-                        C++ 主题的 3D 赛车闯关游戏：霓虹赛道、放样车身、氮气加速，
-                        沿途收集 25 个 C++ 知识点（数据结构与算法 / STL / 语言机制 / OOP / 泛型 / 现代 C++），
-                        中英双语，另附 3D 车辆展厅。
-                    </p>
-                    <span class="racer-card__chips">
-                        <span>3 STAGES</span>
-                        <span>25 TOPICS</span>
-                        <span>3D SHOWROOM</span>
-                        <span>ZH / EN</span>
-                    </span>
-                    <span class="racer-card__cta">进入游戏 <b>→</b></span>
-                </a>
+
+                    <div class="racer-card__main">
+                        <span class="racer-card__tag">// new build · playable</span>
+                        <h2 class="racer-card__title">RACE<em>_</em>ENGINE</h2>
+                        <p class="racer-card__desc">
+                            C++ 主题的 3D 赛车闯关：霓虹赛道、放样车身、氮气加速与小地图导航，
+                            沿途收集 25 个 C++ 知识点，中英双语，另有独立的 3D 车辆展厅。
+                        </p>
+
+                        <div class="racer-card__stats">
+                            <span>best <b id="racerBest">--</b></span>
+                            <span>topics <b id="racerTopics">0 / 25</b></span>
+                            <span>stages <b>3</b></span>
+                        </div>
+
+                        <div class="racer-card__actions">
+                            <a class="racer-card__cta" href="cpp-racer/index.html">
+                                进入游戏 <b>→</b>
+                            </a>
+                            <a class="racer-card__ghost" href="cpp-racer/showroom.html">
+                                3D 展厅
+                            </a>
+                        </div>
+                    </div>
+
+                    <svg class="racer-card__car" viewBox="0 0 340 120" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="rcBody" x1="0" y1="0" x2="0.9" y2="1">
+                                <stop offset="0" stop-color="rgba(34,230,255,.26)"/>
+                                <stop offset="1" stop-color="rgba(34,230,255,.02)"/>
+                            </linearGradient>
+                            <linearGradient id="rcLine" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0" stop-color="#22e6ff"/>
+                                <stop offset="0.62" stop-color="#8dffb8"/>
+                                <stop offset="1" stop-color="#ff2f7d"/>
+                            </linearGradient>
+                        </defs>
+                        <path class="rc-body"
+                              d="M14 92 C34 82 50 77 70 75 L96 52 L152 42 L214 48 L252 68 L306 76 L326 92 Z"
+                              fill="url(#rcBody)" stroke="url(#rcLine)" stroke-width="2.2" stroke-linejoin="round"/>
+                        <path d="M112 52 L158 46 L200 50 L214 64 L104 64 Z"
+                              fill="rgba(141,255,184,.1)" stroke="rgba(141,255,184,.5)" stroke-width="1.4"/>
+                        <path d="M226 70 L252 68 L262 74" fill="none" stroke="rgba(255,47,125,.7)" stroke-width="2"/>
+                        <line x1="300" y1="86" x2="322" y2="86" stroke="#ff2f7d" stroke-width="3" stroke-linecap="round"/>
+                        <g class="rc-wheel">
+                            <circle cx="96" cy="92" r="20" fill="rgba(4,10,16,.9)" stroke="url(#rcLine)" stroke-width="2"/>
+                            <circle cx="96" cy="92" r="8" fill="none" stroke="#22e6ff" stroke-width="1.4" opacity=".8"/>
+                            <circle cx="258" cy="92" r="22" fill="rgba(4,10,16,.9)" stroke="url(#rcLine)" stroke-width="2"/>
+                            <circle cx="258" cy="92" r="9" fill="none" stroke="#22e6ff" stroke-width="1.4" opacity=".8"/>
+                        </g>
+                        <line x1="18" y1="104" x2="330" y2="104" stroke="rgba(34,230,255,.16)" stroke-width="1"/>
+                    </svg>
+                </div>
             </section>
 
             <section class="about animate-in">
@@ -640,7 +690,7 @@
             initSocialLinks, initScrollProgress, initBackToTop,
             initParallax, initMagnetic, initNavScramble, initLetterWave,
             initCursorTrail, initAboutContentReveal, initComradeStars, initOceanLayout,
-            initMusicPlayer
+            initMusicPlayer, initRacerEntry
         ].forEach(init => {
             try {
                 const result = init();
@@ -708,6 +758,36 @@
             }, 40);
             // 兜底：样式表异常时也不能让遮罩卡住页面
             setTimeout(() => { clearInterval(timer); dismiss(); }, 1200);
+        }
+    }
+
+    /* ── 3D 赛车入口：整卡可点 + 读取本地存档显示成绩 ── */
+    function initRacerEntry() {
+        const card = document.querySelector('.racer-card');
+        if (!card) return;
+
+        // 卡片本体点击进游戏；两个按钮各自是 <a>，交给浏览器
+        card.addEventListener('click', e => {
+            if (e.target.closest('a')) return;
+            window.location.href = 'cpp-racer/index.html';
+        });
+
+        // 存档写在同源下（cpp-racer/js/save.js），这里只读，失败就保留占位符
+        try {
+            const raw = localStorage.getItem('race_engine_save_v1');
+            if (!raw) return;
+
+            const data = JSON.parse(raw);
+            const bests = Object.values(data.best || {}).filter(n => typeof n === 'number' && n > 0);
+            const best = bests.length ? Math.min(...bests) : 0;
+            const topics = Array.isArray(data.topics) ? data.topics.length : 0;
+
+            const bestEl = document.getElementById('racerBest');
+            const topicsEl = document.getElementById('racerTopics');
+            if (bestEl && best) bestEl.textContent = `${best.toFixed(2)}s`;
+            if (topicsEl && topics) topicsEl.textContent = `${topics} / 25`;
+        } catch (err) {
+            // 隐私模式或存档不可用：静默降级
         }
     }
 
