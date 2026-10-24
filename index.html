@@ -3,13 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="水神崛起的个人主页 - 前端开发者 | C++爱好者 | 动态视觉魔法师">
+    <title>水神崛起 · C++ 笔记与前端动效</title>
+    <meta name="description" content="水神崛起的个人主页：C++ 学习笔记、前端动效与 3D 实验、可玩的 RACE_ENGINE 赛车游戏，以及关于代码与生活的一些随笔。">
+    <meta name="keywords" content="水神崛起, C++, 前端开发, 网页动效, Three.js, 个人博客, 个人主页">
     <meta name="author" content="水神崛起">
-    <title>水神崛起</title>
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#e8f1f8">
+    <link rel="canonical" href="https://tbssjq.github.io/">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <meta name="application-name" content="水神崛起">
+
+    <!-- 社交平台分享卡片 -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="水神崛起">
+    <meta property="og:title" content="水神崛起 · C++ 笔记与前端动效">
+    <meta property="og:description" content="C++ 学习笔记、前端动效与 3D 实验、可玩的 RACE_ENGINE 赛车游戏，以及一些随笔。">
+    <meta property="og:url" content="https://tbssjq.github.io/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:image" content="https://tbssjq.github.io/og-cover.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="水神崛起 · C++ 笔记与前端动效">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="水神崛起 · C++ 笔记与前端动效">
+    <meta name="twitter:description" content="C++ 学习笔记、前端动效与 3D 实验、可玩的 RACE_ENGINE 赛车游戏，以及一些随笔。">
+    <meta name="twitter:image" content="https://tbssjq.github.io/og-cover.png">
+    <meta name="twitter:image:alt" content="水神崛起 · C++ 笔记与前端动效">
+
+    <!-- 结构化数据：作者、站点与近期文章，帮助搜索引擎理解页面主题 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://tbssjq.github.io/#person",
+          "name": "水神崛起",
+          "url": "https://tbssjq.github.io/",
+          "email": "mailto:ssjq4me@outlook.com",
+          "image": "https://tbssjq.github.io/og-cover.png",
+          "description": "在 C++ 与浏览器之间来回横跳的开发者，写技术笔记、做 3D 实验和会动的网页。",
+          "sameAs": [
+            "https://github.com/TBssjq",
+            "https://space.bilibili.com/439038862"
+          ],
+          "knowsAbout": ["C++", "JavaScript", "Web Animation", "Three.js", "Frontend Engineering"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://tbssjq.github.io/#website",
+          "url": "https://tbssjq.github.io/",
+          "name": "水神崛起",
+          "inLanguage": "zh-CN",
+          "description": "C++ 学习笔记、前端动效与 3D 实验、小游戏，以及一些随笔。",
+          "author": { "@id": "https://tbssjq.github.io/#person" }
+        },
+        {
+          "@type": "ItemList",
+          "name": "近期文章",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "url": "https://tbssjq.github.io/doc/2026/10.2.html", "name": "C++ 面向对象编程：从入门到精通" },
+            { "@type": "ListItem", "position": 2, "url": "https://tbssjq.github.io/doc/2026/9.22.html", "name": "C++11 现代 C++ 开发指南" },
+            { "@type": "ListItem", "position": 3, "url": "https://tbssjq.github.io/doc/2026/9.22-3.html", "name": "C++ 那些「奇怪却短得离谱」的算法" },
+            { "@type": "ListItem", "position": 4, "url": "https://tbssjq.github.io/doc/2026/9.22-2.html", "name": "C++ 位运算完全指南" },
+            { "@type": "ListItem", "position": 5, "url": "https://tbssjq.github.io/doc/2026/9.18.html", "name": "指针、数组、参数传递、引用、UB 与动态数组" },
+            { "@type": "ListItem", "position": 6, "url": "https://tbssjq.github.io/doc/2026/9.14.html", "name": "走在这儿的小路上" }
+          ]
+        }
+      ]
+    }
+    </script>
 
     <!-- 字体域名预连接：提前建连，省掉字体请求的 TCP/TLS 往返 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//music.163.com">
 
     <!-- Web 字体非阻塞加载：media="print" 期间浏览器不拿它做渲染阻塞资源，加载完再切 all。
          即使 fonts.googleapis.com 不可达，首屏也照常用系统字体渲染，不会被挂住。
@@ -133,6 +205,41 @@
             0%, 100% { opacity: 0.72; transform: scale(0.99); filter: blur(1.2px); }
             50%      { opacity: 1; transform: scale(1); filter: blur(0); }
         }
+
+        /* 屏幕阅读器专用文本；无 JS 时由 <noscript> 覆盖为可见 */
+        .sr-only,
+        .hero-title-fallback {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .skip-link {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 100000;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: var(--color-accent-deep);
+            color: #ffffff;
+            font-family: var(--font-en);
+            font-size: 0.82rem;
+            text-decoration: none;
+            transform: translateY(-200%);
+            transition: transform 0.25s var(--ease-out-expo);
+        }
+
+        .skip-link:focus {
+            transform: translateY(0);
+        }
     </style>
 
     <!-- 其余样式异步加载：preload 拉取完成后才切成 stylesheet，首屏不被它阻塞。
@@ -159,11 +266,29 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+    <!-- 禁用 JS 时：揭开遮罩、直接显示所有内容、露出标题文字，隐藏依赖脚本的播放器与光标 -->
     <noscript>
-        <style>.animate-in{opacity:1 !important;transform:none !important;}</style>
+        <style>
+            .animate-in { opacity: 1 !important; transform: none !important; }
+            .loading-screen { display: none !important; }
+            .music-player { display: none !important; }
+            .cmdk-trigger { display: none !important; }
+            .typewriter-caret, .scroll-hint { display: none !important; }
+            .hero-title-fallback {
+                position: static;
+                width: auto;
+                height: auto;
+                margin: 0;
+                clip: auto;
+                white-space: normal;
+                overflow: visible;
+            }
+        </style>
     </noscript>
 </head>
 <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
     <!-- 滚动进度条 -->
     <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
@@ -204,15 +329,15 @@
 
         <!-- 顶部导航 — PillNav -->
         <div class="pill-nav-container" id="pillNav">
-            <nav class="pill-nav" aria-label="Primary"
+            <nav class="pill-nav" aria-label="主导航"
                  style="--base: #009e8e; --pill-bg: transparent; --pill-text: rgba(26, 42, 58, 0.55); --hover-text: #ffffff;">
-                <div class="pill-logo">
+                <div class="pill-logo" role="button" tabindex="0" aria-label="回到顶部">
                     <span class="pill-logo-text">水</span>
                 </div>
                 <div class="pill-nav-items">
-                    <ul class="pill-list" role="menubar">
-                        <li role="none">
-                            <a role="menuitem" href="#about" class="pill is-active" data-target=".about">
+                    <ul class="pill-list">
+                        <li>
+                            <a href="#about" class="pill is-active" data-target="#about" aria-current="location">
                                 <span class="hover-circle" aria-hidden="true"></span>
                                 <span class="label-stack">
                                     <span class="pill-label">About</span>
@@ -220,17 +345,8 @@
                                 </span>
                             </a>
                         </li>
-                        <li role="none">
-                            <a role="menuitem" href="#contact" class="pill" data-target=".contact">
-                                <span class="hover-circle" aria-hidden="true"></span>
-                                <span class="label-stack">
-                                    <span class="pill-label">Contact</span>
-                                    <span class="pill-label-hover" aria-hidden="true">Contact</span>
-                                </span>
-                            </a>
-                        </li>
-                        <li role="none">
-                            <a role="menuitem" href="doc/index.html" class="pill">
+                        <li>
+                            <a href="doc/index.html" class="pill">
                                 <span class="hover-circle" aria-hidden="true"></span>
                                 <span class="label-stack">
                                     <span class="pill-label">Blog</span>
@@ -238,8 +354,8 @@
                                 </span>
                             </a>
                         </li>
-                        <li role="none">
-                            <a role="menuitem" href="cpp-racer/index.html" class="pill">
+                        <li>
+                            <a href="cpp-racer/index.html" class="pill">
                                 <span class="hover-circle" aria-hidden="true"></span>
                                 <span class="label-stack">
                                     <span class="pill-label">Racer</span>
@@ -247,12 +363,12 @@
                                 </span>
                             </a>
                         </li>
-                        <li role="none">
-                            <a role="menuitem" href="forget-me-not/index.html" class="pill">
+                        <li>
+                            <a href="#contact" class="pill" data-target="#contact">
                                 <span class="hover-circle" aria-hidden="true"></span>
                                 <span class="label-stack">
-                                    <span class="pill-label">勿忘我</span>
-                                    <span class="pill-label-hover" aria-hidden="true">勿忘我</span>
+                                    <span class="pill-label">Contact</span>
+                                    <span class="pill-label-hover" aria-hidden="true">Contact</span>
                                 </span>
                             </a>
                         </li>
@@ -261,14 +377,25 @@
             </nav>
         </div>
 
-        <main>
+        <main id="main">
             <div class="hero">
                 <h1 class="hero-title t3d animate-in">
-                    <span class="typewriter-text t3d-inner"></span><span class="typewriter-caret" id="typewriterCaret" aria-hidden="true"></span>
+                    <span class="hero-title-fallback">你好！我是水神崛起</span>
+                    <span class="typewriter-text t3d-inner" aria-hidden="true"></span><span class="typewriter-caret" id="typewriterCaret" aria-hidden="true"></span>
                 </h1>
+                <p class="hero-lead animate-in">一半在 C++ 里较真，一半在浏览器里造梦。</p>
                 <p class="hero-subtitle animate-in">
                     <span class="letter">前</span><span class="letter">端</span><span class="letter">开</span><span class="letter">发</span><span class="letter">者</span> <span class="letter">·</span> <span class="letter">游</span><span class="letter">戏</span><span class="letter">爱</span><span class="letter">好</span><span class="letter">者</span> <span class="letter">·</span> <span class="letter">动</span><span class="letter">态</span><span class="letter">视</span><span class="letter">觉</span><span class="letter">魔</span><span class="letter">法</span><span class="letter">师</span>
                 </p>
+                <div class="hero-actions animate-in">
+                    <a class="btn btn--primary" href="doc/index.html">
+                        读博客 <span class="btn-arrow" aria-hidden="true">→</span>
+                    </a>
+                </div>
+                <ul class="hero-stats animate-in" role="list" aria-label="站点速览">
+                    <li><b>12</b><span>篇笔记</span></li>
+                    <li><b>25</b><span>个 C++ 知识点</span></li>
+                </ul>
                 <p class="hero-hearts animate-in">
                     <span class="heart-char">❤</span>
                     <span class="heart-char">❤</span>
@@ -336,9 +463,193 @@
                 </div>
             </section>
 
-            <section class="about animate-in">
+            <!-- ══════ 关于我 + 此刻 ══════ -->
+            <section class="intro animate-in" id="about" aria-labelledby="aboutTitle">
+                <header class="section-head">
+                    <p class="section-kicker">01 · About</p>
+                    <h2 class="section-title" id="aboutTitle" data-split>关于我</h2>
+                    <p class="section-sub">一个把技术笔记写成教程、把网页当成玩具的人。</p>
+                </header>
+
+                <div class="intro-grid">
+                    <div class="intro-card clay-card">
+                        <p class="intro-lead">我是水神崛起，一个在 C++ 和浏览器之间来回横跳的开发者。</p>
+                        <p>喜欢把底层原理拆开看，也喜欢把想法做成会动、会呼吸的网页。这个站点是我的数字自留地：技术笔记、3D 实验、小游戏，还有一些没头没尾的随笔。</p>
+                        <p>如果这些内容对你有用，或者你只是想找个人聊聊，欢迎来信。</p>
+                    </div>
+
+                    <aside class="now-card clay-card" aria-labelledby="nowTitle">
+                        <div class="card-head">
+                            <span class="card-label" id="nowTitle">Now / 此刻</span>
+                            <span class="live-dot" aria-hidden="true"></span>
+                        </div>
+                        <ul class="now-list" role="list">
+                            <li>
+                                <span class="now-dot" aria-hidden="true"></span>
+                                <div>
+                                    <span class="now-key">正在写</span>
+                                    <p>C++ 系列笔记，从语法到底层，一篇一篇补齐。</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="now-dot" aria-hidden="true"></span>
+                                <div>
+                                    <span class="now-key">正在做</span>
+                                    <p>把 3D 模型和动效搬进浏览器，顺便榨干每一帧。</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="now-dot" aria-hidden="true"></span>
+                                <div>
+                                    <span class="now-key">正在听</span>
+                                    <p>陈奕迅《白色球鞋》——页面顶部的播放器可以作证。</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- ══════ 工具箱 ══════ -->
+            <section class="stack animate-in" id="skills" aria-labelledby="stackTitle">
+                <header class="section-head">
+                    <p class="section-kicker">02 · Toolbox</p>
+                    <h2 class="section-title" id="stackTitle" data-split>工具箱</h2>
+                    <p class="section-sub">不用太多，够用就好；能少一个依赖，就少一个依赖。</p>
+                </header>
+
+                <div class="stack-grid">
+                    <article class="stack-card clay-card">
+                        <span class="stack-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8.5 6.5 3 12l5.5 5.5M15.5 6.5 21 12l-5.5 5.5"/>
+                            </svg>
+                        </span>
+                        <h3>语言 <span>Languages</span></h3>
+                        <p>C++ 是主线，JavaScript 是另一条腿。写着写着，就把笔记写成了教程。</p>
+                        <ul class="tag-list" role="list">
+                            <li class="tag">C++17 / 20</li>
+                            <li class="tag">JavaScript</li>
+                            <li class="tag">HTML / CSS</li>
+                            <li class="tag">Markdown</li>
+                        </ul>
+                    </article>
+
+                    <article class="stack-card clay-card">
+                        <span class="stack-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m4 20 9.5-9.5"/>
+                                <path d="M15 4.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>
+                                <path d="M19.5 13l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/>
+                            </svg>
+                        </span>
+                        <h3>交互 <span>Interaction</span></h3>
+                        <p>偏爱原生 API 和手写动画：能少一个依赖，就少一个依赖。</p>
+                        <ul class="tag-list" role="list">
+                            <li class="tag">GSAP</li>
+                            <li class="tag">Canvas 2D</li>
+                            <li class="tag">Three.js</li>
+                            <li class="tag">SVG / WAAPI</li>
+                        </ul>
+                    </article>
+
+                    <article class="stack-card clay-card">
+                        <span class="stack-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4.5" width="18" height="15" rx="2.5"/>
+                                <path d="m7 9.5 3 2.5-3 2.5M13 15h4"/>
+                            </svg>
+                        </span>
+                        <h3>工程 <span>Engineering</span></h3>
+                        <p>自己写构建脚本和本地后台，把写作、构建、发布串成一条流水线。</p>
+                        <ul class="tag-list" role="list">
+                            <li class="tag">Node.js</li>
+                            <li class="tag">Git</li>
+                            <li class="tag">静态构建</li>
+                            <li class="tag">性能优化</li>
+                            <li class="tag">可访问性</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <!-- ══════ 近期文章 ══════ -->
+            <section class="notes animate-in" id="notes" aria-labelledby="notesTitle">
+                <header class="section-head">
+                    <p class="section-kicker">03 · Notes</p>
+                    <h2 class="section-title" id="notesTitle" data-split>近期文章</h2>
+                    <p class="section-sub">技术笔记与随笔，想到哪儿写到哪儿。</p>
+                </header>
+
+                <div class="notes-grid">
+                    <a class="post-card clay-card" href="doc/2026/10.2.html" target="_blank" rel="noopener noreferrer">
+                        <div class="post-meta">
+                            <time datetime="2026-10-02">10月2日</time>
+                            <span class="post-cat">C++</span>
+                        </div>
+                        <h3 class="post-title">C++ 面向对象编程：从入门到精通</h3>
+                        <p class="post-excerpt">从「为什么需要类」讲到对象模型、拷贝控制、移动语义与设计模式。</p>
+                        <span class="post-arrow" aria-hidden="true">→</span>
+                    </a>
+
+                    <a class="post-card clay-card" href="doc/2026/9.22.html" target="_blank" rel="noopener noreferrer">
+                        <div class="post-meta">
+                            <time datetime="2026-09-22">9月22日</time>
+                            <span class="post-cat">C++</span>
+                        </div>
+                        <h3 class="post-title">C++11 现代 C++ 开发指南</h3>
+                        <p class="post-excerpt">auto、右值引用、移动语义、智能指针与 lambda，一次补齐现代 C++ 的常用武器。</p>
+                        <span class="post-arrow" aria-hidden="true">→</span>
+                    </a>
+
+                    <a class="post-card clay-card" href="doc/2026/9.22-3.html" target="_blank" rel="noopener noreferrer">
+                        <div class="post-meta">
+                            <time datetime="2026-09-22">9月22日</time>
+                            <span class="post-cat">C++</span>
+                        </div>
+                        <h3 class="post-title">C++ 那些「奇怪却短得离谱」的算法</h3>
+                        <p class="post-excerpt">代码不超过十行，却让人第一次看见时怀疑人生。</p>
+                        <span class="post-arrow" aria-hidden="true">→</span>
+                    </a>
+
+                    <a class="post-card clay-card" href="doc/2026/9.22-2.html" target="_blank" rel="noopener noreferrer">
+                        <div class="post-meta">
+                            <time datetime="2026-09-22">9月22日</time>
+                            <span class="post-cat">C++</span>
+                        </div>
+                        <h3 class="post-title">C++ 位运算完全指南</h3>
+                        <p class="post-excerpt">从补码与掩码讲到 lowbit、状态压缩和无分支写法。</p>
+                        <span class="post-arrow" aria-hidden="true">→</span>
+                    </a>
+
+                    <a class="post-card clay-card" href="doc/2026/9.18.html" target="_blank" rel="noopener noreferrer">
+                        <div class="post-meta">
+                            <time datetime="2026-09-18">9月18日</time>
+                            <span class="post-cat">C++</span>
+                        </div>
+                        <h3 class="post-title">指针、数组、参数传递、引用、UB 与动态数组</h3>
+                        <p class="post-excerpt">把指针和数组的底层关系讲透，配 x86-64 汇编对照。</p>
+                        <span class="post-arrow" aria-hidden="true">→</span>
+                    </a>
+
+                    <a class="post-card clay-card" href="doc/2026/9.14.html" target="_blank" rel="noopener noreferrer">
+                        <div class="post-meta">
+                            <time datetime="2026-09-14">9月14日</time>
+                            <span class="post-cat post-cat--essay">随笔</span>
+                        </div>
+                        <h3 class="post-title">走在这儿的小路上</h3>
+                        <p class="post-excerpt">军训第一天的夜路、食堂角落的一锅黄焖鸡，和还没适应的南方天气。</p>
+                        <span class="post-arrow" aria-hidden="true">→</span>
+                    </a>
+                </div>
+
+                <a class="notes-more" href="doc/index.html">查看全部 12 篇 <span aria-hidden="true">→</span></a>
+            </section>
+
+            <section class="about animate-in" aria-labelledby="letterTitle">
                 <div class="about-card card-spotlight" id="spotlightCard">
-                    <h2 class="about-heading" data-split>Hi there 👋</h2>
+                    <p class="letter-kicker">A note to myself · 写给自己</p>
+                    <h2 class="about-heading" id="letterTitle" data-split>Hi there 👋</h2>
                     <div class="about-content">
                         <p>I am an ordinary man.</p>
                         <p>I have many daydreams — cool, yet unreal.</p>
@@ -349,30 +660,39 @@
                         <p>In this wide universe, there are many things worth pursuing.</p>
                         <p>And one of them is you — the real you, still hoping, still waiting.</p>
                     </div>
+                    <p class="about-sign">— 水神崛起</p>
                 </div>
             </section>
 
-            <section class="contact animate-in">
-                <h3 class="contact-heading" data-split>联系我</h3>
-                <div class="social-links">
-                    <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                        <img src="src/github.svg" alt="GitHub" width="32" height="32" loading="lazy" decoding="async">
+            <section class="contact animate-in" id="contact" aria-labelledby="contactTitle">
+                <p class="section-kicker">04 · Contact</p>
+                <h2 class="contact-heading" id="contactTitle" data-split>联系我</h2>
+                <p class="contact-lead">有想法、有项目，或者只是想聊聊天——写封信给我。</p>
+
+                <div class="contact-actions">
+                    <a class="btn btn--primary" href="mailto:ssjq4me@outlook.com?subject=你好！&amp;body=你好！" rel="nofollow">
+                        写邮件 <span class="btn-arrow" aria-hidden="true">→</span>
                     </a>
-                    <a href="mailto:653294795@qq.com?subject=你好！&body=你好！" rel="nofollow" aria-label="Email">
-                        <img src="src/email.svg" alt="Email" width="32" height="32" loading="lazy" decoding="async">
+                    <button class="btn btn--ghost copy-email" type="button" data-email="ssjq4me@outlook.com">
+                        复制邮箱
+                    </button>
+                </div>
+
+                <a class="contact-email" href="mailto:ssjq4me@outlook.com?subject=你好！&amp;body=你好！" rel="nofollow">
+                    ssjq4me@outlook.com
+                </a>
+
+                <nav class="social-links" aria-label="社交链接">
+                    <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <img src="src/github.svg" alt="" width="32" height="32" loading="lazy" decoding="async">
                     </a>
                     <a href="https://space.bilibili.com/439038862" target="_blank" rel="noopener noreferrer" aria-label="Bilibili">
-                        <img src="src/bilibili.svg" alt="Bilibili" width="32" height="32" loading="lazy" decoding="async">
+                        <img src="src/bilibili.svg" alt="" width="32" height="32" loading="lazy" decoding="async">
                     </a>
-                </div>
+                </nav>
 
+                <p class="contact-note">看到消息就会回，通常 1–2 天内。</p>
             </section>
-
-            <!-- 滚动提示 -->
-            <div class="scroll-hint">
-                <span>Scroll</span>
-                <div class="scroll-line"></div>
-            </div>
         </main>
     </div>
 
@@ -503,14 +823,32 @@
         </div>
     </section>
 
+    <!-- ══════ 页脚：深海色收尾 ══════ -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-main">
+                <p class="footer-brand">水神崛起 <span aria-hidden="true">·</span> 海内存知己，天涯若比邻</p>
+                <nav class="footer-nav" aria-label="页脚导航">
+                    <a href="doc/index.html">博客</a>
+                    <a href="cpp-racer/index.html">RACE_ENGINE</a>
+                    <a href="forget-me-not/index.html">勿忘我</a>
+                    <a href="https://github.com/TBssjq" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    <a href="https://github.com/TBssjq/TBssjq.github.io" target="_blank" rel="noopener noreferrer">源码</a>
+                </nav>
+            </div>
+            <p class="footer-meta">© <span id="footerYear">2026</span> 水神崛起 · 原生 HTML / CSS / JavaScript 手写 · Hosted on GitHub Pages</p>
+        </div>
+    </footer>
+
     <!-- 右键菜单 -->
     <nav id="contextMenu" class="context-menu" role="menu" aria-label="快捷操作">
-        <ul>
-            <li role="menuitem" data-action="refresh">刷新主页</li>
-            <li role="menuitem" data-action="bilibili">去我的 B 站</li>
-            <li role="menuitem" data-action="email">给我发邮件</li>
-            <li role="menuitem" data-action="forget">勿忘我</li>
-            <li role="menuitem" data-action="top">返回顶部</li>
+        <ul role="none">
+            <li role="menuitem" tabindex="-1" data-action="search">搜索站内…</li>
+            <li role="menuitem" tabindex="-1" data-action="refresh">刷新主页</li>
+            <li role="menuitem" tabindex="-1" data-action="bilibili">去我的 B 站</li>
+            <li role="menuitem" tabindex="-1" data-action="email">给我发邮件</li>
+            <li role="menuitem" tabindex="-1" data-action="forget">勿忘我</li>
+            <li role="menuitem" tabindex="-1" data-action="top">返回顶部</li>
         </ul>
     </nav>
 
@@ -518,25 +856,29 @@
     <canvas id="sakuraCanvas" aria-hidden="true"></canvas>
 
     <!-- 博客弹窗 -->
-    <div id="blogModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="博客导航">
+    <div id="blogModal" class="modal-overlay" role="dialog" aria-modal="true"
+         aria-labelledby="blogModalTitle" aria-describedby="blogModalDesc">
         <div class="modal-card">
-            <button class="modal-close" aria-label="关闭">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="modal-close" type="button" aria-label="关闭博客导航">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
             <div class="modal-body">
-                <h2 class="modal-title">我的博客</h2>
-                <p class="modal-desc">欢迎访问我的个人随笔空间</p>
+                <h2 class="modal-title" id="blogModalTitle">我的博客</h2>
+                <p class="modal-desc" id="blogModalDesc">欢迎访问我的个人随笔空间</p>
             </div>
-            <button class="modal-go" id="blogGoBtn">
+            <button class="modal-go" id="blogGoBtn" type="button">
                 <span>Go!</span>
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </button>
         </div>
     </div>
+
+    <!-- 复制邮箱后的轻提示 -->
+    <div class="copy-toast" id="copyToast" role="status" aria-live="polite"></div>
 
     <!-- 返回顶部 -->
     <button id="backToTop" class="back-to-top" type="button" aria-label="返回顶部" hidden>
@@ -548,6 +890,69 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5M5 12l7-7 7 7"/>
         </svg>
     </button>
+
+    <!-- 站内搜索入口：桌面可用 Ctrl / Cmd + K，移动端点这里 -->
+    <button id="cmdkTrigger" class="cmdk-trigger" type="button"
+            aria-haspopup="dialog" aria-controls="commandPalette"
+            aria-keyshortcuts="Control+K Meta+K"
+            aria-label="搜索站内内容，快捷键 Ctrl+K 或 Command+K">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke-width="2"/>
+            <path d="M20 20l-4-4" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="cmdk-trigger__text">搜索</span>
+        <kbd class="cmdk-trigger__kbd" id="cmdkTriggerKbd" aria-hidden="true">Ctrl K</kbd>
+    </button>
+
+    <!-- 命令面板：一个输入框同时检索页面、文章与快捷操作 -->
+    <div class="cmdk" id="commandPalette" hidden>
+        <div class="cmdk-scrim" data-cmdk-close aria-hidden="true"></div>
+        <div class="cmdk-panel" role="dialog" aria-modal="true"
+             aria-labelledby="cmdkTitle" aria-describedby="cmdkDesc">
+            <h2 class="sr-only" id="cmdkTitle">搜索站内内容</h2>
+            <p class="sr-only" id="cmdkDesc">输入关键词搜索文章、页面或操作。用上下方向键选择，回车打开，Esc 关闭。</p>
+
+            <div class="cmdk-search">
+                <svg class="cmdk-search__icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" stroke-width="2"/>
+                    <path d="M20 20l-4-4" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input class="cmdk-input" id="cmdkInput" type="search"
+                       role="combobox" aria-expanded="true" aria-controls="cmdkList"
+                       aria-autocomplete="list" aria-haspopup="listbox"
+                       aria-label="搜索文章、页面或操作"
+                       placeholder="搜索文章、页面或操作…"
+                       autocomplete="off" autocapitalize="off" spellcheck="false"
+                       enterkeyhint="go">
+                <button class="cmdk-close" type="button" aria-label="关闭搜索">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="cmdk-list" id="cmdkList" role="listbox" aria-label="搜索结果"></div>
+
+            <div class="cmdk-empty" id="cmdkEmpty" hidden>
+                <p class="cmdk-empty__title">没有找到「<span id="cmdkEmptyQuery"></span>」</p>
+                <p class="cmdk-empty__hint">试试「指针」「C++」「随笔」，或者直接去文章目录翻翻。</p>
+                <button class="cmdk-empty__link" id="cmdkEmptyBlog" type="button">打开全部文章 <span aria-hidden="true">→</span></button>
+            </div>
+
+            <p class="sr-only" id="cmdkStatus" role="status" aria-live="polite"></p>
+
+            <div class="cmdk-foot" aria-hidden="true">
+                <span class="cmdk-hints">
+                    <kbd>↑</kbd><kbd>↓</kbd><span>选择</span>
+                    <span class="cmdk-sep">·</span>
+                    <kbd>↵</kbd><span class="cmdk-hint-open">打开</span>
+                    <span class="cmdk-sep cmdk-hint-open">·</span>
+                    <kbd>esc</kbd><span>关闭</span>
+                </span>
+                <span class="cmdk-count" id="cmdkCount"></span>
+            </div>
+        </div>
+    </div>
 
     <script>
     /* ── 全局时序配置：集中管理，避免魔法数字散落各处 ──
@@ -690,7 +1095,8 @@
             initSocialLinks, initScrollProgress, initBackToTop,
             initParallax, initMagnetic, initNavScramble, initLetterWave,
             initCursorTrail, initAboutContentReveal, initComradeStars, initOceanLayout,
-            initMusicPlayer, initRacerEntry
+            initMusicPlayer, initRacerEntry, initCopyEmail, initFooterYear,
+            initCommandPalette
         ].forEach(init => {
             try {
                 const result = init();
@@ -789,6 +1195,56 @@
         } catch (err) {
             // 隐私模式或存档不可用：静默降级
         }
+    }
+
+    /* ── 复制邮箱：优先 Clipboard API，失败时退回临时 textarea ── */
+    function initCopyEmail() {
+        const btn = document.querySelector('.copy-email');
+        const toast = document.getElementById('copyToast');
+        if (!btn) return;
+
+        const email = btn.dataset.email || '';
+        let timer = null;
+
+        const showToast = text => {
+            if (!toast) return;
+            toast.textContent = text;
+            toast.classList.add('show');
+            clearTimeout(timer);
+            timer = setTimeout(() => toast.classList.remove('show'), 2200);
+        };
+
+        const fallbackCopy = () => {
+            const input = document.createElement('textarea');
+            input.value = email;
+            input.setAttribute('readonly', '');
+            Object.assign(input.style, {
+                position: 'fixed', top: '0', left: '0', opacity: '0', pointerEvents: 'none'
+            });
+            document.body.appendChild(input);
+            input.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+            input.remove();
+            return ok;
+        };
+
+        btn.addEventListener('click', async () => {
+            let ok = false;
+            try {
+                await navigator.clipboard.writeText(email);
+                ok = true;
+            } catch (err) {
+                ok = fallbackCopy();
+            }
+            showToast(ok ? `已复制 ${email}` : `复制失败，请手动选择：${email}`);
+        });
+    }
+
+    /* ── 页脚年份：不写死在 HTML 里，跨年不用改 ── */
+    function initFooterYear() {
+        const el = document.getElementById('footerYear');
+        if (el) el.textContent = String(new Date().getFullYear());
     }
 
     /* ── 音乐播放器：延迟注入 src ──
@@ -965,9 +1421,10 @@
 
     /* ── 右键菜单 ── */
     const CONTEXT_ACTIONS = Object.freeze({
+        search: () => document.getElementById('cmdkTrigger')?.click(),
         refresh: () => location.reload(),
         bilibili: () => window.open('https://space.bilibili.com/439038862', '_blank', 'noopener'),
-        email: () => { location.href = 'mailto:653294795@qq.com?subject=你好！&body=你好！'; },
+        email: () => { location.href = 'mailto:ssjq4me@outlook.com?subject=你好！&body=你好！'; },
         forget: () => { window.location.href = 'forget-me-not/index.html'; },
         top: () => window.scrollTo({ top: 0, behavior: 'smooth' })
     });
@@ -976,22 +1433,621 @@
         const menu = document.getElementById('contextMenu');
         if (!menu) return;
 
-        const hide = () => { menu.style.display = 'none'; };
+        const items = Array.from(menu.querySelectorAll('[role="menuitem"]'));
+        let opener = null;
+
+        const hide = () => {
+            if (!menu.classList.contains('show')) return;
+            menu.classList.remove('show');
+            // 键盘关闭后把焦点送回打开菜单的位置
+            if (menu.contains(document.activeElement)) {
+                opener?.focus?.({ preventScroll: true });
+            }
+            opener = null;
+        };
+
+        const activate = item => {
+            const action = item?.dataset.action;
+            hide();
+            if (action) CONTEXT_ACTIONS[action]?.();
+        };
+
+        const showAt = (x, y) => {
+            opener = document.activeElement;
+            menu.classList.add('show');
+            // 贴边时把菜单收回视口内，否则靠右/靠下触发会溢出屏幕导致选项点不到
+            menu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - menu.offsetWidth - 8))}px`;
+            menu.style.top = `${Math.max(8, Math.min(y, window.innerHeight - menu.offsetHeight - 8))}px`;
+            items[0]?.focus({ preventScroll: true });
+        };
 
         document.addEventListener('contextmenu', e => {
+            // 输入框 / 可编辑区域保留系统菜单，复制粘贴比快捷菜单重要
+            const target = e.target instanceof Element ? e.target : null;
+            if (target?.closest('input, textarea, [contenteditable]:not([contenteditable="false"])')) return;
+            // Shift + 右键也放行，给需要「在新标签页打开」等原生操作的人留出口
+            if (e.shiftKey) return;
+
             e.preventDefault();
-            menu.style.display = 'block';
-            // 贴边时把菜单收回视口内，否则靠右/靠下触发会溢出屏幕导致选项点不到
-            menu.style.left = `${Math.min(e.clientX, window.innerWidth - menu.offsetWidth)}px`;
-            menu.style.top = `${Math.min(e.clientY, window.innerHeight - menu.offsetHeight)}px`;
+            const focused = document.activeElement;
+            const rect = focused && focused !== document.body ? focused.getBoundingClientRect() : null;
+            const x = e.clientX || (rect ? rect.left + Math.min(24, rect.width / 2) : window.innerWidth / 2);
+            const y = e.clientY || (rect ? rect.bottom : window.innerHeight / 2);
+            showAt(x, y);
         });
 
-        document.addEventListener('click', hide);
+        document.addEventListener('click', e => {
+            if (!menu.contains(e.target)) hide();
+        });
         window.addEventListener('blur', hide);
+        window.addEventListener('scroll', hide, { passive: true });
+        window.addEventListener('resize', hide);
 
         menu.addEventListener('click', e => {
-            CONTEXT_ACTIONS[e.target.dataset.action]?.();
-            hide();
+            activate(e.target.closest('[data-action]'));
+        });
+
+        menu.addEventListener('keydown', e => {
+            const i = items.indexOf(document.activeElement);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                items[(i + 1) % items.length]?.focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                items[(i - 1 + items.length) % items.length]?.focus();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                items[0]?.focus();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                items[items.length - 1]?.focus();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                activate(document.activeElement);
+            } else if (e.key === 'Escape' || e.key === 'Tab') {
+                if (e.key === 'Escape') e.preventDefault();
+                hide();
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') hide();
+        });
+    }
+
+    /* ── 命令面板：Ctrl / Cmd + K 搜索页面、文章与快捷操作 ──
+       首屏先用首页那 6 张文章卡立即建索引，真正打开面板时再异步补全
+       doc/index.html 的完整目录。新文章只要进目录，这里无需再改。 */
+    function initCommandPalette() {
+        const overlay = document.getElementById('commandPalette');
+        const trigger = document.getElementById('cmdkTrigger');
+        const input = document.getElementById('cmdkInput');
+        const list = document.getElementById('cmdkList');
+        const empty = document.getElementById('cmdkEmpty');
+        const emptyQuery = document.getElementById('cmdkEmptyQuery');
+        const emptyBlog = document.getElementById('cmdkEmptyBlog');
+        const status = document.getElementById('cmdkStatus');
+        const countEl = document.getElementById('cmdkCount');
+        const triggerKbd = document.getElementById('cmdkTriggerKbd');
+        const closeBtn = overlay?.querySelector('.cmdk-close');
+        if (!overlay || !trigger || !input || !list) return;
+
+        const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+        if (triggerKbd) triggerKbd.textContent = isMac ? '⌘ K' : 'Ctrl K';
+
+        /* 归一化：大小写、全角半角、空白，以及把 C++ 折成 cpp，
+           这样输入 cpp / c++ / C ++ 都能命中同一篇文章 */
+        const normalize = value => String(value || '')
+            .toLowerCase()
+            .normalize('NFKC')
+            .replace(/\+/g, 'p')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const reducedMotion = () => prefersReducedMotion();
+        const isOpen = () => overlay.classList.contains('is-open');
+
+        const resolveUrl = (raw, base = location.href) => {
+            try {
+                const url = new URL(raw, base);
+                return /^(https?|file):$/.test(url.protocol) ? url.href : '';
+            } catch (err) {
+                return '';
+            }
+        };
+
+        const openExternal = url => {
+            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+        };
+
+        const goTop = () => window.scrollTo({
+            top: 0,
+            behavior: reducedMotion() ? 'auto' : 'smooth'
+        });
+
+        const goSection = hash => {
+            const section = document.querySelector(hash);
+            if (!section) return;
+            const labelledBy = section.getAttribute('aria-labelledby');
+            const focusTarget = (labelledBy && document.getElementById(labelledBy)) || section;
+
+            if (history.pushState) history.pushState(null, '', hash);
+            else location.hash = hash;
+
+            // 把焦点交给标题，读屏会从区块名开始念，而不是回到页面顶部
+            focusTarget.setAttribute('tabindex', '-1');
+            focusTarget.focus({ preventScroll: true });
+            section.scrollIntoView({
+                behavior: reducedMotion() ? 'auto' : 'smooth',
+                block: 'start'
+            });
+        };
+
+        /* 页面与快捷操作是静态的；文章则来自首页 DOM + 目录页 */
+        const pages = [
+            {
+                id: 'page-about', group: 'page', kind: 'page', featured: true,
+                title: '关于我', meta: 'About · 一个把网页当成玩具的人',
+                keywords: 'about 关于 我 介绍 技术栈 工具箱 stack',
+                run: () => goSection('#about')
+            },
+            {
+                id: 'page-notes', group: 'page', kind: 'page', featured: true,
+                title: '近期文章', meta: 'Notes · 首页最新的六篇笔记',
+                keywords: 'notes 文章 近期 最新 随笔 blog',
+                run: () => goSection('#notes')
+            },
+            {
+                id: 'page-blog', group: 'page', kind: 'page', featured: true,
+                title: '博客目录', meta: '全部 12 篇笔记与随笔',
+                keywords: 'blog 博客 文章 目录 归档 archive',
+                run: () => { location.href = 'doc/index.html'; }
+            },
+            {
+                id: 'page-racer', group: 'page', kind: 'page', featured: true,
+                title: 'RACE_ENGINE', meta: '可玩的 3D 赛车 · 25 个 C++ 知识点',
+                keywords: 'racer race 赛车 游戏 game 竞速 cpp c++ 知识点',
+                run: () => { location.href = 'cpp-racer/index.html'; }
+            },
+            {
+                id: 'page-contact', group: 'page', kind: 'page', featured: true,
+                title: '联系我', meta: '邮箱、GitHub 与 Bilibili',
+                keywords: 'contact 联系 邮箱 email 邮件 github bilibili 社交',
+                run: () => goSection('#contact')
+            },
+            {
+                id: 'page-showroom', group: 'page', kind: 'page',
+                title: '3D 车辆展厅', meta: 'RACE_ENGINE Showroom',
+                keywords: 'showroom 展厅 3d 车辆 赛车',
+                run: () => { location.href = 'cpp-racer/showroom.html'; }
+            },
+            {
+                id: 'page-forget', group: 'page', kind: 'page',
+                title: '勿忘我', meta: '3D 立体字与交互叙事实验',
+                keywords: 'forget 勿忘我 叙事 3d 文字',
+                run: () => { location.href = 'forget-me-not/index.html'; }
+            }
+        ];
+
+        const actions = [
+            {
+                id: 'action-email', group: 'action', kind: 'action', featured: true,
+                title: '复制我的邮箱', meta: 'ssjq4me@outlook.com · 一键复制',
+                keywords: 'copy 复制 邮箱 email 邮件 联系 contact',
+                run: () => document.querySelector('.copy-email')?.click()
+            },
+            {
+                id: 'action-github', group: 'action', kind: 'action', featured: true, newTab: true,
+                title: '打开 GitHub 主页', meta: 'github.com/TBssjq',
+                keywords: 'github 代码 主页 code',
+                run: () => openExternal('https://github.com/TBssjq')
+            },
+            {
+                id: 'action-bilibili', group: 'action', kind: 'action', featured: true, newTab: true,
+                title: '去 B 站看看', meta: 'space.bilibili.com/439038862',
+                keywords: 'bilibili b站 视频 空间',
+                run: () => openExternal('https://space.bilibili.com/439038862')
+            },
+            {
+                id: 'action-source', group: 'action', kind: 'action', featured: true, newTab: true,
+                title: '查看本站源码', meta: 'github.com/TBssjq/TBssjq.github.io',
+                keywords: 'source github 源码 code 仓库 repo',
+                run: () => openExternal('https://github.com/TBssjq/TBssjq.github.io')
+            },
+            {
+                id: 'action-top', group: 'action', kind: 'action', featured: true,
+                title: '返回页面顶部', meta: '回到海面',
+                keywords: 'top 顶部 返回 回到顶部',
+                run: goTop
+            }
+        ];
+
+        const makePost = ({ title, href, date = '', category = '', excerpt = '', keywords = '' }) => ({
+            id: 'post-' + href,
+            group: 'post',
+            kind: 'post',
+            featured: true,
+            newTab: true,
+            title,
+            date,
+            category,
+            excerpt,
+            meta: [date, category, excerpt].filter(Boolean).join(' · '),
+            keywords: `${keywords} ${category} 文章 笔记 博客 随笔`,
+            run: () => openExternal(href)
+        });
+
+        // 首屏文章卡就是天然的文章索引：立即可用，且不额外发请求
+        let posts = Array.from(document.querySelectorAll('.notes-grid .post-card')).map(card => {
+            const link = card.matches('a') ? card : card.querySelector('a[href]');
+            if (!link) return null;
+            const href = resolveUrl(link.getAttribute('href'));
+            const title = card.querySelector('.post-title')?.textContent.trim();
+            if (!href || !title) return null;
+            const excerpt = card.querySelector('.post-excerpt')?.textContent.trim() || '';
+            return makePost({
+                title,
+                href,
+                date: card.querySelector('time')?.textContent.trim() || '',
+                category: card.querySelector('.post-cat')?.textContent.trim() || '',
+                excerpt,
+                keywords: excerpt
+            });
+        }).filter(Boolean);
+
+        let fullIndexRequested = false;
+        let lastFocused = null;
+        let optionItems = [];
+        let optionEls = [];
+        let activeIndex = -1;
+
+        const mergeFullIndex = async () => {
+            if (fullIndexRequested) return;
+            fullIndexRequested = true;
+
+            try {
+                const response = await fetch('doc/index.html', { credentials: 'same-origin' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const docBase = new URL('doc/index.html', location.href).href;
+                const homeByHref = new Map(posts.map(post => [post.id, post]));
+                const seen = new Set();
+                const complete = [];
+
+                doc.querySelectorAll('.article-card:not(.is-coming) a[href]').forEach(link => {
+                    const card = link.closest('.article-card');
+                    if (!card) return;
+                    const title = card.querySelector('.article-card__title')?.textContent.trim();
+                    const href = resolveUrl(link.getAttribute('href'), docBase);
+                    if (!title || !href || seen.has(href)) return;
+                    seen.add(href);
+
+                    // 首页那张卡有更完整的摘要与分类时优先用首页的
+                    const home = homeByHref.get('post-' + href);
+                    const docExcerpt = card.querySelector('.article-card__excerpt')?.textContent.trim() || '';
+                    const excerpt = home?.excerpt || docExcerpt;
+                    const category = home?.category || (/C\+\+|指针|位运算|算法/.test(title) ? 'C++' : '随笔');
+
+                    complete.push(makePost({
+                        title,
+                        href,
+                        date: card.querySelector('.date-tag')?.textContent.trim() || '',
+                        category,
+                        excerpt,
+                        keywords: excerpt
+                    }));
+                });
+
+                if (!complete.length) return;
+                posts = complete;
+
+                if (isOpen()) {
+                    const current = optionItems[activeIndex];
+                    render();
+                    if (current) {
+                        const restored = optionItems.findIndex(item => item.id === current.id);
+                        if (restored >= 0) setActive(restored, false);
+                    }
+                }
+            } catch (err) {
+                // 离线 / file:// 下读取不到目录也没关系，首页那几篇仍可搜索
+                fullIndexRequested = false;
+            }
+        };
+
+        const ICONS = {
+            page: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M6.5 6.5h.01M9.5 6.5h.01"/></svg>',
+            post: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 12h5M10 16h5"/></svg>',
+            action: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>'
+        };
+
+        const scoreItem = (item, tokens, query) => {
+            const title = normalize(item.title);
+            const meta = normalize(item.meta);
+            const keywords = normalize(item.keywords);
+            const haystack = `${title} ${meta} ${keywords}`;
+            let score = 0;
+
+            for (const token of tokens) {
+                if (!haystack.includes(token)) return -1;
+                if (title === token) score += 80;
+                else if (title.startsWith(token)) score += 26;
+                else if (title.includes(token)) score += 18;
+                else if (keywords.includes(token)) score += 8;
+                else score += 2;
+            }
+
+            if (query && title.includes(query)) score += 20;
+            return score;
+        };
+
+        const setActive = (index, shouldScroll = true) => {
+            if (!optionEls.length) return;
+            const next = (index + optionEls.length) % optionEls.length;
+            if (next === activeIndex) return;
+
+            optionEls.forEach((el, i) => {
+                const selected = i === next;
+                el.classList.toggle('is-active', selected);
+                el.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+
+            activeIndex = next;
+            input.setAttribute('aria-activedescendant', optionEls[activeIndex].id);
+            if (shouldScroll) optionEls[activeIndex].scrollIntoView({ block: 'nearest' });
+        };
+
+        const render = () => {
+            const rawQuery = input.value.trim();
+            const query = normalize(rawQuery);
+            const tokens = query ? query.split(' ') : [];
+            const groups = [
+                { key: 'page', label: '页面', items: pages },
+                { key: 'post', label: '文章', items: posts },
+                { key: 'action', label: '快捷操作', items: actions }
+            ];
+            const fragment = document.createDocumentFragment();
+
+            optionItems = [];
+            optionEls = [];
+            activeIndex = -1;
+
+            groups.forEach(group => {
+                let entries;
+
+                if (tokens.length) {
+                    entries = group.items
+                        .map(item => ({ item, score: scoreItem(item, tokens, query) }))
+                        .filter(entry => entry.score >= 0)
+                        .sort((a, b) => b.score - a.score)
+                        .map(entry => entry.item);
+                } else {
+                    entries = group.items.filter(item => item.featured);
+                    if (group.key === 'post') entries = entries.slice(0, 5);
+                }
+
+                if (!entries.length) return;
+
+                const groupEl = document.createElement('div');
+                groupEl.className = 'cmdk-group';
+                groupEl.setAttribute('role', 'group');
+                const labelId = `cmdk-group-${group.key}`;
+                groupEl.setAttribute('aria-labelledby', labelId);
+
+                const label = document.createElement('div');
+                label.className = 'cmdk-group-label';
+                label.id = labelId;
+                label.textContent = group.label;
+                groupEl.append(label);
+
+                entries.forEach(item => {
+                    const index = optionItems.length;
+                    const el = document.createElement('div');
+                    el.className = 'cmdk-option';
+                    el.id = `cmdk-opt-${index}`;
+                    el.setAttribute('role', 'option');
+                    el.setAttribute('aria-selected', 'false');
+
+                    const icon = document.createElement('span');
+                    icon.className = 'cmdk-option__icon';
+                    icon.setAttribute('aria-hidden', 'true');
+                    icon.innerHTML = ICONS[item.kind] || ICONS.page;
+
+                    const body = document.createElement('span');
+                    body.className = 'cmdk-option__body';
+                    const title = document.createElement('span');
+                    title.className = 'cmdk-option__title';
+                    title.textContent = item.title;
+                    if (item.newTab) {
+                        const hint = document.createElement('span');
+                        hint.className = 'sr-only';
+                        hint.textContent = '（在新标签页打开）';
+                        title.append(hint);
+                    }
+                    const meta = document.createElement('span');
+                    meta.className = 'cmdk-option__meta';
+                    meta.textContent = item.meta;
+                    body.append(title, meta);
+
+                    const go = document.createElement('span');
+                    go.className = 'cmdk-option__go';
+                    go.setAttribute('aria-hidden', 'true');
+                    go.textContent = item.newTab ? '↗' : '↵';
+
+                    el.append(icon, body, go);
+                    groupEl.append(el);
+                    optionItems.push(item);
+                    optionEls.push(el);
+                });
+
+                fragment.append(groupEl);
+            });
+
+            list.replaceChildren(fragment);
+            list.scrollTop = 0;
+
+            const total = optionItems.length;
+            list.hidden = total === 0;
+            empty.hidden = total !== 0;
+            input.setAttribute('aria-expanded', total ? 'true' : 'false');
+            countEl.textContent = `${total} 个结果`;
+            emptyQuery.textContent = rawQuery;
+
+            if (total) {
+                status.textContent = rawQuery
+                    ? `找到 ${total} 个结果`
+                    : `显示 ${total} 个常用入口`;
+                setActive(0, false);
+            } else {
+                input.removeAttribute('aria-activedescendant');
+                status.textContent = rawQuery
+                    ? `没有找到与 ${rawQuery} 相关的内容`
+                    : '没有可用的结果';
+            }
+        };
+
+        const background = () => Array.from(document.body.children)
+            .filter(el => el !== overlay && !/^(SCRIPT|STYLE|NOSCRIPT)$/.test(el.tagName));
+
+        const closePalette = () => {
+            if (!isOpen()) return;
+
+            const focusBack = lastFocused && lastFocused !== document.body && document.contains(lastFocused)
+                ? lastFocused
+                : trigger;
+
+            overlay.classList.remove('is-open');
+            overlay.hidden = true;
+            document.body.classList.remove('cmdk-open');
+            background().forEach(el => el.removeAttribute('inert'));
+            lastFocused = null;
+
+            focusBack.focus?.({ preventScroll: true });
+        };
+
+        const openPalette = () => {
+            if (isOpen()) {
+                input.focus();
+                return;
+            }
+            // 欢迎弹窗或加载遮罩在时，不叠第二个对话框
+            if (document.querySelector('.modal-overlay.show')) return;
+            if (document.querySelector('.loading-screen')) return;
+
+            lastFocused = document.activeElement;
+            document.getElementById('contextMenu')?.classList.remove('show');
+            document.body.classList.add('cmdk-open');
+            overlay.hidden = false;
+            overlay.classList.add('is-open');
+            background().forEach(el => el.setAttribute('inert', ''));
+
+            input.value = '';
+            render();
+            input.focus({ preventScroll: true });
+            mergeFullIndex();
+        };
+
+        const activate = item => {
+            if (!item) return;
+            closePalette();
+            item.run?.();
+        };
+
+        trigger.addEventListener('click', openPalette);
+        // 悬停时预取完整目录，点开就已经是 12 篇
+        trigger.addEventListener('pointerenter', mergeFullIndex, { once: true });
+        closeBtn?.addEventListener('click', closePalette);
+        overlay.addEventListener('click', e => {
+            if (e.target.closest('[data-cmdk-close]')) closePalette();
+        });
+
+        input.addEventListener('input', render);
+
+        list.addEventListener('pointermove', e => {
+            const el = e.target.closest('.cmdk-option');
+            if (!el) return;
+            const index = optionEls.indexOf(el);
+            if (index >= 0) setActive(index, false);
+        });
+
+        list.addEventListener('click', e => {
+            const el = e.target.closest('.cmdk-option');
+            if (!el) return;
+            const index = optionEls.indexOf(el);
+            if (index >= 0) activate(optionItems[index]);
+        });
+
+        emptyBlog?.addEventListener('click', () => {
+            closePalette();
+            location.href = 'doc/index.html';
+        });
+
+        overlay.addEventListener('keydown', e => {
+            if (e.isComposing) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                closePalette();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                const focusables = Array.from(overlay.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])'))
+                    .filter(el => !el.disabled && el.getClientRects().length);
+                if (!focusables.length) { e.preventDefault(); return; }
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                const outside = !overlay.contains(document.activeElement);
+
+                if (e.shiftKey && (document.activeElement === first || outside)) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && (document.activeElement === last || outside)) {
+                    e.preventDefault();
+                    first.focus();
+                }
+                return;
+            }
+
+            if (e.target !== input) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActive(activeIndex + 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActive(activeIndex - 1);
+            } else if (e.key === 'Enter' && optionItems.length) {
+                e.preventDefault();
+                activate(optionItems[activeIndex] || optionItems[0]);
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            const key = e.key.toLowerCase();
+            const cmdK = key === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey;
+
+            if (cmdK) {
+                if (!isOpen() && document.querySelector('.modal-overlay.show')) return;
+                e.preventDefault();
+                if (isOpen()) {
+                    input.focus();
+                    input.select();
+                } else {
+                    openPalette();
+                }
+                return;
+            }
+
+            if (e.key === '/' && !isOpen() && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                const target = e.target;
+                if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+                if (document.querySelector('.modal-overlay.show')) return;
+                e.preventDefault();
+                openPalette();
+            }
         });
     }
 
@@ -1071,23 +2127,78 @@
         const modal = document.getElementById('blogModal');
         if (!modal) return;
 
-        const close = () => modal.classList.remove('show');
+        const closeBtn = modal.querySelector('.modal-close');
+        const goBtn = document.getElementById('blogGoBtn');
+        let lastFocused = null;
+
+        // aria-modal 只是声明，真正的隔离靠 inert；顺带锁住底页滚动
+        const background = () => Array.from(document.body.children)
+            .filter(el => el !== modal && !/^(SCRIPT|STYLE|NOSCRIPT)$/.test(el.tagName));
+
+        const focusables = () => Array.from(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+            .filter(el => !el.disabled && el.getClientRects().length);
+
+        const open = () => {
+            if (modal.classList.contains('show')) return;
+            lastFocused = document.activeElement;
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            background().forEach(el => el.setAttribute('inert', ''));
+            closeBtn?.focus({ preventScroll: true });
+        };
+
+        const close = () => {
+            if (!modal.classList.contains('show')) return;
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            background().forEach(el => el.removeAttribute('inert'));
+            if (lastFocused && document.contains(lastFocused)) {
+                lastFocused.focus?.({ preventScroll: true });
+            }
+            lastFocused = null;
+        };
 
         // 只在首次访问时弹出：cookie 已有标记就跳过；弹出时立刻写下标记，之后不再弹
         if (!readCookie(MODAL_SEEN_COOKIE)) {
             setTimeout(() => {
-                modal.classList.add('show');
+                // 用户正在用命令面板时不抢焦点，这一轮就不再弹欢迎弹窗
+                if (document.body.classList.contains('cmdk-open')) return;
+                open();
                 writeCookie(MODAL_SEEN_COOKIE, '1', MODAL_SEEN_DAYS);
             }, TIMING.modalDelay);
         }
 
-        modal.querySelector('.modal-close')?.addEventListener('click', close);
-        document.getElementById('blogGoBtn')?.addEventListener('click', () => {
+        closeBtn?.addEventListener('click', close);
+        goBtn?.addEventListener('click', () => {
+            close();
             window.open('doc/index.html', '_blank', 'noopener');
         });
         modal.addEventListener('click', e => { if (e.target === modal) close(); });
-        // 既然标注了 role="dialog" aria-modal="true"，就必须能用键盘关闭
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+        document.addEventListener('keydown', e => {
+            if (!modal.classList.contains('show')) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                close();
+                return;
+            }
+
+            if (e.key !== 'Tab') return;
+            const items = focusables();
+            if (!items.length) { e.preventDefault(); return; }
+            const first = items[0];
+            const last = items[items.length - 1];
+            const outside = !modal.contains(document.activeElement);
+
+            if (e.shiftKey && (document.activeElement === first || outside)) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && (document.activeElement === last || outside)) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
     }
 
     /* ── 滚动渐入（GSAP + ScrollTrigger）── */
@@ -1120,7 +2231,7 @@
 
                 tl.fromTo(heroEls,
                     { opacity: 0, y: 40 },
-                    { opacity: 1, y: 0, duration: 1, stagger: 0.3 }
+                    { opacity: 1, y: 0, duration: 1, stagger: 0.2 }
                 );
 
                 // 副标题逐字上浮。"<" 表示与上一段同时开始，"<0.35" 即再延后 0.35s，
@@ -1458,6 +2569,14 @@
             if (!card.height || !box.height) return;
             const surface = card.top + card.height * RATIO;
             ocean.style.marginTop = Math.round(surface - box.bottom) + 'px';
+
+            // 海面高度要盖住整个联系区，否则页脚会压到最后一排内容上
+            const contact = document.querySelector('.contact');
+            if (contact) {
+                const contentBottom = contact.getBoundingClientRect().bottom;
+                const needed = Math.ceil(contentBottom - surface + 72);
+                ocean.style.minHeight = Math.max(470, needed) + 'px';
+            }
         };
 
         apply();
@@ -1466,21 +2585,40 @@
         // style.css 是异步加载的，首帧量到的尺寸可能还没样式：等样式与字体就绪后再量一次
         window.addEventListener('load', apply);
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(apply).catch(() => {});
-        if ('ResizeObserver' in window) new ResizeObserver(apply).observe(about);
+        if ('ResizeObserver' in window) {
+            const ro = new ResizeObserver(apply);
+            ro.observe(about);
+            const contact = document.querySelector('.contact');
+            if (contact) ro.observe(contact);
+        }
     }
 
     /* ── PillNav ── */
     function initPillNav() {
         const container = document.getElementById('pillNav');
-        if (!container || typeof gsap === 'undefined') return;
+        if (!container) return;
 
         const pills = container.querySelectorAll('.pill');
         const logo = container.querySelector('.pill-logo');
         const logoImg = container.querySelector('.pill-logo-text');
         if (pills.length === 0) return;
 
+        // 导航本身不依赖 GSAP：CDN 失败时仍要能跳转、回顶
+        const hasGsap = typeof gsap !== 'undefined';
+
+        let activeIndex = Math.max(0, Array.from(pills).findIndex(p => p.classList.contains('is-active')));
+        const applyActive = index => {
+            activeIndex = index;
+            pills.forEach((pill, i) => {
+                const on = i === index;
+                pill.classList.toggle('is-active', on);
+                if (on) pill.setAttribute('aria-current', 'location');
+                else pill.removeAttribute('aria-current');
+            });
+        };
+        applyActive(activeIndex);
+
         const ease = 'power3.easeOut';
-        let activeIndex = 0;
         const tlRefs = [];
         const activeTweenRefs = [];
         const circleRefs = [];
@@ -1493,6 +2631,7 @@
         });
 
         const layout = () => {
+            if (!hasGsap) return;
             circleRefs.forEach((circle, i) => {
                 if (!circle || !circle.parentElement) return;
                 const pill = circle.parentElement;
@@ -1594,8 +2733,9 @@
         };
 
         let logoTween = null;
-        if (logo && logoImg) {
+        if (logo) {
             logo.addEventListener('mouseenter', () => {
+                if (!hasGsap || !logoImg) return;
                 if (logoTween) logoTween.kill();
                 gsap.set(logoImg, { rotate: 0 });
                 logoTween = gsap.to(logoImg, {
@@ -1605,10 +2745,23 @@
                     overwrite: 'auto'
                 });
             });
+
+            const backToTop = () => {
+                window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+            };
+            logo.addEventListener('click', backToTop);
+            logo.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    backToTop();
+                }
+            });
         }
 
         // 导航栏入场（logo 缩放 / 导航项展开 / 各项淡入）已统一交给 initNavEntrance，
         // 避免 WAAPI fill:'forwards' 锁死 transform 导致磁吸失效；此处不再处理。
+
+        let spyHoldUntil = 0;
 
         pills.forEach((pill, i) => {
             pill.addEventListener('mouseenter', () => handleEnter(i));
@@ -1617,35 +2770,67 @@
             pill.addEventListener('click', (e) => {
                 // Ctrl / Cmd / Shift 点击交给浏览器处理，保留「在新标签页打开」
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                e.preventDefault();
-                if (activeIndex === i) return;
-
-                pills.forEach(p => p.classList.remove('is-active'));
-                pill.classList.add('is-active');
-                activeIndex = i;
 
                 const target = pill.dataset.target;
-                if (target) {
-                    const el = document.querySelector(target);
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    const href = pill.getAttribute('href');
-                    if (href && !href.startsWith('#')) {
-                        setTimeout(() => { window.location.href = href; }, 300);
-                    }
-                }
-            });
+                // Blog / Racer 是独立页面，直接交给浏览器，不延迟、不误亮当前区块
+                if (!target) return;
 
-            pill.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    pill.click();
-                }
+                e.preventDefault();
+                applyActive(i);
+                // 平滑滚动期间别让 scroll spy 把高亮抢回上一个区块
+                spyHoldUntil = performance.now() + 1400;
+                const el = document.querySelector(target);
+                if (el) el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
             });
         });
 
         // 只保留 ResizeObserver：容器尺寸变化已隐含 window resize，无需重复监听
         new ResizeObserver(scheduleLayout).observe(container);
+
+        /* 滚动到哪个区块，就把哪个 pill 点亮（Blog / Racer 是外链，不参与） */
+        const indexOfTarget = target => Array.from(pills).findIndex(p => p.dataset.target === target);
+        const spies = ['#about', '#contact']
+            .map(sel => ({
+                index: indexOfTarget(sel),
+                sel,
+                el: document.querySelector(sel),
+                top: 0
+            }))
+            .filter(s => s.index >= 0 && s.el);
+
+        if (!spies.length) return;
+
+        const measureSpies = () => {
+            spies.forEach(s => { s.top = s.el.getBoundingClientRect().top + window.scrollY; });
+        };
+        let spyTicking = false;
+        const runSpy = () => {
+            spyTicking = false;
+            if (performance.now() < spyHoldUntil) return;
+            // 以视口上方 32% 处为探针：跨过区块标题即视为进入该区块
+            const probe = window.scrollY + window.innerHeight * 0.32;
+            let current = 0;
+            spies.forEach((s, i) => { if (probe >= s.top) current = i; });
+            // 页面见底时最后一块可能永远够不到探针（内容不满一屏），直接归给收尾区块
+            if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) current = spies.length - 1;
+            const idx = spies[current].index;
+            if (idx !== activeIndex) applyActive(idx);
+        };
+        const onSpyScroll = () => {
+            if (spyTicking) return;
+            spyTicking = true;
+            requestAnimationFrame(runSpy);
+        };
+
+        measureSpies();
+        runSpy();
+        window.addEventListener('scroll', onSpyScroll, { passive: true });
+        window.addEventListener('resize', () => { measureSpies(); onSpyScroll(); }, { passive: true });
+        window.addEventListener('load', () => { measureSpies(); runSpy(); });
+        if (document.fonts?.ready) {
+            document.fonts.ready.then(() => { measureSpies(); runSpy(); }).catch(() => {});
+        }
+        if ('ResizeObserver' in window) new ResizeObserver(measureSpies).observe(document.body);
     }
 
     /* ── Web Animations API — 入场动画编排 ──
