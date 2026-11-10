@@ -1,0 +1,2448 @@
+    /* ── 全局时序配置：集中管理，避免魔法数字散落各处 ──
+       加载遮罩不再固定卡 3 秒：样式就绪后 0.4s 内就揭开，
+       LCP 从 3s+ 直接回到首帧可交互。 */
+    const TIMING = Object.freeze({
+        loadingHold: 400,    // 遮罩最短停留（防闪烁）
+        loadingFade: 600,    // 遮罩淡出时长
+        modalDelay: 4200     // 博客弹窗弹出延时（等入场动画播完，不抢戏）
+    });
+
+    /* 与 CSS 的 prefers-reduced-motion 媒体查询保持一致，供 JS 动画降级使用 */
+    const prefersReducedMotion = () =>
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* 只有精确指针设备（鼠标 / 触控板）才值得跑跟随类特效。
+       触摸设备没有 hover，跑这些只会白烧 GPU。 */
+    const hasFinePointer = () =>
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    /* ── 指针事件统一调度 ──
+       原来 cursorGlow / cursorRing / cursorTrail / magnetic / 3D 标题 / 视差
+       各自挂一个 mousemove，同一次移动要跑 6 遍逻辑、写 6 次样式。
+       这里收成「一个监听 + 每帧一次合批」，位移再密也只处理一帧一次。 */
+    const pointerSubs = new Set();
+    const pointerState = { x: 0, y: 0 };
+    let pointerQueued = false;
+
+    function onPointerMove(fn) { pointerSubs.add(fn); }
+
+    function flushPointer() {
+        pointerQueued = false;
+        pointerSubs.forEach(fn => fn(pointerState.x, pointerState.y));
+    }
+
+    window.addEventListener('pointermove', e => {
+        if (e.pointerType === 'touch') return;
+        pointerState.x = e.clientX;
+        pointerState.y = e.clientY;
+        if (!pointerQueued) {
+            pointerQueued = true;
+            requestAnimationFrame(flushPointer);
+        }
+    }, { passive: true });
+
+    /* ── 博客弹窗的「已看过」标记：写进 cookie，保证只弹第一次 ── */
+    const MODAL_SEEN_COOKIE = 'blogModalSeen';
+    const MODAL_SEEN_DAYS = 365;
+
+    // file:// 或隐私模式下 cookie 可能不可用，读写都兜一层：
+    // 读失败当没记录（多弹一次），写失败退化为「每次访问都弹」，但页面不会报错
+    function readCookie(name) {
+        try {
+            const hit = document.cookie.split(';')
+                .map(row => row.trim())
+                .find(row => row.startsWith(name + '='));
+            return hit ? decodeURIComponent(hit.slice(name.length + 1)) : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    function writeCookie(name, value, days) {
+        try {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+        } catch (err) {
+            // 忽略：无法写 cookie 时只影响弹窗频次，不影响页面功能
+        }
+    }
+
+    /* rAF 循环统一封装：页面切到后台时挂起，回到前台再恢复，避免后台空转 */
+    function createLoop(render) {
+        let rafId = null;
+        let running = false;
+
+        const frame = now => {
+            render(now);
+            // render 内部可以调用 stop() 主动停机（例如粒子全部消散）。
+            // 不判 running 的话，这行会把刚停掉的循环立刻重新拉起来。
+            rafId = running ? requestAnimationFrame(frame) : null;
+        };
+        const start = () => {
+            if (running) return;
+            running = true;
+            rafId = requestAnimationFrame(frame);
+        };
+        const stop = () => {
+            running = false;
+            if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+        };
+
+        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+        start();
+        return { start, stop };
+    }
+
+    /* ── 发光贴图缓存 ──
+       径向渐变的「柔光圆」在运行时反复用 createRadialGradient + arc 画是很贵的，
+       更贵的是 shadowBlur。这里一次性把每个颜色烘焙成一张小贴图，
+       之后每帧只做一次 drawImage —— 光晕效果不变，绘制成本降一个数量级。 */
+    const glowSpriteCache = new Map();
+
+    function getGlowSprite(rgb, size = 64) {
+        const key = rgb + '@' + size;
+        const hit = glowSpriteCache.get(key);
+        if (hit) return hit;
+
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        const r = size / 2;
+        const grad = g.createRadialGradient(r, r, 0, r, r, r);
+        grad.addColorStop(0, `rgba(${rgb},1)`);
+        grad.addColorStop(0.32, `rgba(${rgb},0.78)`);
+        grad.addColorStop(0.62, `rgba(${rgb},0.26)`);
+        grad.addColorStop(1, `rgba(${rgb},0)`);
+        g.fillStyle = grad;
+        g.fillRect(0, 0, size, size);
+        glowSpriteCache.set(key, c);
+        return c;
+    }
+
+    /* 插件集中注册一次：gsap.registerPlugin 是幂等的，重复调用无副作用 */
+    function registerGsapPlugins() {
+        if (typeof gsap === 'undefined') return;
+        const plugins = [window.ScrollTrigger, window.SplitText].filter(Boolean);
+        if (plugins.length) gsap.registerPlugin(...plugins);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        registerGsapPlugins();
+
+        // 逐个隔离：任一模块初始化抛错不应阻断其余模块
+        [
+            initLoadingScreen, initCursorGlow, initCursorRing, initParticles,
+            initDynamicTitle, initContextMenu, initSakura, initModal,
+            initEntranceAnimations, initScrollReveal, initHeadingReveal,
+            initTypewriterCaret, initAboutCard, initPillNav, initNavEntrance,
+            initSocialLinks, initScrollProgress, initBackToTop,
+            initParallax, initMagnetic, initNavScramble, initLetterWave,
+            initCursorTrail, initAboutContentReveal, initComradeStars, initOceanLayout,
+            initMusicPlayer, initRacerEntry, initCopyEmail, initFooterYear,
+            initCommandPalette
+        ].forEach(init => {
+            try {
+                const result = init();
+                // 异步 init 的 rejection 不会被 try/catch 捕获，单独兜一层
+                if (result && typeof result.catch === 'function') {
+                    result.catch(err => console.error(`[init] ${init.name} 失败:`, err));
+                }
+            } catch (err) {
+                console.error(`[init] ${init.name} 失败:`, err);
+            }
+        });
+    });
+
+    /* ── 鼠标跟随光效 ── */
+    function initCursorGlow() {
+        const glow = document.getElementById('cursorGlow');
+        if (!glow || !hasFinePointer()) return;
+
+        // GSAP 不可用时退回直接写 transform，保证效果不整体失效
+        if (typeof gsap === 'undefined') {
+            onPointerMove((x, y) => {
+                glow.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+            });
+            return;
+        }
+
+        // 用 transform 代替 left/top 位移，避免每帧触发布局；
+        // quickTo 复用同一个 tween，比每帧新建 tween 开销低得多
+        gsap.set(glow, { left: 0, top: 0, xPercent: -50, yPercent: -50, x: -500, y: -500 });
+        const moveX = gsap.quickTo(glow, 'x', { duration: 0.45, ease: 'power3' });
+        const moveY = gsap.quickTo(glow, 'y', { duration: 0.45, ease: 'power3' });
+
+        onPointerMove((x, y) => { moveX(x); moveY(y); });
+    }
+
+    /* ── 加载画面 ──
+       不再固定等 3 秒：样式表一就绪就开始计时，最多再停留 loadingHold 防闪烁。
+       （不等 window.load —— 网易云 iframe 可能迟迟不返回，会把整页拖住） */
+    function initLoadingScreen() {
+        const screen = document.querySelector('.loading-screen');
+        if (!screen) return;
+
+        let dismissed = false;
+        const start = performance.now();
+
+        const dismiss = () => {
+            if (dismissed) return;
+            dismissed = true;
+            const wait = Math.max(0, TIMING.loadingHold - (performance.now() - start));
+            setTimeout(() => {
+                screen.classList.add('hidden');
+                setTimeout(() => {
+                    screen.remove();
+                    startTypewriter();
+                }, TIMING.loadingFade);
+            }, wait);
+        };
+
+        if (window.__cssReady) {
+            dismiss();
+        } else {
+            // 样式表还在路上：等它到位再揭开，避免闪一下裸 HTML
+            const timer = setInterval(() => {
+                if (window.__cssReady) { clearInterval(timer); dismiss(); }
+            }, 40);
+            // 兜底：样式表异常时也不能让遮罩卡住页面
+            setTimeout(() => { clearInterval(timer); dismiss(); }, 1200);
+        }
+    }
+
+    /* ── 3D 赛车入口：整卡可点 + 读取本地存档显示成绩 ── */
+    function initRacerEntry() {
+        const card = document.querySelector('.racer-card');
+        if (!card) return;
+
+        // 卡片本体点击进游戏；两个按钮各自是 <a>，交给浏览器
+        card.addEventListener('click', e => {
+            if (e.target.closest('a')) return;
+            window.location.href = 'cpp-racer/index.html';
+        });
+
+        // 存档写在同源下（cpp-racer/js/save.js），这里只读，失败就保留占位符
+        try {
+            const raw = localStorage.getItem('race_engine_save_v1');
+            if (!raw) return;
+
+            const data = JSON.parse(raw);
+            const bests = Object.values(data.best || {}).filter(n => typeof n === 'number' && n > 0);
+            const best = bests.length ? Math.min(...bests) : 0;
+            const topics = Array.isArray(data.topics) ? data.topics.length : 0;
+
+            const bestEl = document.getElementById('racerBest');
+            const topicsEl = document.getElementById('racerTopics');
+            if (bestEl && best) bestEl.textContent = `${best.toFixed(2)}s`;
+            if (topicsEl && topics) topicsEl.textContent = `${topics} / 25`;
+        } catch (err) {
+            // 隐私模式或存档不可用：静默降级
+        }
+    }
+
+    /* ── 复制邮箱：优先 Clipboard API，失败时退回临时 textarea ── */
+    function initCopyEmail() {
+        const btn = document.querySelector('.copy-email');
+        const toast = document.getElementById('copyToast');
+        if (!btn) return;
+
+        const email = btn.dataset.email || '';
+        let timer = null;
+
+        const showToast = text => {
+            if (!toast) return;
+            toast.textContent = text;
+            toast.classList.add('show');
+            clearTimeout(timer);
+            timer = setTimeout(() => toast.classList.remove('show'), 2200);
+        };
+
+        const fallbackCopy = () => {
+            const input = document.createElement('textarea');
+            input.value = email;
+            input.setAttribute('readonly', '');
+            Object.assign(input.style, {
+                position: 'fixed', top: '0', left: '0', opacity: '0', pointerEvents: 'none'
+            });
+            document.body.appendChild(input);
+            input.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+            input.remove();
+            return ok;
+        };
+
+        btn.addEventListener('click', async () => {
+            let ok = false;
+            try {
+                await navigator.clipboard.writeText(email);
+                ok = true;
+            } catch (err) {
+                ok = fallbackCopy();
+            }
+            showToast(ok ? `已复制 ${email}` : `复制失败，请手动选择：${email}`);
+        });
+    }
+
+    /* ── 页脚年份：不写死在 HTML 里，跨年不用改 ── */
+    function initFooterYear() {
+        const el = document.getElementById('footerYear');
+        if (el) el.textContent = String(new Date().getFullYear());
+    }
+
+    /* ── 音乐播放器：延迟注入 src ──
+       网易云 iframe 会自己拉一整套播放器资源，放在首屏和字体 / GSAP 抢带宽很不划算。
+       等首屏稳定、浏览器空闲后再挂上去，听感上只晚一两秒。 */
+    function initMusicPlayer() {
+        const frame = document.querySelector('.music-player iframe');
+        if (!frame || !frame.dataset.src) return;
+
+        const load = () => { frame.src = frame.dataset.src; };
+
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(load, { timeout: 2500 });
+        } else {
+            setTimeout(load, 2000);
+        }
+    }
+
+    /* ── 打字机 ── */
+    function startTypewriter() {
+        const el = document.querySelector('.typewriter-text');
+        if (!el) return;
+
+        // 原来整套打完要 9.6 秒（24 个字母 + 9 次停顿），首屏观感很拖；
+        // 这里压到 3.4 秒左右，仍看得清拼音逐个敲入的过程。
+        const STEP = 45;    // 敲入一个拼音字母的间隔
+        const HOLD = 110;   // 拼音补全后的停留
+        const GAP = 150;    // 替换为汉字后的停顿
+
+        const pairs = [
+            { pin: 'NI',   ch: '你' },
+            { pin: 'HAO',  ch: '好' },
+            { pin: '!',    ch: '！', br: true },
+            { pin: 'WO',   ch: '我' },
+            { pin: 'SHI',  ch: '是' },
+            { pin: 'SHUI', ch: '水' },
+            { pin: 'SHEN', ch: '神' },
+            { pin: 'JUE',  ch: '崛' },
+            { pin: 'QI',   ch: '起' }
+        ];
+
+        // 已确定的片段：{ text } 或 { br: true }
+        const segments = [];
+        let pi = 0, ci = 0;
+
+        // 每个字符单独包一层 <span class="t3d-char">，才能做「勿忘我」同款的 3D 立体字。
+        // 仍用「已确定片段 + 正在输入的拼音」渲染成节点，替代反复改写 innerHTML：
+        // 旧实现用 innerHTML.replace(pin, ch) 定位待替换文本，一旦拼音片段在已有内容中
+        // 重复出现就会替换错位，且每次 += 都会重新解析整棵子树。
+        const makeChar = ch => {
+            const span = document.createElement('span');
+            span.className = 't3d-char';
+            span.textContent = ch === ' ' ? '\u00A0' : ch;
+            return span;
+        };
+
+        const render = typing => {
+            const frag = document.createDocumentFragment();
+            let i = 0;
+            const pushText = text => {
+                for (const ch of text) {
+                    const span = makeChar(ch);
+                    // 逐字给不同的 Z 深度，制造立体层次
+                    span.style.setProperty('--z', `${40 - (i % 3) * 9}px`);
+                    frag.appendChild(span);
+                    i += 1;
+                }
+            };
+            segments.forEach(seg => {
+                if (seg.br) frag.appendChild(document.createElement('br'));
+                else pushText(seg.text);
+            });
+            pushText(typing);
+            el.replaceChildren(frag);
+        };
+
+        if (prefersReducedMotion()) {
+            pairs.forEach(({ ch, br }) => {
+                segments.push({ text: ch });
+                if (br) segments.push({ br: true });
+            });
+            render('');
+            return;
+        }
+
+        (function tick() {
+            if (pi >= pairs.length) return;
+            const { pin, ch, br } = pairs[pi];
+            if (ci < pin.length) {
+                ci += 1;
+                render(pin.slice(0, ci));
+                setTimeout(tick, STEP);
+            } else {
+                setTimeout(() => {
+                    segments.push({ text: ch });
+                    if (br) segments.push({ br: true });
+                    pi += 1;
+                    ci = 0;
+                    render('');
+                    setTimeout(tick, GAP);
+                }, HOLD);
+            }
+        })();
+    }
+
+    /* ── 点击粒子 ── */
+    function initParticles() {
+        const cvs = document.createElement('canvas');
+        Object.assign(cvs.style, { position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 });
+        cvs.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(cvs);
+
+        const ctx = cvs.getContext('2d', { desynchronized: true });
+        const resize = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; };
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        // 颜色改成贴图：每帧只 drawImage，不再逐粒子设置 shadowBlur
+        const COLORS = ['0,158,142', '64,201,184', '0,122,109', '108,92,231', '162,155,254', '253,121,168'];
+        const sprites = COLORS.map(rgb => getGlowSprite(rgb));
+        const particles = [];
+
+        function spawn(x, y) {
+            const n = prefersReducedMotion() ? 10 : 26;
+            for (let i = 0; i < n; i++) {
+                const angle = (Math.PI * 2 * i) / n + (Math.random() - 0.5) * 0.5;
+                const speed = Math.random() * 5 + 2;
+                particles.push({
+                    x, y,
+                    r: Math.random() * 3 + 1.6,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    sprite: sprites[Math.random() * sprites.length | 0],
+                    life: 1,
+                    decay: Math.random() * 0.015 + 0.008
+                });
+            }
+            loop.start();
+        }
+
+        // 粒子只在点击后短暂存在，闲时空转 rAF 没有意义：
+        // 队列清空后主动停掉循环，下次点击再唤醒
+        const loop = createLoop(() => {
+            if (!particles.length) { loop.stop(); return; }
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.02; // slight gravity
+                p.vx *= 0.99;
+                p.life -= p.decay;
+                p.r *= 0.985;
+                if (p.life <= 0) { particles.splice(i, 1); continue; }
+                const d = p.r * 6;
+                ctx.globalAlpha = p.life;
+                ctx.drawImage(p.sprite, p.x - d / 2, p.y - d / 2, d, d);
+            }
+            ctx.globalAlpha = 1;
+        });
+        loop.stop();
+
+        document.addEventListener('click', e => spawn(e.clientX, e.clientY));
+    }
+
+    /* ── 动态标题 ── */
+    function initDynamicTitle() {
+        const title = document.title;
+        document.addEventListener('visibilitychange', () => {
+            document.title = document.hidden ? '(｡•́ω•̀｡) 你别走啊~' : '(✧∇✧) 你回来啦！';
+            if (!document.hidden) setTimeout(() => { document.title = title; }, 1000);
+        });
+    }
+
+    /* ── 右键菜单 ── */
+    const CONTEXT_ACTIONS = Object.freeze({
+        search: () => document.getElementById('cmdkTrigger')?.click(),
+        refresh: () => location.reload(),
+        bilibili: () => window.open('https://space.bilibili.com/439038862', '_blank', 'noopener'),
+        email: () => { location.href = 'mailto:ssjq4me@outlook.com?subject=你好！&body=你好！'; },
+        forget: () => { window.location.href = 'forget-me-not/index.html'; },
+        top: () => window.scrollTo({ top: 0, behavior: 'smooth' })
+    });
+
+    function initContextMenu() {
+        const menu = document.getElementById('contextMenu');
+        if (!menu) return;
+
+        const items = Array.from(menu.querySelectorAll('[role="menuitem"]'));
+        let opener = null;
+
+        const hide = () => {
+            if (!menu.classList.contains('show')) return;
+            menu.classList.remove('show');
+            // 键盘关闭后把焦点送回打开菜单的位置
+            if (menu.contains(document.activeElement)) {
+                opener?.focus?.({ preventScroll: true });
+            }
+            opener = null;
+        };
+
+        const activate = item => {
+            const action = item?.dataset.action;
+            hide();
+            if (action) CONTEXT_ACTIONS[action]?.();
+        };
+
+        const showAt = (x, y) => {
+            opener = document.activeElement;
+            menu.classList.add('show');
+            // 贴边时把菜单收回视口内，否则靠右/靠下触发会溢出屏幕导致选项点不到
+            menu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - menu.offsetWidth - 8))}px`;
+            menu.style.top = `${Math.max(8, Math.min(y, window.innerHeight - menu.offsetHeight - 8))}px`;
+            items[0]?.focus({ preventScroll: true });
+        };
+
+        document.addEventListener('contextmenu', e => {
+            // 输入框 / 可编辑区域保留系统菜单，复制粘贴比快捷菜单重要
+            const target = e.target instanceof Element ? e.target : null;
+            if (target?.closest('input, textarea, [contenteditable]:not([contenteditable="false"])')) return;
+            // Shift + 右键也放行，给需要「在新标签页打开」等原生操作的人留出口
+            if (e.shiftKey) return;
+
+            e.preventDefault();
+            const focused = document.activeElement;
+            const rect = focused && focused !== document.body ? focused.getBoundingClientRect() : null;
+            const x = e.clientX || (rect ? rect.left + Math.min(24, rect.width / 2) : window.innerWidth / 2);
+            const y = e.clientY || (rect ? rect.bottom : window.innerHeight / 2);
+            showAt(x, y);
+        });
+
+        document.addEventListener('click', e => {
+            if (!menu.contains(e.target)) hide();
+        });
+        window.addEventListener('blur', hide);
+        window.addEventListener('scroll', hide, { passive: true });
+        window.addEventListener('resize', hide);
+
+        menu.addEventListener('click', e => {
+            activate(e.target.closest('[data-action]'));
+        });
+
+        menu.addEventListener('keydown', e => {
+            const i = items.indexOf(document.activeElement);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                items[(i + 1) % items.length]?.focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                items[(i - 1 + items.length) % items.length]?.focus();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                items[0]?.focus();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                items[items.length - 1]?.focus();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                activate(document.activeElement);
+            } else if (e.key === 'Escape' || e.key === 'Tab') {
+                if (e.key === 'Escape') e.preventDefault();
+                hide();
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') hide();
+        });
+    }
+
+    /* ── 命令面板：Ctrl / Cmd + K 搜索页面、文章与快捷操作 ──
+       首屏先用首页那 6 张文章卡立即建索引，真正打开面板时再异步补全
+       doc/index.html 的完整目录。新文章只要进目录，这里无需再改。 */
+    function initCommandPalette() {
+        const overlay = document.getElementById('commandPalette');
+        const trigger = document.getElementById('cmdkTrigger');
+        const input = document.getElementById('cmdkInput');
+        const list = document.getElementById('cmdkList');
+        const empty = document.getElementById('cmdkEmpty');
+        const emptyQuery = document.getElementById('cmdkEmptyQuery');
+        const emptyBlog = document.getElementById('cmdkEmptyBlog');
+        const status = document.getElementById('cmdkStatus');
+        const countEl = document.getElementById('cmdkCount');
+        const triggerKbd = document.getElementById('cmdkTriggerKbd');
+        const closeBtn = overlay?.querySelector('.cmdk-close');
+        if (!overlay || !trigger || !input || !list) return;
+
+        const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+        if (triggerKbd) triggerKbd.textContent = isMac ? '⌘ K' : 'Ctrl K';
+
+        /* 归一化：大小写、全角半角、空白，以及把 C++ 折成 cpp，
+           这样输入 cpp / c++ / C ++ 都能命中同一篇文章 */
+        const normalize = value => String(value || '')
+            .toLowerCase()
+            .normalize('NFKC')
+            .replace(/\+/g, 'p')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const reducedMotion = () => prefersReducedMotion();
+        const isOpen = () => overlay.classList.contains('is-open');
+
+        const resolveUrl = (raw, base = location.href) => {
+            try {
+                const url = new URL(raw, base);
+                return /^(https?|file):$/.test(url.protocol) ? url.href : '';
+            } catch (err) {
+                return '';
+            }
+        };
+
+        const openExternal = url => {
+            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+        };
+
+        const goTop = () => window.scrollTo({
+            top: 0,
+            behavior: reducedMotion() ? 'auto' : 'smooth'
+        });
+
+        const goSection = hash => {
+            const section = document.querySelector(hash);
+            if (!section) return;
+            const labelledBy = section.getAttribute('aria-labelledby');
+            const focusTarget = (labelledBy && document.getElementById(labelledBy)) || section;
+
+            if (history.pushState) history.pushState(null, '', hash);
+            else location.hash = hash;
+
+            // 把焦点交给标题，读屏会从区块名开始念，而不是回到页面顶部
+            focusTarget.setAttribute('tabindex', '-1');
+            focusTarget.focus({ preventScroll: true });
+            section.scrollIntoView({
+                behavior: reducedMotion() ? 'auto' : 'smooth',
+                block: 'start'
+            });
+        };
+
+        /* 页面与快捷操作是静态的；文章则来自首页 DOM + 目录页 */
+        const pages = [
+            {
+                id: 'page-blog', group: 'page', kind: 'page', featured: true,
+                title: '博客目录', meta: '全部 12 篇笔记与随笔',
+                keywords: 'blog 博客 文章 目录 归档 archive',
+                run: () => { location.href = 'doc/index.html'; }
+            },
+            {
+                id: 'page-racer', group: 'page', kind: 'page', featured: true,
+                title: 'RACE_ENGINE', meta: '可玩的 3D 赛车 · 25 个 C++ 知识点',
+                keywords: 'racer race 赛车 游戏 game 竞速 cpp c++ 知识点',
+                run: () => { location.href = 'cpp-racer/index.html'; }
+            },
+            {
+                id: 'page-contact', group: 'page', kind: 'page', featured: true,
+                title: '联系我', meta: '邮箱、GitHub 与 Bilibili',
+                keywords: 'contact 联系 邮箱 email 邮件 github bilibili 社交',
+                run: () => goSection('#contact')
+            },
+            {
+                id: 'page-showroom', group: 'page', kind: 'page',
+                title: '3D 车辆展厅', meta: 'RACE_ENGINE Showroom',
+                keywords: 'showroom 展厅 3d 车辆 赛车',
+                run: () => { location.href = 'cpp-racer/showroom.html'; }
+            },
+            {
+                id: 'page-forget', group: 'page', kind: 'page',
+                title: '勿忘我', meta: '3D 立体字与交互叙事实验',
+                keywords: 'forget 勿忘我 叙事 3d 文字',
+                run: () => { location.href = 'forget-me-not/index.html'; }
+            }
+        ];
+
+        const actions = [
+            {
+                id: 'action-email', group: 'action', kind: 'action', featured: true,
+                title: '复制我的邮箱', meta: 'ssjq4me@outlook.com · 一键复制',
+                keywords: 'copy 复制 邮箱 email 邮件 联系 contact',
+                run: () => document.querySelector('.copy-email')?.click()
+            },
+            {
+                id: 'action-github', group: 'action', kind: 'action', featured: true, newTab: true,
+                title: '打开 GitHub 主页', meta: 'github.com/TBssjq',
+                keywords: 'github 代码 主页 code',
+                run: () => openExternal('https://github.com/TBssjq')
+            },
+            {
+                id: 'action-bilibili', group: 'action', kind: 'action', featured: true, newTab: true,
+                title: '去 B 站看看', meta: 'space.bilibili.com/439038862',
+                keywords: 'bilibili b站 视频 空间',
+                run: () => openExternal('https://space.bilibili.com/439038862')
+            },
+            {
+                id: 'action-source', group: 'action', kind: 'action', featured: true, newTab: true,
+                title: '查看本站源码', meta: 'github.com/TBssjq/TBssjq.github.io',
+                keywords: 'source github 源码 code 仓库 repo',
+                run: () => openExternal('https://github.com/TBssjq/TBssjq.github.io')
+            },
+            {
+                id: 'action-top', group: 'action', kind: 'action', featured: true,
+                title: '返回页面顶部', meta: '回到海面',
+                keywords: 'top 顶部 返回 回到顶部',
+                run: goTop
+            }
+        ];
+
+        const makePost = ({ title, href, date = '', category = '', excerpt = '', keywords = '' }) => ({
+            id: 'post-' + href,
+            group: 'post',
+            kind: 'post',
+            featured: true,
+            newTab: true,
+            title,
+            date,
+            category,
+            excerpt,
+            meta: [date, category, excerpt].filter(Boolean).join(' · '),
+            keywords: `${keywords} ${category} 文章 笔记 博客 随笔`,
+            run: () => openExternal(href)
+        });
+
+        // 首屏文章卡就是天然的文章索引：立即可用，且不额外发请求
+        let posts = Array.from(document.querySelectorAll('.notes-grid .post-card')).map(card => {
+            const link = card.matches('a') ? card : card.querySelector('a[href]');
+            if (!link) return null;
+            const href = resolveUrl(link.getAttribute('href'));
+            const title = card.querySelector('.post-title')?.textContent.trim();
+            if (!href || !title) return null;
+            const excerpt = card.querySelector('.post-excerpt')?.textContent.trim() || '';
+            return makePost({
+                title,
+                href,
+                date: card.querySelector('time')?.textContent.trim() || '',
+                category: card.querySelector('.post-cat')?.textContent.trim() || '',
+                excerpt,
+                keywords: excerpt
+            });
+        }).filter(Boolean);
+
+        let fullIndexRequested = false;
+        let lastFocused = null;
+        let optionItems = [];
+        let optionEls = [];
+        let activeIndex = -1;
+
+        const mergeFullIndex = async () => {
+            if (fullIndexRequested) return;
+            fullIndexRequested = true;
+
+            try {
+                const response = await fetch('doc/index.html', { credentials: 'same-origin' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const docBase = new URL('doc/index.html', location.href).href;
+                const homeByHref = new Map(posts.map(post => [post.id, post]));
+                const seen = new Set();
+                const complete = [];
+
+                doc.querySelectorAll('.article-card:not(.is-coming) a[href]').forEach(link => {
+                    const card = link.closest('.article-card');
+                    if (!card) return;
+                    const title = card.querySelector('.article-card__title')?.textContent.trim();
+                    const href = resolveUrl(link.getAttribute('href'), docBase);
+                    if (!title || !href || seen.has(href)) return;
+                    seen.add(href);
+
+                    // 首页那张卡有更完整的摘要与分类时优先用首页的
+                    const home = homeByHref.get('post-' + href);
+                    const docExcerpt = card.querySelector('.article-card__excerpt')?.textContent.trim() || '';
+                    const excerpt = home?.excerpt || docExcerpt;
+                    const category = home?.category || (/C\+\+|指针|位运算|算法/.test(title) ? 'C++' : '随笔');
+
+                    complete.push(makePost({
+                        title,
+                        href,
+                        date: card.querySelector('.date-tag')?.textContent.trim() || '',
+                        category,
+                        excerpt,
+                        keywords: excerpt
+                    }));
+                });
+
+                if (!complete.length) return;
+                posts = complete;
+
+                if (isOpen()) {
+                    const current = optionItems[activeIndex];
+                    render();
+                    if (current) {
+                        const restored = optionItems.findIndex(item => item.id === current.id);
+                        if (restored >= 0) setActive(restored, false);
+                    }
+                }
+            } catch (err) {
+                // 离线 / file:// 下读取不到目录也没关系，首页那几篇仍可搜索
+                fullIndexRequested = false;
+            }
+        };
+
+        const ICONS = {
+            page: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M6.5 6.5h.01M9.5 6.5h.01"/></svg>',
+            post: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 12h5M10 16h5"/></svg>',
+            action: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>'
+        };
+
+        const scoreItem = (item, tokens, query) => {
+            const title = normalize(item.title);
+            const meta = normalize(item.meta);
+            const keywords = normalize(item.keywords);
+            const haystack = `${title} ${meta} ${keywords}`;
+            let score = 0;
+
+            for (const token of tokens) {
+                if (!haystack.includes(token)) return -1;
+                if (title === token) score += 80;
+                else if (title.startsWith(token)) score += 26;
+                else if (title.includes(token)) score += 18;
+                else if (keywords.includes(token)) score += 8;
+                else score += 2;
+            }
+
+            if (query && title.includes(query)) score += 20;
+            return score;
+        };
+
+        const setActive = (index, shouldScroll = true) => {
+            if (!optionEls.length) return;
+            const next = (index + optionEls.length) % optionEls.length;
+            if (next === activeIndex) return;
+
+            optionEls.forEach((el, i) => {
+                const selected = i === next;
+                el.classList.toggle('is-active', selected);
+                el.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+
+            activeIndex = next;
+            input.setAttribute('aria-activedescendant', optionEls[activeIndex].id);
+            if (shouldScroll) optionEls[activeIndex].scrollIntoView({ block: 'nearest' });
+        };
+
+        const render = () => {
+            const rawQuery = input.value.trim();
+            const query = normalize(rawQuery);
+            const tokens = query ? query.split(' ') : [];
+            const groups = [
+                { key: 'page', label: '页面', items: pages },
+                { key: 'post', label: '文章', items: posts },
+                { key: 'action', label: '快捷操作', items: actions }
+            ];
+            const fragment = document.createDocumentFragment();
+
+            optionItems = [];
+            optionEls = [];
+            activeIndex = -1;
+
+            groups.forEach(group => {
+                let entries;
+
+                if (tokens.length) {
+                    entries = group.items
+                        .map(item => ({ item, score: scoreItem(item, tokens, query) }))
+                        .filter(entry => entry.score >= 0)
+                        .sort((a, b) => b.score - a.score)
+                        .map(entry => entry.item);
+                } else {
+                    entries = group.items.filter(item => item.featured);
+                    if (group.key === 'post') entries = entries.slice(0, 5);
+                }
+
+                if (!entries.length) return;
+
+                const groupEl = document.createElement('div');
+                groupEl.className = 'cmdk-group';
+                groupEl.setAttribute('role', 'group');
+                const labelId = `cmdk-group-${group.key}`;
+                groupEl.setAttribute('aria-labelledby', labelId);
+
+                const label = document.createElement('div');
+                label.className = 'cmdk-group-label';
+                label.id = labelId;
+                label.textContent = group.label;
+                groupEl.append(label);
+
+                entries.forEach(item => {
+                    const index = optionItems.length;
+                    const el = document.createElement('div');
+                    el.className = 'cmdk-option';
+                    el.id = `cmdk-opt-${index}`;
+                    el.setAttribute('role', 'option');
+                    el.setAttribute('aria-selected', 'false');
+
+                    const icon = document.createElement('span');
+                    icon.className = 'cmdk-option__icon';
+                    icon.setAttribute('aria-hidden', 'true');
+                    icon.innerHTML = ICONS[item.kind] || ICONS.page;
+
+                    const body = document.createElement('span');
+                    body.className = 'cmdk-option__body';
+                    const title = document.createElement('span');
+                    title.className = 'cmdk-option__title';
+                    title.textContent = item.title;
+                    if (item.newTab) {
+                        const hint = document.createElement('span');
+                        hint.className = 'sr-only';
+                        hint.textContent = '（在新标签页打开）';
+                        title.append(hint);
+                    }
+                    const meta = document.createElement('span');
+                    meta.className = 'cmdk-option__meta';
+                    meta.textContent = item.meta;
+                    body.append(title, meta);
+
+                    const go = document.createElement('span');
+                    go.className = 'cmdk-option__go';
+                    go.setAttribute('aria-hidden', 'true');
+                    go.textContent = item.newTab ? '↗' : '↵';
+
+                    el.append(icon, body, go);
+                    groupEl.append(el);
+                    optionItems.push(item);
+                    optionEls.push(el);
+                });
+
+                fragment.append(groupEl);
+            });
+
+            list.replaceChildren(fragment);
+            list.scrollTop = 0;
+
+            const total = optionItems.length;
+            list.hidden = total === 0;
+            empty.hidden = total !== 0;
+            input.setAttribute('aria-expanded', total ? 'true' : 'false');
+            countEl.textContent = `${total} 个结果`;
+            emptyQuery.textContent = rawQuery;
+
+            if (total) {
+                status.textContent = rawQuery
+                    ? `找到 ${total} 个结果`
+                    : `显示 ${total} 个常用入口`;
+                setActive(0, false);
+            } else {
+                input.removeAttribute('aria-activedescendant');
+                status.textContent = rawQuery
+                    ? `没有找到与 ${rawQuery} 相关的内容`
+                    : '没有可用的结果';
+            }
+        };
+
+        const background = () => Array.from(document.body.children)
+            .filter(el => el !== overlay && !/^(SCRIPT|STYLE|NOSCRIPT)$/.test(el.tagName));
+
+        const closePalette = () => {
+            if (!isOpen()) return;
+
+            const focusBack = lastFocused && lastFocused !== document.body && document.contains(lastFocused)
+                ? lastFocused
+                : trigger;
+
+            overlay.classList.remove('is-open');
+            overlay.hidden = true;
+            document.body.classList.remove('cmdk-open');
+            background().forEach(el => el.removeAttribute('inert'));
+            lastFocused = null;
+
+            focusBack.focus?.({ preventScroll: true });
+        };
+
+        const openPalette = () => {
+            if (isOpen()) {
+                input.focus();
+                return;
+            }
+            // 欢迎弹窗或加载遮罩在时，不叠第二个对话框
+            if (document.querySelector('.modal-overlay.show')) return;
+            if (document.querySelector('.loading-screen')) return;
+
+            lastFocused = document.activeElement;
+            document.getElementById('contextMenu')?.classList.remove('show');
+            document.body.classList.add('cmdk-open');
+            overlay.hidden = false;
+            overlay.classList.add('is-open');
+            background().forEach(el => el.setAttribute('inert', ''));
+
+            input.value = '';
+            render();
+            input.focus({ preventScroll: true });
+            mergeFullIndex();
+        };
+
+        const activate = item => {
+            if (!item) return;
+            closePalette();
+            item.run?.();
+        };
+
+        trigger.addEventListener('click', openPalette);
+        // 悬停时预取完整目录，点开就已经是 12 篇
+        trigger.addEventListener('pointerenter', mergeFullIndex, { once: true });
+        closeBtn?.addEventListener('click', closePalette);
+        overlay.addEventListener('click', e => {
+            if (e.target.closest('[data-cmdk-close]')) closePalette();
+        });
+
+        input.addEventListener('input', render);
+
+        list.addEventListener('pointermove', e => {
+            const el = e.target.closest('.cmdk-option');
+            if (!el) return;
+            const index = optionEls.indexOf(el);
+            if (index >= 0) setActive(index, false);
+        });
+
+        list.addEventListener('click', e => {
+            const el = e.target.closest('.cmdk-option');
+            if (!el) return;
+            const index = optionEls.indexOf(el);
+            if (index >= 0) activate(optionItems[index]);
+        });
+
+        emptyBlog?.addEventListener('click', () => {
+            closePalette();
+            location.href = 'doc/index.html';
+        });
+
+        overlay.addEventListener('keydown', e => {
+            if (e.isComposing) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                closePalette();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                const focusables = Array.from(overlay.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])'))
+                    .filter(el => !el.disabled && el.getClientRects().length);
+                if (!focusables.length) { e.preventDefault(); return; }
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                const outside = !overlay.contains(document.activeElement);
+
+                if (e.shiftKey && (document.activeElement === first || outside)) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && (document.activeElement === last || outside)) {
+                    e.preventDefault();
+                    first.focus();
+                }
+                return;
+            }
+
+            if (e.target !== input) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActive(activeIndex + 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActive(activeIndex - 1);
+            } else if (e.key === 'Enter' && optionItems.length) {
+                e.preventDefault();
+                activate(optionItems[activeIndex] || optionItems[0]);
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            const key = e.key.toLowerCase();
+            const cmdK = key === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey;
+
+            if (cmdK) {
+                if (!isOpen() && document.querySelector('.modal-overlay.show')) return;
+                e.preventDefault();
+                if (isOpen()) {
+                    input.focus();
+                    input.select();
+                } else {
+                    openPalette();
+                }
+                return;
+            }
+
+            if (e.key === '/' && !isOpen() && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                const target = e.target;
+                if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+                if (document.querySelector('.modal-overlay.show')) return;
+                e.preventDefault();
+                openPalette();
+            }
+        });
+    }
+
+    /* ── 樱花（升级版 — 多彩光点） ── */
+    function initSakura() {
+        const cvs = document.getElementById('sakuraCanvas');
+        if (!cvs) return;
+
+        // 樱花是纯装饰层，用户要求减少动效时直接不绘制
+        if (prefersReducedMotion()) return;
+
+        const ctx = cvs.getContext('2d', { desynchronized: true });
+        if (!ctx) return;
+
+        // 按 CSS 像素绘制：光点本身就是柔光，不需要 DPR 放大，填充像素直接省一半以上
+        const resize = () => {
+            cvs.width = window.innerWidth;
+            cvs.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        // 颜色改成预烘焙贴图：原来每帧要做 95 次 shadowBlur(20) + arc + 字符串拼接，
+        // 现在每帧只是 95 次 drawImage，光晕观感一致，开销降一个数量级。
+        const COLORS = [
+            '255,183,197',   // 樱花粉
+            '255,150,180',   // 深樱粉
+            '255,209,220',   // 浅樱粉
+            '255,182,193',   // 浅粉红
+            '248,187,208',   // 玫瑰粉
+            '237,159,176',   // 桃粉
+            '0,229,199',     // accent青（少量点缀）
+            '253,121,168'    // warm粉
+        ];
+        const sprites = COLORS.map(rgb => getGlowSprite(rgb));
+
+        // 小屏 / 低核心设备减量：视觉密度不变太多，帧率优先级更高
+        const small = window.matchMedia('(max-width: 768px)').matches;
+        const COUNT = small ? 40 : 70;
+
+        const petals = Array.from({ length: COUNT }, () => ({
+            x: Math.random() * cvs.width,
+            y: Math.random() * cvs.height,
+            r: Math.random() * 4.5 + 2.5,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: Math.random() * 0.8 + 0.35,
+            o: Math.random() * 0.4 + 0.35,
+            sprite: sprites[Math.random() * sprites.length | 0],
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.025 + 0.008
+        }));
+
+        createLoop(() => {
+            const w = cvs.width, h = cvs.height;
+            ctx.clearRect(0, 0, w, h);
+
+            for (let i = 0; i < petals.length; i++) {
+                const p = petals[i];
+                p.x += p.vx + Math.sin(p.pulse) * 0.4;
+                p.y += p.vy;
+                p.pulse += p.pulseSpeed;
+
+                if (p.y > h + p.r) { p.y = -p.r; p.x = Math.random() * w; }
+                if (p.x > w + p.r) p.x = -p.r;
+                if (p.x < -p.r) p.x = w + p.r;
+
+                const d = p.r * 6;
+                ctx.globalAlpha = p.o * (0.65 + 0.35 * Math.sin(p.pulse));
+                ctx.drawImage(p.sprite, p.x - d / 2, p.y - d / 2, d, d);
+            }
+            ctx.globalAlpha = 1;
+        });
+    }
+
+    /* ── 弹窗 ── */
+    function initModal() {
+        const modal = document.getElementById('blogModal');
+        if (!modal) return;
+
+        const closeBtn = modal.querySelector('.modal-close');
+        const goBtn = document.getElementById('blogGoBtn');
+        let lastFocused = null;
+
+        // aria-modal 只是声明，真正的隔离靠 inert；顺带锁住底页滚动
+        const background = () => Array.from(document.body.children)
+            .filter(el => el !== modal && !/^(SCRIPT|STYLE|NOSCRIPT)$/.test(el.tagName));
+
+        const focusables = () => Array.from(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+            .filter(el => !el.disabled && el.getClientRects().length);
+
+        const open = () => {
+            if (modal.classList.contains('show')) return;
+            lastFocused = document.activeElement;
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            background().forEach(el => el.setAttribute('inert', ''));
+            closeBtn?.focus({ preventScroll: true });
+        };
+
+        const close = () => {
+            if (!modal.classList.contains('show')) return;
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            background().forEach(el => el.removeAttribute('inert'));
+            if (lastFocused && document.contains(lastFocused)) {
+                lastFocused.focus?.({ preventScroll: true });
+            }
+            lastFocused = null;
+        };
+
+        // 只在首次访问时弹出：cookie 已有标记就跳过；弹出时立刻写下标记，之后不再弹
+        if (!readCookie(MODAL_SEEN_COOKIE)) {
+            setTimeout(() => {
+                // 用户正在用命令面板时不抢焦点，这一轮就不再弹欢迎弹窗
+                if (document.body.classList.contains('cmdk-open')) return;
+                open();
+                writeCookie(MODAL_SEEN_COOKIE, '1', MODAL_SEEN_DAYS);
+            }, TIMING.modalDelay);
+        }
+
+        closeBtn?.addEventListener('click', close);
+        goBtn?.addEventListener('click', () => {
+            close();
+            window.open('doc/index.html', '_blank', 'noopener');
+        });
+        modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+        document.addEventListener('keydown', e => {
+            if (!modal.classList.contains('show')) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                close();
+                return;
+            }
+
+            if (e.key !== 'Tab') return;
+            const items = focusables();
+            if (!items.length) { e.preventDefault(); return; }
+            const first = items[0];
+            const last = items[items.length - 1];
+            const outside = !modal.contains(document.activeElement);
+
+            if (e.shiftKey && (document.activeElement === first || outside)) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && (document.activeElement === last || outside)) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
+    }
+
+    /* ── 滚动渐入（GSAP + ScrollTrigger）── */
+    function initScrollReveal() {
+        const items = Array.from(document.querySelectorAll('.animate-in'));
+
+        // Fallback：GSAP 未加载或用户要求减少动效时，退回 CSS 过渡直接显示
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) {
+            items.forEach(el => el.classList.add('visible'));
+            return null;
+        }
+
+        // 交由 GSAP 逐帧写 inline style。CSS 上的 opacity/transform 过渡必须关掉，
+        // 否则 CSS transition 会对 GSAP 的每一帧再做一次插值，动画变得迟滞。
+        items.forEach(el => el.classList.add('gsap-driven'));
+
+        // 用 context 收拢本模块的全部动画与 ScrollTrigger，便于统一 revert；
+        // self.selector 是作用域选择器，保证只命中 <main> 内的元素
+        const ctx = gsap.context(self => {
+            const q = self.selector;
+
+            // Hero 入场：一条 timeline 统一编排，替代脆弱的 setTimeout 链。
+            // 延迟到加载画面开始淡出时才播放，否则整套入场动画会在遮罩后面白跑一遍。
+            const heroEls = q('.hero .animate-in');
+            if (heroEls.length) {
+                const tl = gsap.timeline({
+                    delay: TIMING.loadingHold / 1000,
+                    defaults: { ease: 'expo.out' }
+                });
+
+                tl.fromTo(heroEls,
+                    { opacity: 0, y: 40 },
+                    { opacity: 1, y: 0, duration: 1, stagger: 0.2 }
+                );
+
+                // 副标题逐字上浮。"<" 表示与上一段同时开始，"<0.35" 即再延后 0.35s，
+                // 正好落在副标题块自身入场的时点之后。
+                const letters = q('.hero-subtitle .letter');
+                if (letters.length) {
+                    // .hero-subtitle .letter 自带 transform 过渡（用于 hover 上浮），
+                    // 不关掉的话 GSAP 的逐帧写入会被 CSS 再插值一次，动画变迟滞。
+                    tl.set(letters, { transition: 'none' }, 0)
+                        .fromTo(letters,
+                            { opacity: 0, yPercent: 120 },
+                            {
+                                opacity: 1,
+                                yPercent: 0,
+                                duration: 0.6,
+                                stagger: { each: 0.025, from: 'start' },
+                                ease: 'back.out(2)'
+                            },
+                            // 副标题块在 stagger 0.3 时入场，逐字动画晚 0.05s 起
+                            0.35
+                        )
+                        // 动画结束后清掉 inline transition，把 hover 上浮还回 CSS
+                        .set(letters, { clearProps: 'transition' });
+                }
+            }
+
+            // 其余 section：ScrollTrigger 驱动，进入视口时渐入（离开可回放）
+            q('.animate-in:not(.hero .animate-in)').forEach(el => {
+                gsap.fromTo(el,
+                    { opacity: 0, y: 40 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1,
+                        ease: 'expo.out',
+                        scrollTrigger: window.ScrollTrigger ? {
+                            trigger: el,
+                            start: 'top 85%',
+                            toggleActions: 'play none none reverse'
+                        } : undefined
+                    }
+                );
+            });
+        }, document.querySelector('main'));
+
+        // 字体加载完成后行高/高度可能变化，触发点需要重新测量
+        document.fonts?.ready.then(() => window.ScrollTrigger?.refresh()).catch(() => {});
+
+        return ctx;
+    }
+
+    /* ── 标题逐行遮罩揭示（SplitText + ScrollTrigger）── */
+    function initHeadingReveal() {
+        if (typeof gsap === 'undefined' || !window.SplitText || prefersReducedMotion()) return;
+
+        gsap.utils.toArray('[data-split]').forEach(el => {
+            SplitText.create(el, {
+                type: 'lines',
+                mask: 'lines',
+                linesClass: 'split-line',
+                // autoSplit：字体加载完或容器宽度变化后自动重新分行，避免错行。
+                // 动画必须建在 onSplit 里，重分后才能重新绑定并同步进度。
+                autoSplit: true,
+                onSplit: self => gsap.from(self.lines, {
+                    yPercent: 110,
+                    duration: 0.9,
+                    ease: 'expo.out',
+                    stagger: 0.08,
+                    scrollTrigger: window.ScrollTrigger ? {
+                        trigger: el,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    } : undefined
+                })
+            });
+        });
+    }
+
+    /* ── 打字机光标 ── */
+    function initTypewriterCaret() {
+        const caret = document.getElementById('typewriterCaret');
+        if (!caret || typeof gsap === 'undefined') return;
+
+        if (prefersReducedMotion()) {
+            gsap.set(caret, { opacity: 0 });
+            return;
+        }
+        gsap.to(caret, {
+            opacity: 0,
+            duration: 0.55,
+            ease: 'power1.inOut',
+            repeat: -1,
+            yoyo: true
+        });
+    }
+
+    /* ── 滚动进度条 ── */
+    function initScrollProgress() {
+        const bar = document.getElementById('scrollProgress');
+        const ring = document.getElementById('ringBar');
+        if (!bar) return;
+
+        const RING_LEN = 131.947;   // 2π·21，与 CSS 里 stroke-dasharray 对应
+
+        if (typeof gsap === 'undefined' || !window.ScrollTrigger) {
+            bar.remove();
+            if (ring) ring.style.strokeDashoffset = String(RING_LEN);
+            return;
+        }
+
+        // quickSetter 直接写属性，比每帧 gsap.set() 少一层开销；
+        // clamp 兜住惯性滚动 / overscroll 导致的越界进度。
+        // 环形进度直接写 style（SVG 比 GSAP quickSetter 更稳），同样每帧只一次赋值。
+        const setScale = gsap.quickSetter(bar, 'scaleX');
+        const setRing = ring ? (v) => { ring.style.strokeDashoffset = String(v); } : null;
+        const clamp01 = gsap.utils.clamp(0, 1);
+
+        ScrollTrigger.create({
+            trigger: document.documentElement,
+            start: 'top top',
+            end: 'bottom bottom',
+            onUpdate: self => {
+                const p = clamp01(self.progress);
+                setScale(p);
+                if (setRing) setRing(RING_LEN * (1 - p));
+            }
+        });
+    }
+
+    /* ── 返回顶部 ── */
+    function initBackToTop() {
+        const btn = document.getElementById('backToTop');
+        if (!btn) return;
+
+        const hasGsap = typeof gsap !== 'undefined' && !prefersReducedMotion();
+        const threshold = () => window.innerHeight * 0.8;
+
+        const show = () => {
+            if (!btn.hidden) return;
+            btn.hidden = false;   // hidden 同时移除可聚焦性，避免 Tab 到看不见的按钮
+            if (!hasGsap) return;
+            gsap.fromTo(btn,
+                { opacity: 0, y: 12, scale: 0.8 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(2)', overwrite: 'auto' }
+            );
+        };
+
+        const hide = () => {
+            if (btn.hidden) return;
+            if (!hasGsap) { btn.hidden = true; return; }
+            gsap.to(btn, {
+                opacity: 0, y: 12, scale: 0.8, duration: 0.25, ease: 'power2.in',
+                overwrite: 'auto',
+                onComplete: () => { btn.hidden = true; }
+            });
+        };
+
+        if (window.ScrollTrigger) {
+            ScrollTrigger.create({
+                start: threshold,
+                end: 'max',
+                onToggle: self => (self.isActive ? show() : hide())
+            });
+        } else {
+            const onScroll = () => (window.scrollY > threshold() ? show() : hide());
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        }
+
+        btn.addEventListener('click', () => {
+            // 原生平滑滚动就够用，不必再为这一处引入 ScrollToPlugin
+            window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        });
+    }
+
+    /* ── About 卡片：光斑跟随 + 3D 倾斜 ── */
+    function initAboutCard() {
+        const card = document.getElementById('spotlightCard');
+        // 光斑与倾斜都依赖悬停，触摸设备上白算一遍没意义
+        if (!card || !hasFinePointer()) return;
+
+        // mousemove 是高频事件，逐次 getBoundingClientRect() 会强制同步布局。
+        // 进入时量一次，滚动 / 缩放 / 离开时作废缓存。
+        let rect = null;
+        const invalidate = () => { rect = null; };
+        window.addEventListener('scroll', invalidate, { passive: true });
+        window.addEventListener('resize', invalidate);
+
+        const canTilt = typeof gsap !== 'undefined' && !prefersReducedMotion();
+        let tiltX = null, tiltY = null;
+        if (canTilt) {
+            gsap.set(card, { transformPerspective: 900 });
+            // quickTo 复用同一个 tween，比每次移动新建 tween 便宜得多
+            tiltX = gsap.quickTo(card, 'rotationX', { duration: 0.5, ease: 'power3' });
+            tiltY = gsap.quickTo(card, 'rotationY', { duration: 0.5, ease: 'power3' });
+        }
+
+        card.addEventListener('mouseenter', () => {
+            rect = card.getBoundingClientRect();
+            if (canTilt) gsap.to(card, { scale: 1.015, duration: 0.4, ease: 'power3.out' });
+        });
+
+        card.addEventListener('mousemove', e => {
+            if (!rect) rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+
+            if (!canTilt) return;
+            // 卡片中心为 0、边缘为 ±1，映射到 ±8°
+            tiltY(((x / rect.width) - 0.5) * 16);
+            tiltX((0.5 - (y / rect.height)) * 16);
+        });
+
+        card.addEventListener('mouseleave', () => {
+            rect = null;
+            if (!canTilt) return;
+            gsap.to(card, { scale: 1, duration: 0.4, ease: 'power3.out' });
+            tiltX(0);
+            tiltY(0);
+        });
+    }
+
+    /* ── 关于段落逐行揭示（跟随卡片入场，增加层次）── */
+    function initAboutContentReveal() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
+        const paras = gsap.utils.toArray('.about-content p');
+        if (!paras.length) return;
+
+        // p 自带 transition: all（hover 上浮用），会二次插值 GSAP 逐帧写入；
+        // 揭示期间关掉，结束用 clearProps 把 hover 还回 CSS。
+        gsap.set(paras, { transition: 'none' });
+        gsap.from(paras, {
+            opacity: 0,
+            y: 18,
+            duration: 0.7,
+            ease: 'power3.out',
+            stagger: 0.07,
+            clearProps: 'transition',
+            scrollTrigger: window.ScrollTrigger ? {
+                trigger: '.about',
+                start: 'top 78%',
+                toggleActions: 'play none none reverse'
+            } : undefined
+        });
+    }
+
+    /* ── "comrade," 往外冒黄色小星星 ──
+       星星放在 body 下的 fixed 图层里，从单词的矩形范围内随机一点飘出、
+       向上并向两侧散开，动画结束自动移除；离开视口或切到后台就停，不空转。 */
+    function initComradeStars() {
+        const target = document.querySelector('.comrade-word');
+        if (!target || prefersReducedMotion()) return;
+
+        const layer = document.createElement('div');
+        layer.className = 'star-layer';
+        layer.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(layer);
+
+        const rand = (min, max) => min + Math.random() * (max - min);
+
+        const spawn = () => {
+            const r = target.getBoundingClientRect();
+            // 不在视口内就不喷
+            if (!r.width || r.bottom < 0 || r.top > window.innerHeight) return;
+
+            const count = Math.random() < 0.45 ? 1 : 2;
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('span');
+                star.className = 'comrade-star';
+                star.textContent = '★';
+                star.style.left = rand(r.left, r.right).toFixed(1) + 'px';
+                star.style.top = (r.top + r.height * rand(0.15, 0.85)).toFixed(1) + 'px';
+                star.style.fontSize = rand(11, 17).toFixed(1) + 'px';
+                layer.appendChild(star);
+
+                // 以「向上」为主、向两侧散开
+                const angle = (-90 + rand(-78, 78)) * Math.PI / 180;
+                const dist = rand(42, 108);
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const rot = rand(-200, 200);
+
+                const anim = star.animate([
+                    { transform: 'translate(-50%, -50%) translate(0, 0) scale(.35) rotate(0deg)', opacity: 0 },
+                    { opacity: 1, offset: 0.18 },
+                    {
+                        transform: 'translate(-50%, -50%) translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(1) rotate(' + rot.toFixed(0) + 'deg)',
+                        opacity: 0
+                    }
+                ], { duration: rand(1100, 2000), easing: 'cubic-bezier(.2, .7, .3, 1)' });
+
+                const drop = () => star.remove();
+                anim.onfinish = drop;
+                anim.oncancel = drop;
+            }
+        };
+
+        let inView = false;
+        let timer = null;
+        const sync = () => {
+            const wanted = inView && !document.hidden;
+            if (wanted && !timer) timer = setInterval(spawn, 380);
+            else if (!wanted && timer) { clearInterval(timer); timer = null; }
+        };
+
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(entries => {
+                entries.forEach(en => { inView = en.isIntersecting; });
+                sync();
+            }, { threshold: 0.15 }).observe(target);
+        } else {
+            inView = true;
+            sync();
+        }
+        document.addEventListener('visibilitychange', sync);
+    }
+
+    /* ── 把海面抬到「Hi there 👋」卡片内部 ──
+       用固定的负 vh 在不同视口高度下会飘，所以按卡片的实测高度算出海面位置，
+       再换算成相对 .container 底部的偏移（视口坐标相减，滚动不影响结果）。 */
+    function initOceanLayout() {
+        const ocean = document.querySelector('.ocean');
+        const about = document.querySelector('.about');
+        const container = document.querySelector('.container');
+        if (!ocean || !about || !container) return;
+
+        // 海面落在卡片高度的这个比例处：越大，海水漫进卡片越多
+        const RATIO = 0.66;
+
+        const apply = () => {
+            const card = about.getBoundingClientRect();
+            const box = container.getBoundingClientRect();
+            if (!card.height || !box.height) return;
+            const surface = card.top + card.height * RATIO;
+            ocean.style.marginTop = Math.round(surface - box.bottom) + 'px';
+
+            // 海面高度要盖住整个联系区，否则页脚会压到最后一排内容上
+            const contact = document.querySelector('.contact');
+            if (contact) {
+                const contentBottom = contact.getBoundingClientRect().bottom;
+                const needed = Math.ceil(contentBottom - surface + 72);
+                ocean.style.minHeight = Math.max(470, needed) + 'px';
+            }
+        };
+
+        apply();
+        window.addEventListener('resize', apply, { passive: true });
+        window.addEventListener('orientationchange', apply);
+        // style.css 是异步加载的，首帧量到的尺寸可能还没样式：等样式与字体就绪后再量一次
+        window.addEventListener('load', apply);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(apply).catch(() => {});
+        if ('ResizeObserver' in window) {
+            const ro = new ResizeObserver(apply);
+            ro.observe(about);
+            const contact = document.querySelector('.contact');
+            if (contact) ro.observe(contact);
+        }
+    }
+
+    /* ── PillNav ── */
+    function initPillNav() {
+        const container = document.getElementById('pillNav');
+        if (!container) return;
+
+        const pills = container.querySelectorAll('.pill');
+        const logo = container.querySelector('.pill-logo');
+        const logoImg = container.querySelector('.pill-logo-text');
+        if (pills.length === 0) return;
+
+        // 导航本身不依赖 GSAP：CDN 失败时仍要能跳转、回顶
+        const hasGsap = typeof gsap !== 'undefined';
+
+        // 没有 is-active 时不要强行点亮第一个（第一个可能是外链）
+        let activeIndex = Array.from(pills).findIndex(p => p.classList.contains('is-active'));
+        const applyActive = index => {
+            activeIndex = index;
+            pills.forEach((pill, i) => {
+                const on = i === index;
+                pill.classList.toggle('is-active', on);
+                if (on) pill.setAttribute('aria-current', 'location');
+                else pill.removeAttribute('aria-current');
+            });
+        };
+        applyActive(activeIndex);
+
+        const ease = 'power3.easeOut';
+        const tlRefs = [];
+        const activeTweenRefs = [];
+        const circleRefs = [];
+
+        pills.forEach((pill, i) => {
+            const circle = pill.querySelector('.hover-circle');
+            circleRefs[i] = circle;
+            tlRefs[i] = null;
+            activeTweenRefs[i] = null;
+        });
+
+        const layout = () => {
+            if (!hasGsap) return;
+            circleRefs.forEach((circle, i) => {
+                if (!circle || !circle.parentElement) return;
+                const pill = circle.parentElement;
+                const rect = pill.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                if (w === 0 || h === 0) return;
+
+                const R = ((w * w) / 4 + h * h) / (2 * h);
+                const D = Math.ceil(2 * R) + 2;
+                const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
+                const originY = D - delta;
+
+                circle.style.width = `${D}px`;
+                circle.style.height = `${D}px`;
+                circle.style.bottom = `-${delta}px`;
+
+                gsap.set(circle, {
+                    xPercent: -50,
+                    scale: 0,
+                    transformOrigin: `50% ${originY}px`
+                });
+
+                const label = pill.querySelector('.pill-label');
+                const hoverLabel = pill.querySelector('.pill-label-hover');
+
+                if (label) gsap.set(label, { y: 0 });
+                if (hoverLabel) gsap.set(hoverLabel, { y: h + 12, opacity: 0 });
+
+                if (tlRefs[i]) tlRefs[i].kill();
+                const tl = gsap.timeline({ paused: true });
+
+                tl.to(circle, {
+                    scale: 1.2,
+                    xPercent: -50,
+                    duration: 2,
+                    ease,
+                    overwrite: 'auto'
+                }, 0);
+
+                if (label) {
+                    tl.to(label, {
+                        y: -(h + 8),
+                        duration: 2,
+                        ease,
+                        overwrite: 'auto'
+                    }, 0);
+                }
+
+                if (hoverLabel) {
+                    gsap.set(hoverLabel, { y: Math.ceil(h + 100), opacity: 0 });
+                    tl.to(hoverLabel, {
+                        y: 0,
+                        opacity: 1,
+                        duration: 2,
+                        ease,
+                        overwrite: 'auto'
+                    }, 0);
+                }
+
+                tlRefs[i] = tl;
+            });
+        };
+
+        // layout() 内部既读 getBoundingClientRect 又写 style，必须合并到同一帧执行，
+        // 否则 resize / 字体加载期间会连续读写导致布局抖动
+        let layoutQueued = false;
+        const scheduleLayout = () => {
+            if (layoutQueued) return;
+            layoutQueued = true;
+            requestAnimationFrame(() => { layoutQueued = false; layout(); });
+        };
+
+        layout();
+        if (document.fonts?.ready) {
+            document.fonts.ready.then(scheduleLayout).catch(() => {});
+        }
+
+        const handleEnter = (i) => {
+            const tl = tlRefs[i];
+            if (!tl) return;
+            if (activeTweenRefs[i]) activeTweenRefs[i].kill();
+            activeTweenRefs[i] = tl.tweenTo(tl.duration(), {
+                duration: 0.3,
+                ease,
+                overwrite: 'auto'
+            });
+        };
+
+        const handleLeave = (i) => {
+            const tl = tlRefs[i];
+            if (!tl) return;
+            if (activeTweenRefs[i]) activeTweenRefs[i].kill();
+            activeTweenRefs[i] = tl.tweenTo(0, {
+                duration: 0.2,
+                ease,
+                overwrite: 'auto'
+            });
+        };
+
+        let logoTween = null;
+        if (logo) {
+            logo.addEventListener('mouseenter', () => {
+                if (!hasGsap || !logoImg) return;
+                if (logoTween) logoTween.kill();
+                gsap.set(logoImg, { rotate: 0 });
+                logoTween = gsap.to(logoImg, {
+                    rotate: 360,
+                    duration: 0.2,
+                    ease,
+                    overwrite: 'auto'
+                });
+            });
+
+            const backToTop = () => {
+                window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+            };
+            // 原生 button 自带 Enter / Space 激活，不再另挂 keydown 以免触发两次
+            logo.addEventListener('click', backToTop);
+        }
+
+        // 导航栏入场（logo 缩放 / 导航项展开 / 各项淡入）已统一交给 initNavEntrance，
+        // 避免 WAAPI fill:'forwards' 锁死 transform 导致磁吸失效；此处不再处理。
+
+        let spyHoldUntil = 0;
+
+        pills.forEach((pill, i) => {
+            pill.addEventListener('mouseenter', () => handleEnter(i));
+            pill.addEventListener('mouseleave', () => handleLeave(i));
+
+            pill.addEventListener('click', (e) => {
+                // Ctrl / Cmd / Shift 点击交给浏览器处理，保留「在新标签页打开」
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+                const target = pill.dataset.target;
+                // Blog / Racer 是独立页面，直接交给浏览器，不延迟、不误亮当前区块
+                if (!target) return;
+
+                e.preventDefault();
+                applyActive(i);
+                // 平滑滚动期间别让 scroll spy 把高亮抢回上一个区块
+                spyHoldUntil = performance.now() + 1400;
+                const el = document.querySelector(target);
+                if (el) el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+            });
+        });
+
+        // 只保留 ResizeObserver：容器尺寸变化已隐含 window resize，无需重复监听
+        new ResizeObserver(scheduleLayout).observe(container);
+
+        /* 滚动到哪个区块，就把哪个 pill 点亮（Blog / Racer 是外链，不参与） */
+        const indexOfTarget = target => Array.from(pills).findIndex(p => p.dataset.target === target);
+        const spies = ['#about', '#contact']
+            .map(sel => ({
+                index: indexOfTarget(sel),
+                sel,
+                el: document.querySelector(sel),
+                top: 0
+            }))
+            .filter(s => s.index >= 0 && s.el);
+
+        if (!spies.length) return;
+
+        const measureSpies = () => {
+            spies.forEach(s => { s.top = s.el.getBoundingClientRect().top + window.scrollY; });
+        };
+        let spyTicking = false;
+        const runSpy = () => {
+            spyTicking = false;
+            if (performance.now() < spyHoldUntil) return;
+            // 以视口上方 32% 处为探针：跨过区块标题即视为进入该区块
+            const probe = window.scrollY + window.innerHeight * 0.32;
+            let current = -1;
+            spies.forEach((s, i) => { if (probe >= s.top) current = i; });
+            // 页面见底时最后一块可能永远够不到探针（内容不满一屏），直接归给收尾区块
+            if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) current = spies.length - 1;
+            if (current < 0) return; // 还没进入任何锚点区块：保持无高亮
+            const idx = spies[current].index;
+            if (idx !== activeIndex) applyActive(idx);
+        };
+        const onSpyScroll = () => {
+            if (spyTicking) return;
+            spyTicking = true;
+            requestAnimationFrame(runSpy);
+        };
+
+        measureSpies();
+        runSpy();
+        window.addEventListener('scroll', onSpyScroll, { passive: true });
+        window.addEventListener('resize', () => { measureSpies(); onSpyScroll(); }, { passive: true });
+        window.addEventListener('load', () => { measureSpies(); runSpy(); });
+        if (document.fonts?.ready) {
+            document.fonts.ready.then(() => { measureSpies(); runSpy(); }).catch(() => {});
+        }
+        if ('ResizeObserver' in window) new ResizeObserver(measureSpies).observe(document.body);
+    }
+
+    /* ── Web Animations API — 入场动画编排 ──
+       Hero 的标题/副标题由 initScrollReveal 的 GSAP timeline 负责，
+       这里不再重复处理，避免两套动画系统争抢同一元素的 opacity / transform。 */
+    function initEntranceAnimations() {
+        if (prefersReducedMotion()) return;
+
+        setTimeout(() => {
+            animateHeroHearts();
+            animateAboutSection();
+            animateContactHeading();
+        }, TIMING.loadingHold);
+    }
+
+    /* Hero 心跳动画 —— 标题/副标题的入场由 GSAP timeline 负责，此处不重复处理 */
+    function animateHeroHearts() {
+        const hearts = document.querySelectorAll('.heart-char');
+        hearts.forEach((heart, index) => {
+            // 入场动画
+            heart.animate([
+                { opacity: 0, transform: 'scale(0) translateY(20px)' },
+                { opacity: 1, transform: 'scale(1.4) translateY(-5px)', offset: 0.6 },
+                { opacity: 1, transform: 'scale(1) translateY(0)' }
+            ], {
+                duration: 700,
+                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill: 'forwards',
+                // 原来要等 1.6s+，现在遮罩一揭开就能看到爱心跳出来
+                delay: 120 + index * 120
+            });
+
+            // 持续心跳动画
+            heart.animate([
+                { transform: 'scale(1)', opacity: 0.7 },
+                { transform: 'scale(1.25)', opacity: 1, offset: 0.15 },
+                { transform: 'scale(1)', opacity: 0.8, offset: 0.3 },
+                { transform: 'scale(1.18)', opacity: 0.95, offset: 0.45 },
+                { transform: 'scale(1)', opacity: 0.7 }
+            ], {
+                duration: 1400,
+                iterations: Infinity,
+                easing: 'ease-in-out',
+                delay: index * 120,
+                endDelay: 2400
+            });
+        });
+    }
+
+    /* About 区域动画 */
+    function animateAboutSection() {
+        const aboutSection = document.querySelector('.about');
+        if (!aboutSection) return;
+
+        // 卡片本身不做 WAAPI 入场：fill: 'forwards' 的 transform 会常驻在动画层叠源，
+        // 永久压过 GSAP 倾斜写进 inline style 的 transform，导致 3D 倾斜失效。
+        // 卡片的入场已由父级 .about 的 ScrollTrigger 渐入负责。
+
+        // 标题动画（只跑一次，不再和 SplitText 的行遮罩抢同一条时间线）
+        const heading = document.querySelector('.about-heading');
+        if (heading) {
+            heading.animate([
+                { opacity: 0, transform: 'translateX(-24px)' },
+                { opacity: 1, transform: 'translateX(0)' }
+            ], {
+                duration: 700,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
+                delay: 400
+            });
+        }
+
+        // 段落不再在这里做第二套入场：GSAP 的 initAboutContentReveal 已经跟着滚动
+        // 逐行揭示，两套 WAAPI + GSAP 同时写 opacity/transform 会互相覆盖
+        // （旧的 WAAPI 用 fill:'forwards' 常驻，还会把 GSAP 的进度顶掉）。
+        // 段落 hover 的位移也交回 CSS transition，少一层 JS 监听。
+    }
+
+    /* ── 社交链接：ScrollTrigger 入场 + GSAP 悬停 ──
+       原来的 WAAPI 版本用 fill:'forwards' 把 transform 常驻在动画层叠源，
+       会永久压过磁吸写进 inline style 的位移，所以统一改成 GSAP。
+       （.scroll-hint / .scroll-line 的呼吸与线条动画 CSS 里已经有一份，
+         WAAPI 那份只是把 CSS 版本盖掉，直接删掉不留重复实现。） */
+    function initSocialLinks() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const links = gsap.utils.toArray('.social-links a');
+        if (!links.length) return;
+
+        // 入场走 yPercent / scale，磁吸走 x / y —— 不同 transform 分量，互不覆盖
+        gsap.set(links, { opacity: 0, yPercent: 60, scale: 0.6 });
+        gsap.to(links, {
+            opacity: 1,
+            yPercent: 0,
+            scale: 1,
+            duration: 0.7,
+            ease: 'back.out(1.8)',
+            stagger: 0.12,
+            scrollTrigger: window.ScrollTrigger ? {
+                trigger: '.contact',
+                start: 'top 80%',
+                toggleActions: 'play none none reverse'
+            } : undefined
+        });
+
+        links.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                gsap.to(link, { scale: 1.15, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+            });
+            link.addEventListener('mouseleave', () => {
+                gsap.to(link, { scale: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+            });
+        });
+    }
+
+    /* ── 导航栏入场（GSAP）──
+       原 WAAPI 版本同样会被 fill:'forwards' 锁死 transform 使磁吸失效；
+       改成 GSAP 后顺便把时点对齐到加载画面开始淡出的那一刻。 */
+    function initNavEntrance() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const nav = document.querySelector('.pill-nav');
+        const navItems = document.querySelector('.pill-nav-items');
+        const logoText = document.querySelector('.pill-logo-text');
+        const pills = gsap.utils.toArray('.pill');
+        if (!nav) return;
+
+        // 先立刻钉住初始态，再由 timeline 统一放到终态。
+        // 不用 from() 是因为 timeline 带 3s 延迟，混用 set / to 行为更可控。
+        gsap.set(nav, { opacity: 0, y: -30, scale: 0.95 });
+        if (navItems) gsap.set(navItems, { width: 0, overflow: 'hidden' });
+        if (logoText) gsap.set(logoText, { scale: 0, rotate: -120 });
+        if (pills.length) gsap.set(pills, { opacity: 0, xPercent: -60 });
+
+        const tl = gsap.timeline({
+            delay: TIMING.loadingHold / 1000,
+            defaults: { ease: 'power3.out' }
+        });
+
+        tl.to(nav, { opacity: 1, y: 0, scale: 1, duration: 0.9 }, 0);
+        if (navItems) tl.to(navItems, { width: 'auto', duration: 0.6 }, 0.15);
+        if (logoText) tl.to(logoText, { scale: 1, rotate: 0, duration: 0.7, ease: 'back.out(2)' }, 0.2);
+        if (pills.length) tl.to(pills, { opacity: 1, xPercent: 0, duration: 0.6, stagger: 0.1 }, 0.3);
+
+        // overflow 必须清掉，否则会一直裁掉 pill 的悬浮圆
+        if (navItems) tl.set(navItems, { clearProps: 'width,overflow' });
+    }
+
+    /* ── 磁吸：可交互元素被鼠标吸引产生位移 ── */
+    function initMagnetic() {
+        if (typeof gsap === 'undefined' || prefersReducedMotion() || !hasFinePointer()) return;
+
+        const targets = gsap.utils.toArray('.social-links a, .pill');
+        if (!targets.length) return;
+
+        const RADIUS = 110;   // 吸附半径（px）
+        const PULL = 0.32;    // 最大位移系数
+
+        const items = targets.map(el => ({
+            el: el,
+            xTo: gsap.quickTo(el, 'x', { duration: 0.4, ease: 'power3' }),
+            yTo: gsap.quickTo(el, 'y', { duration: 0.4, ease: 'power3' }),
+            rect: null
+        }));
+
+        // getBoundingClientRect 是布局读取，塞进高频 mousemove 会反复触发同步布局。
+        // 缓存一份，只在滚动 / 缩放 / 尺寸变化时作废。
+        const invalidate = () => items.forEach(it => { it.rect = null; });
+        window.addEventListener('scroll', invalidate, { passive: true });
+        window.addEventListener('resize', invalidate);
+        new ResizeObserver(invalidate).observe(document.body);
+
+        // 距离越近吸力越强：dist=0 → 1，dist=RADIUS → 0
+        const falloff = gsap.utils.pipe(
+            gsap.utils.mapRange(0, RADIUS, 1, 0),
+            gsap.utils.clamp(0, 1)
+        );
+
+        onPointerMove((x, y) => {
+            for (let i = 0; i < items.length; i++) {
+                const it = items[i];
+                if (!it.rect) it.rect = it.el.getBoundingClientRect();
+                const r = it.rect;
+                const dx = x - (r.left + r.width / 2);
+                const dy = y - (r.top + r.height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > RADIUS) { it.xTo(0); it.yTo(0); continue; }
+                const k = falloff(dist) * PULL;
+                it.xTo(dx * k);
+                it.yTo(dy * k);
+            }
+        });
+    }
+
+    /* ── 导航文字乱码重组 ──
+       原来依赖 ScrambleTextPlugin（多一个 CDN 请求 + 一份解析）。
+       这里用 rAF 做同样的效果：先满屏乱码，再从左到右逐字收敛，
+       只改 .pill-label-hover 的文本，不碰 PillNav 正在驱动的 transform。 */
+    function initNavScramble() {
+        if (prefersReducedMotion() || !hasFinePointer()) return;
+
+        const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const FRAMES = 22;
+
+        const scramble = (label, text) => {
+            if (label.__scrambleRaf) cancelAnimationFrame(label.__scrambleRaf);
+            let frame = 0;
+
+            const step = () => {
+                frame += 1;
+                const settled = Math.floor((frame / FRAMES) * text.length);
+                let out = '';
+                for (let i = 0; i < text.length; i++) {
+                    const ch = text[i];
+                    if (ch === ' ') { out += ' '; continue; }
+                    out += i < settled ? ch : CHARS[Math.random() * CHARS.length | 0];
+                }
+                label.textContent = out;
+
+                if (frame < FRAMES) {
+                    label.__scrambleRaf = requestAnimationFrame(step);
+                } else {
+                    label.textContent = text;
+                    label.__scrambleRaf = 0;
+                }
+            };
+            step();
+        };
+
+        document.querySelectorAll('.pill').forEach(pill => {
+            const label = pill.querySelector('.pill-label-hover');
+            if (!label) return;
+            const text = label.textContent.trim();
+            if (!text) return;
+            pill.addEventListener('mouseenter', () => scramble(label, text));
+        });
+    }
+
+    /* ── 副标题逐字波纹：悬停某个字时，邻居按距离依次抬升 ── */
+    function initLetterWave() {
+        const letters = Array.from(document.querySelectorAll('.hero-subtitle .letter'));
+        if (!letters.length || typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const LIFT = -12;    // 峰值抬升（px）
+        const SPREAD = 4;    // 影响半径（字数）
+
+        // 入场 timeline 用的是 yPercent，这里用 y —— 两个分量可叠加
+        const toY = letters.map(l => gsap.quickTo(l, 'y', { duration: 0.4, ease: 'power3' }));
+
+        letters.forEach((letter, i) => {
+            letter.addEventListener('mouseenter', () => {
+                toY.forEach((fn, j) => {
+                    const dist = Math.abs(i - j);
+                    if (dist > SPREAD) return;
+                    fn(LIFT * (1 - dist / (SPREAD + 1)));
+                });
+            });
+        });
+
+        document.querySelector('.hero-subtitle')?.addEventListener('mouseleave', () => {
+            toY.forEach(fn => fn(0));
+        });
+    }
+
+    /* ── 光标跟随环：常态小圆，移到可交互元素上放大吸附 ── */
+    function initCursorRing() {
+        const ring = document.getElementById('cursorRing');
+        if (!ring || typeof gsap === 'undefined' || prefersReducedMotion() || !hasFinePointer()) return;
+
+        const xTo = gsap.quickTo(ring, 'x', { duration: 0.35, ease: 'power3' });
+        const yTo = gsap.quickTo(ring, 'y', { duration: 0.35, ease: 'power3' });
+        const HOVERABLE = 'a, button, .pill, .about-card, .heart-char';
+
+        let shown = false;
+        onPointerMove((x, y) => {
+            // 只在首次移动时建一个淡入 tween，之后每帧仅更新 quickTo
+            if (!shown) { shown = true; gsap.to(ring, { opacity: 1, duration: 0.4 }); }
+            xTo(x);
+            yTo(y);
+        });
+
+        document.addEventListener('mouseleave', () => {
+            gsap.to(ring, { opacity: 0, duration: 0.3, overwrite: 'auto' });
+        });
+
+        // mouseover 在进出任意元素时都会触发，一个监听器就能兼顾进入与离开
+        let hovering = false;
+        document.addEventListener('mouseover', e => {
+            const hit = !!(e.target && e.target.closest && e.target.closest(HOVERABLE));
+            if (hit === hovering) return;
+            hovering = hit;
+            gsap.to(ring, { scale: hit ? 1.9 : 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+        });
+    }
+
+    /* ── 光标粒子拖尾（canvas：渐隐 + lighter 叠加发光）── */
+    function initCursorTrail() {
+        if (prefersReducedMotion() || !hasFinePointer()) return;   // 减少动效 / 触摸设备：零开销
+        const canvas = document.getElementById('cursorTrail');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d', { desynchronized: true });
+        if (!ctx) return;
+
+        // 光晕是柔的，1.5 倍采样已经看不出差别，显存与填充率比 2 倍少很多
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        let w = 0, h = 0;
+
+        const resize = () => {
+            w = window.innerWidth; h = window.innerHeight;
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        // 一张预烘焙贴图替代每帧 22 次 createRadialGradient
+        const sprite = getGlowSprite('0,200,180');
+
+        const MAX = 20, LIFE = 1;        // 上限粒子数 / 存活秒数
+        const particles = [];
+        let lastX = -1, lastY = -1;
+        let rafId = null, prevT = 0;
+
+        const tick = (t) => {
+            const dt = Math.min((t - prevT) / 1000, 0.05);
+            prevT = t;
+            ctx.clearRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.age += dt;
+                const k = p.age / LIFE;
+                if (k >= 1) { particles.splice(i, 1); continue; }
+                const d = (9 * (1 - k) + 2) * 2;       // 直径，随年龄收缩
+                ctx.globalAlpha = (1 - k) * 0.5;
+                ctx.drawImage(sprite, p.x - d / 2, p.y - d / 2, d, d);
+            }
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+            rafId = particles.length ? requestAnimationFrame(tick) : null;
+        };
+
+        const ensureLoop = () => { if (!rafId) { prevT = performance.now(); rafId = requestAnimationFrame(tick); } };
+
+        onPointerMove((x, y) => {
+            if (lastX === x && lastY === y) return;   // 静止不重复生成
+            lastX = x; lastY = y;
+            particles.push({ x, y, age: 0 });
+            if (particles.length > MAX) particles.shift();
+            ensureLoop();
+        });
+    }
+
+    /* ── 背景视差：环境光球随鼠标与滚动轻微位移 ── */
+    function initParallax() {
+        const layer = document.getElementById('ambientLayer');
+        if (!layer || typeof gsap === 'undefined' || prefersReducedMotion()) return;
+
+        const xTo = gsap.quickTo(layer, 'x', { duration: 0.9, ease: 'power3' });
+        const yTo = gsap.quickTo(layer, 'y', { duration: 0.9, ease: 'power3' });
+
+        // 鼠标与滚动都会写 y，合并到同一个写入口，避免两个来源互相打断
+        let mx = 0, my = 0, progress = 0, shownOpacity = -1;
+        const apply = () => {
+            xTo(mx * 26);
+            yTo(my * 18 + progress * 60);
+            // 原来这里每帧写 filter: hue-rotate()，会让整个全屏光晕层反复重新栅格化，
+            // 是滚动时最重的一笔开销。改成几乎免费的 opacity 微调，观感差别很小。
+            const o = 0.82 + progress * 0.18;
+            if (Math.abs(o - shownOpacity) > 0.02) {
+                shownOpacity = o;
+                layer.style.opacity = o.toFixed(2);
+            }
+        };
+
+        // 只在精确指针设备上做鼠标视差；触摸设备仅由滚动驱动
+        if (hasFinePointer()) {
+            onPointerMove((x, y) => {
+                mx = (x / window.innerWidth) * 2 - 1;
+                my = (y / window.innerHeight) * 2 - 1;
+                apply();
+            });
+        }
+
+        if (window.ScrollTrigger) {
+            ScrollTrigger.create({
+                start: 0,
+                end: 'max',
+                onUpdate: self => { progress = self.progress; apply(); }
+            });
+        }
+    }
+
+    /* 联系标题动画 */
+    function animateContactHeading() {
+        const contactHeading = document.querySelector('.contact-heading');
+        if (!contactHeading) return;
+
+        contactHeading.animate([
+            { opacity: 0, letterSpacing: '0.8em' },
+            { opacity: 1, letterSpacing: '0.5em' }
+        ], {
+            duration: 900,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
+            delay: 900
+        });
+    }
+
+    /* ══ 3D 立体标题：把标题拆成逐字 span，并跟随鼠标倾斜（「勿忘我」同款）══
+       hero 标题的字符由打字机逐字生成（.typewriter-text 已带 .t3d-inner），
+       这里只负责登记它并驱动鼠标倾斜。 */
+    (function initTitle3D() {
+        const reduced = prefersReducedMotion();
+        const SELECTOR = '[data-t3d], .hero-title';
+        const items = [];
+
+        const makeChar = ch => {
+            const span = document.createElement('span');
+            span.className = 't3d-char';
+            span.textContent = ch === ' ' ? '\u00A0' : ch;
+            return span;
+        };
+
+        const split = el => {
+            const text = el.textContent;
+            if (!text.trim()) return;
+            const inner = document.createElement('span');
+            inner.className = 't3d-inner';
+            Array.from(text).forEach((ch, i) => {
+                if (ch === '\n') return;
+                const span = makeChar(ch);
+                span.style.setProperty('--z', `${40 - (i % 3) * 9}px`);
+                inner.appendChild(span);
+            });
+            el.textContent = '';
+            el.appendChild(inner);
+        };
+
+        const register = el => {
+            if (!el || el.__t3d) return;
+            el.__t3d = true;
+            el.classList.add('t3d');
+            let inner = el.querySelector('.t3d-inner');
+            if (!inner) { split(el); inner = el.querySelector('.t3d-inner'); }
+            if (inner) items.push({ el, inner, rect: null });
+        };
+
+        // mousemove 是高频事件：rect 缓存起来，只在滚动 / 缩放时作废
+        const invalidate = () => items.forEach(it => { it.rect = null; });
+        window.addEventListener('scroll', invalidate, { passive: true });
+        window.addEventListener('resize', invalidate);
+
+        if (!reduced && hasFinePointer()) {
+            onPointerMove((x, y) => {
+                for (let i = 0; i < items.length; i++) {
+                    const it = items[i];
+                    if (!it.rect) it.rect = it.el.getBoundingClientRect();
+                    const r = it.rect;
+                    if (!r.width || !r.height) continue;
+                    const nx = Math.max(-1, Math.min(1, (x - (r.left + r.width / 2)) / (r.width / 2)));
+                    const ny = Math.max(-1, Math.min(1, (y - (r.top + r.height / 2)) / (r.height / 2)));
+                    it.inner.style.setProperty('--rx', (-ny * 12).toFixed(2) + 'deg');
+                    it.inner.style.setProperty('--ry', (nx * 18).toFixed(2) + 'deg');
+                }
+            });
+        }
+
+        const init = () => document.querySelectorAll(SELECTOR).forEach(register);
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+        else init();
+
+        window.T3D = { enhance: register, split };
+    })();
+
+/* ── comrade 彩蛋：悬停这个词，照片从信里浮出来 ──
+   桌面跟随指针，触屏与键盘固定在词的上方；
+   图片 data-src 延迟加载，首屏不为它多花一个字节。 */
+(function initComradePortal() {
+    const word = document.querySelector('.comrade-word');
+    const portal = document.getElementById('wePortal');
+    const photo = document.getElementById('wePortalPhoto');
+    if (!word || !portal) return;
+
+    let open = false;
+    let targetX = 0, targetY = 0, curX = 0, curY = 0, rafId = 0;
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+    const loadPhoto = () => {
+        if (!photo || photo.getAttribute('src') || !photo.dataset.src) return;
+        photo.src = photo.dataset.src;
+    };
+
+    if (photo) {
+        photo.addEventListener('load', () => photo.classList.add('is-ready'), { once: true });
+    }
+
+    const tick = () => {
+        rafId = 0;
+        if (!open) return;
+        curX += (targetX - curX) * 0.16;
+        curY += (targetY - curY) * 0.16;
+        portal.style.setProperty('--px', curX.toFixed(1) + 'px');
+        portal.style.setProperty('--py', curY.toFixed(1) + 'px');
+        rafId = requestAnimationFrame(tick);
+    };
+
+    const show = () => {
+        if (open) return;
+        open = true;
+        loadPhoto();
+        curX = targetX;
+        curY = targetY;
+        portal.style.setProperty('--px', curX + 'px');
+        portal.style.setProperty('--py', curY + 'px');
+        portal.classList.add('is-on');
+        if (!rafId) rafId = requestAnimationFrame(tick);
+    };
+
+    const hide = () => {
+        if (!open) return;
+        open = false;
+        portal.classList.remove('is-on');
+    };
+
+    const pointAt = (x, y) => {
+        targetX = x;
+        targetY = y - 18;
+    };
+
+    const pointAtWord = () => {
+        const r = word.getBoundingClientRect();
+        targetX = r.left + r.width / 2;
+        targetY = r.top - 36;
+    };
+
+    // 让词可以用 Tab 聚焦，键盘用户也能看到这张照片
+    word.setAttribute('tabindex', '0');
+
+    word.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'touch') return;
+        pointAt(e.clientX, e.clientY);
+        show();
+    });
+
+    word.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'touch') return;
+        pointAt(e.clientX, e.clientY);
+    });
+
+    word.addEventListener('pointerleave', () => {
+        // 键盘聚焦时，鼠标划过不应该把内容收走
+        if (word.matches(':focus-visible')) return;
+        hide();
+    });
+
+    word.addEventListener('focus', () => {
+        pointAtWord();
+        show();
+    });
+
+    word.addEventListener('blur', hide);
+
+    word.addEventListener('click', () => {
+        if (canHover.matches) return;
+        pointAtWord();
+        if (open) hide();
+        else show();
+    });
+
+    window.addEventListener('scroll', () => {
+        if (open && document.activeElement === word) pointAtWord();
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', hide);
+
+    // 空闲时预取，别和首屏抢带宽
+    const prefetch = () => loadPhoto();
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(prefetch, { timeout: 4000 });
+    } else {
+        setTimeout(prefetch, 2000);
+    }
+})();

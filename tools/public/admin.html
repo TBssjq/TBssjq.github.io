@@ -5,9 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>博客后台</title>
+<meta name="description" content="本地静态博客的 Markdown 编辑与发布后台，仅在本机服务中运行。">
+<meta name="theme-color" content="#f8fafc">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"></noscript>
 <link rel="stylesheet" href="admin.css">
 <script src="admin-theme.js"></script>
 </head>
@@ -58,7 +65,8 @@
     <aside class="sidebar">
       <div class="sidebar-search">
         <svg class="i search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input class="field field-search" type="search" id="searchInput" placeholder="搜索标题 / 标签…" autocomplete="off">
+        <input class="field field-search" type="search" id="searchInput" placeholder="搜索标题 / 标签…"
+               aria-label="搜索文章标题或标签" autocomplete="off">
       </div>
 
       <div class="filter-block">
@@ -237,10 +245,10 @@
   </footer>
 </div>
 
-<script src="gsap.min.js"></script>
-<script src="ScrollToPlugin.min.js"></script>
-<script src="Flip.min.js"></script>
-<script src="SplitText.min.js"></script>
+<script src="gsap.min.js" defer></script>
+<script src="ScrollToPlugin.min.js" defer></script>
+<script src="Flip.min.js" defer></script>
+<script src="SplitText.min.js" defer></script>
 <script src="admin.js" defer></script>
 </body>
 </html>

@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>博客编辑器</title>
+    <meta name="description" content="本地博客文章编辑器：撰写、预览并导出与站点风格一致的静态文章 HTML。">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,7 +110,7 @@
             border-radius: 8px;
             overflow-x: auto;
             margin: 1rem 0;
-            font-family: 'Fira Code', monospace;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
             position: relative;
         }
         /* 代码块语言标签 */
@@ -144,7 +149,7 @@
             border-radius: 4px;
             font-size: 0.9em;
             color: var(--accent);
-            font-family: 'Fira Code', monospace;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
         }
         .editor-content em { font-style: italic; }
         .editor-content strong { font-weight: 700; color: var(--text-primary); }
@@ -202,7 +207,7 @@
             padding: 1rem;
             overflow: auto;
             flex: 1;
-            font-family: 'Fira Code', monospace;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
             font-size: 0.85rem;
             white-space: pre-wrap;
             word-break: break-all;
@@ -1088,6 +1093,10 @@
         /* ====== 生成HTML ====== */
         function generateHTML() {
             const title = document.getElementById('articleTitle').value || '无题';
+            // 标题会同时进入 <title>、<h1> 与 meta 属性，必须先做 HTML 转义
+            const safeTitle = String(title).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
             // 处理代码块：提取语言标签并转为 data 属性
             let rawContent = document.getElementById('editor').innerHTML;
             rawContent = rawContent.replace(
@@ -1110,7 +1119,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
+    <title>${safeTitle} - My Blog</title>
+    <meta name="description" content="${safeTitle}">
+    <meta name="author" content="水神崛起">
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="${safeTitle} - My Blog">
+    <meta property="og:description" content="${safeTitle}">
+    <meta property="og:locale" content="zh_CN">
     <script src="https://cdn.tailwindcss.com"><\/script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1133,26 +1151,28 @@
         }
     <\/script>
     <link rel="stylesheet" href="../article.css">
+    <link rel="stylesheet" href="../toc.css">
 </head>
 <body class="min-h-screen">
+    <a class="skip-link" href="#main-content">跳到正文</a>
     <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">
         <div class="h-full flex items-center justify-between px-6">
-            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white" target="_blank" rel="noopener noreferrer">My Blog</a>
-            <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white">My Blog</a>
+            <button id="themeToggle" type="button" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="切换主题">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                 </svg>
             </button>
         </div>
     </header>
 
-    <main class="pt-16">
+    <main class="pt-16" id="main-content">
         <div class="max-w-3xl mx-auto px-4 py-8 lg:py-12">
             <article>
-                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">${title}</h1>
+                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">${safeTitle}</h1>
                 <div class="article-body prose text-gray-700 dark:text-gray-300">
                     ${content}
                 </div>
@@ -1160,7 +1180,7 @@
                     <div class="giscus"></div>
                 </div>
                 <div class="mt-8">
-                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium" target="_blank" rel="noopener noreferrer">
+                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium">
                         <span>目录</span>
                         <span class="font-semibold">Go!</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1173,6 +1193,7 @@
     </main>
 
     <script src="../article.js" defer><\/script>
+    <script src="../toc.js" defer><\/script>
 
 
 </body>
@@ -1226,7 +1247,10 @@
     </script>
 
     <div style="display:flex;justify-content:center;align-items:center;margin:32px auto 0;padding-bottom:env(safe-area-inset-bottom,0);">
-        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=65546&auto=1&height=66" style="border-radius:12px;max-width:100%;"></iframe>
+        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86"
+                loading="lazy" title="网易云音乐播放器"
+                src="https://music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=0&amp;height=66"
+                style="border-radius:12px;max-width:100%;"></iframe>
     </div>
 </body>
 </html>

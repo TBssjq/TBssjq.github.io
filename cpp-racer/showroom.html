@@ -6,10 +6,18 @@
 <meta name="theme-color" content="#04070c" />
 <meta name="description" content="RACE_ENGINE 3D 车辆展厅 — C++ 主题赛车的外观、材质与结构细节展示。" />
 <title>RACE_ENGINE // 3D 车辆展厅</title>
+<link rel="canonical" href="https://tbssjq.github.io/cpp-racer/showroom.html" />
+<link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="RACE_ENGINE // 3D 车辆展厅" />
+<meta property="og:description" content="RACE_ENGINE 3D 车辆展厅 — C++ 主题赛车的外观、材质与结构细节展示。" />
+<meta property="og:url" content="https://tbssjq.github.io/cpp-racer/showroom.html" />
+<meta property="og:locale" content="zh_CN" />
+<link rel="preconnect" href="https://unpkg.com" crossorigin />
 <link rel="stylesheet" href="./css/showroom.css" />
 </head>
 <body>
-<canvas id="stage"></canvas>
+<canvas id="stage" role="img" aria-label="可拖拽旋转的 3D 赛车模型展厅"></canvas>
 <div class="fx-scan" aria-hidden="true"></div>
 <div class="fx-vignette" aria-hidden="true"></div>
 
@@ -72,8 +80,8 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
   }
 }
 </script>

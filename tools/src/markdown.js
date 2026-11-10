@@ -74,13 +74,16 @@ function inline(text) {
   text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
     function (_, alt, src, title) {
       return '<img src="' + escapeAttr(src) + '" alt="' + escapeAttr(alt) + '"' +
-        (title ? ' title="' + escapeAttr(title) + '"' : '') + ' loading="lazy">';
+        (title ? ' title="' + escapeAttr(title) + '"' : '') + ' loading="lazy" decoding="async">';
     });
 
   // 链接 [text](url)（URL 允许成对括号）
+  // 只有外部链接才开新标签；站内链接保留当前页，避免无谓的标签堆积
   text = text.replace(/\[([^\]]+)\]\(((?:\([^)]*\)|[^()])+)\)/g,
     function (_, t, url) {
-      return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener noreferrer">' + t + '</a>';
+      const external = /^(https?:)?\/\//i.test(url);
+      return '<a href="' + escapeAttr(url) + '"' +
+        (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' + t + '</a>';
     });
 
   // 自动链接 <https://…>
@@ -182,7 +185,7 @@ function heading(level, text) {
 function figure(alt, src, cap) {
   const body = [
     '<figure class="md-figure">',
-    '    <img src="' + escapeAttr(src) + '" alt="' + escapeAttr(alt) + '" loading="lazy">',
+    '    <img src="' + escapeAttr(src) + '" alt="' + escapeAttr(alt) + '" loading="lazy" decoding="async">',
   ];
   if (cap) body.push('    <figcaption>' + inline(cap) + '</figcaption>');
   body.push('</figure>');

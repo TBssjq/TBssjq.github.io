@@ -16,6 +16,7 @@
     "remove": "node src/remove-post.js",
     "preview": "node src/build.js",
     "verify": "node src/verify.js",
+    "test": "node --test ../tests/markdown.test.js ../tests/article-fileguard.test.js",
     "serve": "node src/server.js",
     "admin": "node src/server.js --open"
   },

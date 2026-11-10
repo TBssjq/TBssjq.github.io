@@ -60,7 +60,6 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 
         // 整段年份如果一张卡都不剩就折叠起来，避免出现空标题
         sections.forEach((section) => {
-            if (section.classList.contains('is-coming')) return;   // 占位年份始终保留
             const visible = section.querySelectorAll('.article-card:not(.is-hidden)').length;
             section.classList.toggle('is-hidden', visible === 0);
         });
@@ -112,7 +111,6 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     if (typeof gsap === 'undefined') return;
     if (window.ScrollToPlugin) gsap.registerPlugin(ScrollToPlugin);
     if (window.Flip) gsap.registerPlugin(Flip);
-    if (window.SplitText) gsap.registerPlugin(SplitText);
 
     const reduced = safeMatchMedia('(prefers-reduced-motion: reduce)');
     gsap.defaults({ ease: 'power3.out', duration: 0.6 });
@@ -148,7 +146,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     }
 
     // ── 卡片悬停：轻微跟随光标的 3D 倾斜（仅桌面、非减弱动效）──
-    // 原来每张卡各挂 3 个监听（16 张 = 48 个），且每次移动都量一次 rect。
+    // 原来每张卡各挂 3 个监听，且每次移动都量一次 rect。
     // 现在改成容器委托 + rect 缓存，一个 mousemove 解决全部卡片。
     const mm = gsap.matchMedia();
     mm.add('(hover: hover) and (min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {

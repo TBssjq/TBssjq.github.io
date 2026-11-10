@@ -1,5 +1,6 @@
-/* Giscus 浅色主题 —— 对齐站点 Claymorphism 陶土风 */
-main {
+/* Giscus 浅色主题 —— 对齐站点 Claymorphism 陶土风
+   变量挂在 :root，giscus iframe 内不保证存在 <main> */
+:root {
     /* 语法高亮（GitHub Light，保留可读性） */
     --color-prettylights-syntax-comment: #6e7781;
     --color-prettylights-syntax-constant: #0550ae;

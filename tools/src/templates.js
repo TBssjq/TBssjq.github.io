@@ -8,10 +8,20 @@ const md = require('./markdown');
 //   - 块与块之间用空行分隔
 // 因此这里统一使用带缩进的模板字符串，不做任何压缩。
 
+// escapeHtml 不处理引号，元信息放进属性前必须再补一层
+function attr(s) {
+  return md.escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+const SITE_URL = 'https://tbssjq.github.io';
+const OG_IMAGE = SITE_URL + '/og-cover.png';
+
 const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap';
 const FONTS = [
   '    <link rel="preconnect" href="https://fonts.googleapis.com">',
   '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+  '    <link rel="preconnect" href="https://cdn.tailwindcss.com">',
+  '    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>',
   // 只留一条 preload，并在 onload 里直接切成 stylesheet：
   // 原来的「preload + 再写一条 stylesheet」等于同一份字体 CSS 请求两次，
   // 而且 stylesheet 会阻塞首屏，字体没到位就一直白屏。
@@ -20,17 +30,41 @@ const FONTS = [
   '    <noscript><link rel="stylesheet" href="' + FONT_HREF + '"></noscript>',
 ].join('\n');
 
-// GSAP 动效库（核心 + 插件）。CDN 加载，JS 中均做 typeof gsap 防御，
-// 加载失败也能正常浏览，只是没有动画。
-// 全部 defer：defer 脚本按文档顺序执行，article.js / toc.js 仍在它们之后跑，
-// 但 HTML 解析不必再等 4 个 CDN 往返。
+// 文章页与目录页共用的 SEO / 社交元信息，避免每页手写、逐页漂移
+function siteMeta(cfg, o) {
+  const url = SITE_URL + o.path;
+  const title = attr(o.title);
+  const desc = attr(o.desc);
+  return [
+    '    <meta name="description" content="' + desc + '">',
+    '    <meta name="author" content="水神崛起">',
+    '    <meta name="theme-color" content="#e8f1f8">',
+    '    <meta name="color-scheme" content="light dark">',
+    '    <link rel="canonical" href="' + url + '">',
+    '    <link rel="icon" href="' + o.icon + '" type="image/svg+xml">',
+    '    <meta property="og:type" content="' + o.type + '">',
+    '    <meta property="og:site_name" content="' + attr(cfg.siteTitle) + '">',
+    '    <meta property="og:title" content="' + title + '">',
+    '    <meta property="og:description" content="' + desc + '">',
+    '    <meta property="og:url" content="' + url + '">',
+    '    <meta property="og:image" content="' + OG_IMAGE + '">',
+    '    <meta property="og:locale" content="zh_CN">',
+    '    <meta name="twitter:card" content="summary_large_image">',
+    '    <meta name="twitter:title" content="' + title + '">',
+    '    <meta name="twitter:description" content="' + desc + '">',
+    '    <meta name="twitter:image" content="' + OG_IMAGE + '">',
+  ].join('\n');
+}
+
+// GSAP 动效库：按页面实际用到的插件分组，不再每页无条件拉 4 个文件。
+// 文章页只需核心 + ScrollToPlugin，目录页只需核心 + Flip；SplitText 未使用。
+// 全部 defer：defer 脚本按文档顺序执行，article.js / toc.js 仍在它们之后跑。
 const GSAP_CDN = 'https://cdn.jsdelivr.net/npm/gsap@3.13.0';
-const GSAP_SCRIPTS = [
-  '    <script defer src="' + GSAP_CDN + '/dist/gsap.min.js"><\/script>',
-  '    <script defer src="' + GSAP_CDN + '/dist/ScrollToPlugin.min.js"><\/script>',
-  '    <script defer src="' + GSAP_CDN + '/dist/Flip.min.js"><\/script>',
-  '    <script defer src="' + GSAP_CDN + '/dist/SplitText.min.js"><\/script>',
-].join('\n');
+const GSAP_CORE = '    <script defer src="' + GSAP_CDN + '/dist/gsap.min.js"><\/script>';
+const GSAP_SCROLL = '    <script defer src="' + GSAP_CDN + '/dist/ScrollToPlugin.min.js"><\/script>';
+const GSAP_FLIP = '    <script defer src="' + GSAP_CDN + '/dist/Flip.min.js"><\/script>';
+const GSAP_ARTICLE = [GSAP_CORE, GSAP_SCROLL].join('\n');
+const GSAP_INDEX = [GSAP_CORE, GSAP_FLIP].join('\n');
 
 // 原 doc 文章页用的 Tailwind 配置（darkMode=class，accent 橙）
 // compact=true 时输出早期手写页面的紧凑写法： colors: { accent: '#f97316' }
@@ -85,16 +119,16 @@ function articleHeader(brand) {
   return [
     '    <header class="site-header fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-900/80 z-40">',
     '        <div class="h-full flex items-center justify-between px-6">',
-    '            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white" target="_blank" rel="noopener noreferrer">' + md.escapeHtml(brand) + '</a>',
+    '            <a href="../index.html" class="text-xl font-bold text-gray-900 dark:text-white">' + md.escapeHtml(brand) + '</a>',
     '            <div class="flex items-center gap-3">',
     '                <div class="music-player music-player--top">',
-    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"><\/iframe>',
+    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="https://music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=0&amp;height=66"><\/iframe>',
     '                </div>',
-    '                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">',
-    '                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+    '                <button id="themeToggle" type="button" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="切换主题">',
+    '                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">',
     '                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + SUN_PATH + '"/>',
     '                </svg>',
-    '                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+    '                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-400 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">',
     '                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + MOON_PATH + '"/>',
     '                </svg>',
     '            </button>',
@@ -112,19 +146,19 @@ function indexHeader(brand) {
     '            <a href="index.html" class="brand">' + md.escapeHtml(brand) + '</a>',
     '            <div class="header-actions">',
     '                <a href="../index.html" class="back-link">',
-    '                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+    '                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">',
     '                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + HOME_PATH + '"/>',
     '                    </svg>',
     '                    <span>返回主页</span>',
     '                </a>',
     '                <div class="music-player music-player--top">',
-    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"><\/iframe>',
+    '                    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" loading="lazy" title="网易云音乐播放器" src="https://music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=0&amp;height=66"><\/iframe>',
     '                </div>',
     '                <button id="themeToggle" class="theme-toggle" aria-label="切换主题">',
-    '                    <svg id="sunIcon" class="icon sun" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+    '                    <svg id="sunIcon" class="icon sun" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">',
     '                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + SUN_PATH + '"/>',
     '                    </svg>',
-    '                    <svg id="moonIcon" class="icon moon" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+    '                    <svg id="moonIcon" class="icon moon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">',
     '                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + MOON_PATH + '"/>',
     '                    </svg>',
     '                </button>',
@@ -142,7 +176,7 @@ function articleMeta(post) {
   return [
     '                <p class="article-meta">',
     tags,
-    '                    <span class="meta-date">' + md.escapeHtml(post.dateTag) + '</span>',
+    '                    <time class="meta-date" datetime="' + attr(post.date) + '">' + md.escapeHtml(post.date) + '</time>',
     '                </p>',
   ].join('\n');
 }
@@ -160,17 +194,25 @@ function articlePage(cfg, post, htmlBody) {
     '    <meta charset="UTF-8">',
     '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
     '    <title>' + pageTitle + '</title>',
+    siteMeta(cfg, {
+      path: '/doc/' + post.year + '/' + post.slug + '.html',
+      title: post.title,
+      desc: post.excerpt,
+      type: 'article',
+      icon: '../../favicon.svg',
+    }),
     '    <script src="https://cdn.tailwindcss.com"><\/script>',
     FONTS,
     tailwindConfig(post.compactConfig === 'true' || post.compactConfig === true),
     '    <link rel="stylesheet" href="../article.css">',
     '    <link rel="stylesheet" href="../toc.css">',
-    GSAP_SCRIPTS,
+    GSAP_ARTICLE,
     '</head>',
     '<body class="min-h-screen">',
+    '    <a class="skip-link" href="#main-content">跳到正文</a>',
     articleHeader(cfg.brand),
     '',
-    '    <main class="pt-16">',
+    '    <main class="pt-16" id="main-content">',
     '        <div class="article-shell">',
     '            <article class="article-main">',
     '                <h1 class="article-title text-3xl lg:text-4xl text-center mb-8">' + md.escapeHtml(post.title) + '</h1>',
@@ -186,10 +228,10 @@ function articlePage(cfg, post, htmlBody) {
     '                    <div class="giscus"></div>',
     '                </div>',
     '                <div class="mt-8">',
-    '                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium" target="_blank" rel="noopener noreferrer">',
+    '                    <a href="../index.html" class="btn-back inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-xl font-medium">',
     '                        <span>目录</span>',
     '                        <span class="font-semibold">Go!</span>',
-    '                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">',
+    '                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">',
     '                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + ARROW_PATH + '"/>',
     '                        </svg>',
     '                    </a>',
@@ -211,15 +253,11 @@ function articlePage(cfg, post, htmlBody) {
 }
 
 function articleCard(year, post) {
-  const tags = (post.tags || []).map(function (t) {
-    return '<span class="tag-chip">' + md.escapeHtml(t) + '</span>';
-  }).join(' ');
   return [
     '                        <article class="article-card" data-tags="' + md.escapeHtml((post.tags || []).join(' ')) + '">',
-    '                            <a href="' + year + '/' + post.slug + '.html" target="_blank" rel="noopener noreferrer">',
+    '                            <a href="' + year + '/' + post.slug + '.html">',
     '                                <div class="card-row">',
     '                                    <div class="card-body">',
-    tags,
     '                                        <h3 class="article-card__title">' + md.escapeHtml(post.title) + '</h3>',
     '                                        <p class="article-card__excerpt">' + md.escapeHtml(post.excerpt) + '</p>',
     '                                    </div>',
@@ -242,8 +280,11 @@ function yearSection(year, posts) {
 }
 
 // 标签筛选条：纯静态输出，交互由 theme/index.js 负责（无内联脚本）
-function filterBar(tags) {
-  const total = tags.reduce(function (n, c) { return n + c.count; }, 0);
+// 只保留能筛出两篇以上文章的标签：单篇标签点进去和「全部」没有区别
+function filterBar(tags, postCount) {
+  const usable = tags.filter(function (c) { return c.count > 1; });
+  if (!usable.length) return null;
+
   const chip = function (value, label, count, active) {
     return [
       '                    <button class="filter-chip' + (active ? ' is-active' : '') + '" type="button" data-filter="' + md.escapeHtml(value) + '">',
@@ -252,8 +293,8 @@ function filterBar(tags) {
       '                    </button>',
     ].join('\n');
   };
-  const chips = [chip('__all__', '全部', total, true)].concat(
-    tags.map(function (c) { return chip(c.name, c.name, c.count, false); })
+  const chips = [chip('__all__', '全部', postCount, true)].concat(
+    usable.map(function (c) { return chip(c.name, c.name, c.count, false); })
   );
   return [
     '            <nav class="filter-bar" aria-label="按标签筛选">',
@@ -263,32 +304,13 @@ function filterBar(tags) {
   ].join('\n');
 }
 
-function comingSection(year) {
-  return [
-    '                <section class="year-section is-coming">',
-    '                    <h2 class="year-heading">' + year + '</h2>',
-    '                    <div class="year-list">',
-    '                        <article class="article-card is-coming">',
-    '                            <div class="card-row">',
-    '                                <div class="card-body">',
-    '                                    <h3 class="article-card__title muted">即将发布</h3>',
-    '                                    <p class="article-card__excerpt muted">更多文章即将到来...</p>',
-    '                                </div>',
-    '                                <span class="date-tag">敬请期待</span>',
-    '                            </div>',
-    '                        </article>',
-    '                    </div>',
-    '                </section>',
-  ].join('\n');
-}
-
 function indexPage(cfg, years, tags) {
   const sections = years
     .map(function (y) { return yearSection(y.name, y.posts); })
-    .concat((cfg.comingYears || []).map(comingSection))
     .join('\n\n');
 
-  const bar = (tags && tags.length) ? filterBar(tags) : null;
+  const postCount = years.reduce(function (n, y) { return n + y.posts.length; }, 0);
+  const bar = filterBar(tags || [], postCount);
 
   return [
     '<!DOCTYPE html>',
@@ -297,13 +319,21 @@ function indexPage(cfg, years, tags) {
     '    <meta charset="UTF-8">',
     '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
     '    <title>' + md.escapeHtml(cfg.pageTitle) + ' - ' + md.escapeHtml(cfg.siteTitle) + '</title>',
+    siteMeta(cfg, {
+      path: '/doc/index.html',
+      title: cfg.pageTitle + ' - ' + cfg.siteTitle,
+      desc: cfg.pageDesc,
+      type: 'website',
+      icon: '../favicon.svg',
+    }),
     FONTS,
     '    <link rel="stylesheet" href="index.css">',
     '</head>',
     '<body>',
+    '    <a class="skip-link" href="#main-content">跳到正文</a>',
     indexHeader(cfg.brand),
     '',
-    '    <main class="page-main">',
+    '    <main class="page-main" id="main-content">',
     '        <div class="page-wrap">',
     '            <div class="page-head">',
     '                <h1 class="page-title">' + md.escapeHtml(cfg.pageTitle) + '</h1>',
@@ -317,7 +347,7 @@ function indexPage(cfg, years, tags) {
     '        </div>',
     '    </main>',
     '',
-    GSAP_SCRIPTS,
+    GSAP_INDEX,
     '    <script src="index.js" defer><\/script>',
     '</body>',
     '</html>',

@@ -3,9 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>水神崛起</title>
+    <title>水神崛起 · 联系我</title>
+    <meta name="description" content="水神崛起的联系页：QQ、邮箱与一点点关于时间的碎念。">
+    <meta name="author" content="水神崛起">
+    <meta name="theme-color" content="#0b1013">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://tbssjq.github.io/nfc/">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <meta property="og:type" content="profile">
+    <meta property="og:title" content="水神崛起 · 联系我">
+    <meta property="og:description" content="水神崛起的联系页：QQ、邮箱与一点点关于时间的碎念。">
+    <meta property="og:url" content="https://tbssjq.github.io/nfc/">
+    <meta property="og:locale" content="zh_CN">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 原来只放在 <noscript> 里：启用 JS 时字体样式表根本不加载，字形恒回退 -->
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"
+          onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap"></noscript>
     <style>
         :root {
@@ -16,6 +31,9 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* 旋转的 .blob 会超出卡片几个像素，在 html 层截断才不会出现横向拖动 */
+        html { overflow-x: hidden; }
 
         body {
             font-family: var(--font-body);
@@ -279,7 +297,7 @@
     <div style="display:flex;justify-content:center;align-items:center;margin:32px auto 0;padding-bottom:env(safe-area-inset-bottom,0);">
         <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86"
                 loading="lazy" title="网易云音乐播放器"
-                src="//music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=1&amp;height=66"
+                src="https://music.163.com/outchain/player?type=2&amp;id=65546&amp;auto=0&amp;height=66"
                 style="border-radius:12px;max-width:100%;"></iframe>
     </div>
 </body>

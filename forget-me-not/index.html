@@ -6,7 +6,24 @@
 <meta name="description" content="水神崛起 · 一封没写完的自我介绍 —— 写给还在等、还在期待的你。请不要忘记我。">
 <meta name="author" content="水神崛起">
 <title>勿忘我 · Forget Me Not</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Caveat:wght@400;600&family=Noto+Serif+SC:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f1e7d3">
+<meta name="color-scheme" content="light">
+<link rel="canonical" href="https://tbssjq.github.io/forget-me-not/">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:title" content="勿忘我 · Forget Me Not">
+<meta property="og:description" content="水神崛起 · 一封没写完的自我介绍 —— 写给还在等、还在期待的你。请不要忘记我。">
+<meta property="og:url" content="https://tbssjq.github.io/forget-me-not/">
+<meta property="og:locale" content="zh_CN">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Caveat:wght@400;600&family=Noto+Serif+SC:wght@200;300;400;500;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Caveat:wght@400;600&family=Noto+Serif+SC:wght@200;300;400;500;700&display=swap">
+  <style>.reveal{opacity:1!important;transform:none!important}</style>
+</noscript>
 <style>
 /* ══════════════════════════════════════════
    一张纸。所有元素长在同一张纸上。
@@ -678,11 +695,16 @@ if(finePointer&&!reduceMotion){
   },{passive:true});
 }
 
-/* 滚动淡入 */
-const io=new IntersectionObserver(es=>{
-  es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}});
-},{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+/* 滚动淡入：旧浏览器没有 IntersectionObserver 时直接显示，绝不把正文藏死 */
+const revealEls=Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{
+    es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}});
+  },{threshold:.12});
+  revealEls.forEach(el=>io.observe(el));
+}else{
+  revealEls.forEach(el=>el.classList.add('in'));
+}
 </script>
 </body>
 </html>

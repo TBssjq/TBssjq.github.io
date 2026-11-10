@@ -484,7 +484,7 @@ HTTPS 远程需要凭证管理器或 Personal Access Token；更省事的做法�
 
 ## 自定义
 
-- 改 `src/config.js`：站点标题、目录文案、`comingYears`、
+- 改 `src/config.js`：站点标题、目录文案、
   Giscus 仓库配置、Git 行为
 - 改 `theme/` 下的 css/js 调整博客外观与交互；构建时自动同步到 `doc/`
 - 改 `public/admin.css` 的 `:root` / `html[data-theme='dark']` 变量调整后台配色

@@ -484,6 +484,8 @@
 
         /* 图片 — 陶土阴影 */
         .prose img {
+            max-width: 100%;
+            height: auto;
             border-radius: 16px;
             box-shadow:
                 8px 8px 20px rgba(163, 177, 198, 0.45),
@@ -676,4 +678,29 @@
         .back-to-top:focus-visible,
         #themeToggle:focus-visible {
             outline-offset: 4px;
+        }
+
+        /* 跳转正文：键盘与读屏用户可跳过重复的导航和播放器 */
+        .skip-link {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 100;
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+            transform: translateY(-160%);
+            transition: transform .2s ease;
+        }
+        .skip-link:focus-visible {
+            transform: translateY(0);
+            outline: 2px solid var(--text-primary);
+            outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .skip-link { transition: none; }
         }

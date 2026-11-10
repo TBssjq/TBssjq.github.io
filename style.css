@@ -33,9 +33,9 @@
 
     --color-text: #1a2a3a;
     /* 正文对比度：原来的 0.55 叠在半透明卡片上几乎看不清，提到 0.78 才够 WCAG AA */
-    --color-text-soft: rgba(26, 42, 58, 0.78);
-    --color-text-muted: rgba(26, 42, 58, 0.62);
-    --color-text-dim: rgba(26, 42, 58, 0.46);
+    --color-text-soft: rgba(26, 42, 58, 0.82);
+    --color-text-muted: rgba(26, 42, 58, 0.72);
+    --color-text-dim: rgba(26, 42, 58, 0.6);
     --color-border: rgba(0, 0, 0, 0.06);
     --color-border-accent: rgba(0, 158, 142, 0.15);
 
@@ -235,6 +235,9 @@ body::before {
 
 /* Logo */
 .pill-logo {
+    border: 0;
+    font: inherit;
+    color: inherit;
     width: var(--nav-h);
     height: var(--nav-h);
     border-radius: 50%;
@@ -1959,6 +1962,7 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
     .ocean-wave,
     .ocean-boat,
     .ocean-boat__bob,
@@ -3619,5 +3623,204 @@ body.cmdk-open {
         width: 44px;
         justify-content: center;
         padding: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   comrade 彩蛋：悬停这个词，照片从信里浮出来
+   ═══════════════════════════════════════════ */
+.comrade-word {
+    cursor: help;
+}
+
+.we-portal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 9997;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate3d(var(--px, 50vw), var(--py, 50vh), 0);
+    transition: opacity .22s ease, visibility 0s .22s;
+    will-change: transform, opacity;
+}
+
+.we-portal.is-on {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .18s ease;
+}
+
+.we-portal__inner {
+    position: relative;
+    width: clamp(210px, 25vw, 320px);
+    aspect-ratio: 4 / 3;
+    opacity: 0;
+    filter: blur(14px) saturate(.55);
+    transform: translate(-50%, -58%) scale(.72) rotate(-4deg);
+    transition:
+        opacity .26s ease,
+        filter .34s ease,
+        transform .5s cubic-bezier(.18, 1.4, .38, 1);
+}
+
+.we-portal.is-on .we-portal__inner {
+    opacity: 1;
+    filter: blur(0) saturate(1);
+    transform: translate(-50%, -58%) scale(1) rotate(0deg);
+}
+
+.we-portal__aura {
+    position: absolute;
+    inset: -42%;
+    border-radius: 50%;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(150, 255, 240, .5), rgba(90, 190, 255, .2) 44%, transparent 68%),
+        radial-gradient(circle at 50% 50%, rgba(255, 225, 150, .34), transparent 60%);
+    filter: blur(18px);
+    animation: we-aura 2.8s ease-in-out infinite;
+}
+
+@keyframes we-aura {
+    0%, 100% { opacity: .55; transform: scale(.92); }
+    50% { opacity: 1; transform: scale(1.06); }
+}
+
+.we-portal__ring {
+    position: absolute;
+    inset: -14%;
+    border-radius: 50%;
+    pointer-events: none;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0 6%,
+        rgba(255, 236, 178, .95) 10%,
+        transparent 16%,
+        transparent 36%,
+        rgba(120, 255, 238, .85) 41%,
+        transparent 48%,
+        transparent 70%,
+        rgba(255, 255, 255, .7) 75%,
+        transparent 82%
+    );
+    -webkit-mask: radial-gradient(circle, transparent 57%, #000 59% 71%, transparent 73%);
+    mask: radial-gradient(circle, transparent 57%, #000 59% 71%, transparent 73%);
+    animation: we-spin 7s linear infinite;
+    opacity: .9;
+}
+
+.we-portal__ring--slow {
+    inset: -24%;
+    opacity: .45;
+    animation-duration: 11s;
+    animation-direction: reverse;
+}
+
+@keyframes we-spin {
+    to { transform: rotate(360deg); }
+}
+
+.we-portal__photo {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 240, 205, .72);
+    background: linear-gradient(140deg, rgba(120, 255, 238, .18), rgba(255, 224, 160, .14));
+    box-shadow:
+        0 26px 70px -18px rgba(6, 20, 32, .62),
+        0 0 0 1px rgba(255, 255, 255, .16) inset,
+        0 0 36px rgba(120, 255, 238, .38),
+        0 0 90px rgba(255, 222, 150, .22);
+    filter: saturate(1.05) contrast(1.02);
+    opacity: 0;
+    transition: opacity .32s ease;
+}
+
+.we-portal__photo.is-ready {
+    opacity: 1;
+}
+
+.we-portal__glint {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.we-portal__glint::after {
+    content: "";
+    position: absolute;
+    top: -70%;
+    left: -30%;
+    width: 40%;
+    height: 240%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .85), transparent);
+    opacity: 0;
+    transform: rotate(16deg) translateX(-220%);
+}
+
+.we-portal.is-on .we-portal__glint::after {
+    animation: we-glint .9s .22s ease-out 1 both;
+}
+
+@keyframes we-glint {
+    0% { opacity: 0; transform: rotate(16deg) translateX(-220%); }
+    18% { opacity: .9; }
+    100% { opacity: 0; transform: rotate(16deg) translateX(520%); }
+}
+
+.we-portal__spark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, #ffffff, rgba(255, 232, 170, .95) 40%, transparent 72%);
+    box-shadow: 0 0 10px rgba(255, 238, 180, .9);
+    opacity: 0;
+}
+
+.we-portal.is-on .we-portal__spark {
+    animation: we-spark 1.05s var(--d, 0s) cubic-bezier(.2, .7, .3, 1) both;
+}
+
+@keyframes we-spark {
+    0% { opacity: 0; transform: translate(0, 0) scale(.3); }
+    18% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--sx, 0px), var(--sy, -80px)) scale(.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .we-portal,
+    .we-portal__inner {
+        transition-duration: .01ms;
+    }
+
+    .we-portal__aura,
+    .we-portal__ring {
+        animation: none;
+    }
+
+    .we-portal__spark {
+        display: none;
+    }
+
+    .we-portal.is-on .we-portal__glint::after {
+        animation: none;
+    }
+}
+
+@media (max-width: 560px) {
+    .we-portal__inner {
+        width: min(62vw, 280px);
     }
 }

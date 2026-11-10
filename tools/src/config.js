@@ -23,9 +23,6 @@ module.exports = {
   // 主题强调色（与 doc/article.css 保持一致）
   accent: '#f97316',
 
-  // 没有文章、但想在目录页占位的年份（"即将发布"占位卡）
-  comingYears: ['2025'],
-
   // 仓库根目录（一键 Git 同步的作用范围）
   repoRoot: path.join(TOOLS_DIR, '..'),
 

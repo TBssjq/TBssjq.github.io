@@ -156,7 +156,11 @@ test('全部文章：代码块无占位符残留、无基准缩进污染', () =>
     const rel = path.relative(path.join(__dirname, '..'), file);
     assert.doesNotMatch(html, /\u0000/, rel + ' 泄漏了内部占位符');
     eachCode(html, (body) => {
-      assert.doesNotMatch(body, /\n {20,}\S/, rel + ' 的代码块出现 20 空格基准缩进');
+      // 污染的特征是「所有非空行都被统一加了 20 空格」；
+      // C++ 正文里本来就可能有深缩进的续行注释，逐行命中属于误报。
+      const lines = body.split('\n').filter((line) => line.trim() !== '');
+      const polluted = lines.length > 0 && lines.every((line) => /^ {20,}\S/.test(line));
+      assert.equal(polluted, false, rel + ' 的代码块出现 20 空格基准缩进');
     });
   });
 });

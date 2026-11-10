@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /editor.html
+Disallow: /tools/
+Disallow: /404.html
 
 Sitemap: https://tbssjq.github.io/sitemap.xml

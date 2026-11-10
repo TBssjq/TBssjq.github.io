@@ -31,9 +31,10 @@ if (stored === 'dark' || (!stored && safeMatchMedia('(prefers-color-scheme: dark
 
 const isFilePage = typeof location !== 'undefined' && location.protocol === 'file:';
 
-// 评论区主题跟着站点手动暗色开关走（giscus 是跨域 iframe，只能靠 postMessage 同步）
-const GISCUS_LIGHT = 'https://TBssjq.github.io/giscus-light.css';
-const GISCUS_DARK = 'https://TBssjq.github.io/giscus-dark.css';
+// 评论区主题跟着站点手动暗色开关走（giscus 是跨域 iframe，只能靠 postMessage 同步）。
+// 主题 CSS 必须是同源绝对地址；从当前文章页往上两级推导，换域名 / 子路径部署都不会失效。
+const GISCUS_LIGHT = isFilePage ? '' : new URL('../../giscus-light.css', document.baseURI).href;
+const GISCUS_DARK = isFilePage ? '' : new URL('../../giscus-dark.css', document.baseURI).href;
 const giscusTheme = () => root.classList.contains('dark') ? GISCUS_DARK : GISCUS_LIGHT;
 
 function updateGiscusTheme() {

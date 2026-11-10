@@ -23,6 +23,8 @@ const CHECK = [
   'article.js',
   'index.css',
   'index.js',
+  'toc.css',
+  'toc.js',
 ];
 fs.readdirSync(path.join(DOC_DIR, '2026')).forEach((f) => {
   if (f.endsWith('.html')) CHECK.push(path.join('2026', f));

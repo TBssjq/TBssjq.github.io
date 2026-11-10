@@ -6,11 +6,19 @@
 <meta name="theme-color" content="#04070c" />
 <meta name="description" content="RACE_ENGINE — 在霓虹赛道上学习 C++：数据结构与算法、STL、语言机制、OOP、泛型编程与现代 C++。中英双语，可静态部署。" />
 <title>RACE_ENGINE // C++ 学习赛车</title>
+<link rel="canonical" href="https://tbssjq.github.io/cpp-racer/index.html" />
+<link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="RACE_ENGINE // C++ 学习赛车" />
+<meta property="og:description" content="在霓虹赛道上学习 C++：数据结构与算法、STL、语言机制、OOP、泛型编程与现代 C++。中英双语，可静态部署。" />
+<meta property="og:url" content="https://tbssjq.github.io/cpp-racer/index.html" />
+<meta property="og:locale" content="zh_CN" />
+<link rel="preconnect" href="https://unpkg.com" crossorigin />
 <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
 <div id="app">
-  <canvas id="scene"></canvas>
+  <canvas id="scene" role="img" aria-label="霓虹赛道 3D 游戏画面，使用键盘方向键或 A/D 控制赛车"></canvas>
 
   <div class="fx-grain"></div>
   <div class="fx-scan"></div>
@@ -75,7 +83,7 @@
           <span class="lbl" data-i18n="hud.map">track</span>
           <span class="lbl" id="hudBest">best --</span>
         </div>
-        <canvas id="minimap" width="300" height="300"></canvas>
+        <canvas id="minimap" width="300" height="300" role="img" aria-label="赛道小地图，显示赛车当前位置"></canvas>
       </div>
     </div>
 
@@ -188,7 +196,7 @@
       <div class="panel__head"><span class="led led--r"></span><span>fatal error</span></div>
       <div class="panel__body">
         <p><b data-i18n="fatal.title">链接失败：无法加载三维引擎。</b></p>
-        <p data-i18n="fatal.body">请通过 HTTP 打开本页（本地用 run.cmd，GitHub Pages 直接访问），并确认可访问 cdn.jsdelivr.net。</p>
+        <p data-i18n="fatal.body">请通过 HTTP 打开本页（本地用 run.cmd，GitHub Pages 直接访问），并确认可访问 unpkg.com。</p>
       </div>
     </div>
   </div>
@@ -207,8 +215,8 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
   }
 }
 </script>

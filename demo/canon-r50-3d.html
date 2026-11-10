@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Canon EOS R50 · 实时 3D 模型</title>
+<meta name="description" content="用 Three.js 实时渲染的佳能 EOS R50 无反相机：机身、手柄、模式拨盘、热靴、RF 卡口镜头与翻转屏，可拖拽旋转、滚轮缩放。">
+<meta name="author" content="水神崛起">
+<meta name="theme-color" content="#090a0d">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://tbssjq.github.io/demo/canon-r50-3d.html">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Canon EOS R50 · 实时 3D 模型">
+<meta property="og:description" content="用 Three.js 实时渲染的佳能 EOS R50：机身、手柄、模式拨盘、热靴、RF 卡口镜头与翻转屏，可拖拽旋转查看。">
+<meta property="og:url" content="https://tbssjq.github.io/demo/canon-r50-3d.html">
+<meta property="og:locale" content="zh_CN">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<style>
+:root{
+  --ink:#eceae4;
+  --dim:rgba(236,234,228,.46);
+  --gold:#c8a76a;
+  --line:rgba(255,255,255,.09);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:radial-gradient(90% 72% at 50% 16%,#2d3139 0%,#181b21 46%,#090a0d 100%);
+  color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* 极细的胶片颗粒，压住大面积渐变的塑料感 */
+body::after{
+  content:"";position:fixed;inset:0;z-index:6;pointer-events:none;
+  opacity:.045;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+#stage{
+  position:fixed;inset:0;width:100%;height:100%;
+  display:block;touch-action:none;cursor:grab;
+  outline:none;
+}
+#stage:active{cursor:grabbing}
+
+/* ── 信息层 ── */
+.hud{position:fixed;z-index:10;pointer-events:none}
+.hud--top{
+  top:clamp(22px,4vw,50px);left:clamp(20px,4vw,56px);
+  max-width:min(440px,82vw);
+}
+.eyebrow{
+  display:flex;align-items:center;gap:10px;
+  font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;
+  color:var(--gold);font-weight:500;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--gold);opacity:.65}
+h1{
+  margin:14px 0 6px;
+  font-size:clamp(40px,7.4vw,68px);font-weight:200;
+  letter-spacing:-.035em;line-height:.92;
+}
+h1 b{font-weight:200;color:var(--gold)}
+.desc{
+  margin-top:12px;font-size:12.5px;line-height:1.85;
+  letter-spacing:.05em;color:var(--dim);max-width:34ch;
+}
+.spec{
+  display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;
+}
+.spec span{
+  font-size:10.5px;letter-spacing:.1em;color:rgba(236,234,228,.74);
+  border:1px solid var(--line);border-radius:999px;
+  padding:4px 10px;background:rgba(255,255,255,.02);
+}
+
+/* ── 右下角控制 ── */
+.hud--bottom{
+  right:clamp(16px,3.6vw,46px);bottom:clamp(16px,3.6vw,40px);
+  display:flex;flex-direction:column;align-items:flex-end;gap:9px;
+}
+.views{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;pointer-events:auto}
+.vb{
+  appearance:none;border:1px solid var(--line);
+  background:rgba(20,22,26,.4);
+  color:rgba(236,234,228,.55);
+  font:inherit;font-size:11.5px;letter-spacing:.1em;
+  padding:8px 14px;border-radius:999px;cursor:pointer;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  transition:color .22s ease,border-color .22s ease,background .22s ease,transform .22s ease;
+}
+.vb:hover{color:var(--ink);border-color:rgba(255,255,255,.26);background:rgba(255,255,255,.07)}
+.vb:active{transform:scale(.96)}
+.vb:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.vb.on{color:#14150f;background:var(--gold);border-color:var(--gold);font-weight:600}
+.vb--spin{display:flex;align-items:center;gap:6px}
+.vb--spin i{
+  width:7px;height:7px;border-radius:50%;background:currentColor;
+  opacity:.35;transition:opacity .2s,box-shadow .2s;
+}
+.vb--spin.on i{opacity:1;box-shadow:0 0 8px currentColor}
+
+.hint{
+  position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+  z-index:10;pointer-events:none;
+  font-size:10.5px;letter-spacing:.2em;color:rgba(255,255,255,.58);
+  white-space:nowrap;
+}
+
+/* ── 启动遮罩 ── */
+#boot{
+  position:fixed;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:#08090c;color:rgba(236,234,228,.42);
+  font-size:11px;letter-spacing:.32em;
+  transition:opacity .9s ease,visibility .9s ease;
+}
+#boot.done{opacity:0;visibility:hidden}
+#boot .ring{
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);
+  border-top-color:var(--gold);
+  animation:boot-spin 1s linear infinite;
+}
+#boot.err .ring{animation:none;border-color:rgba(200,80,80,.5);border-top-color:#d36a6a}
+#boot.err .msg::after{content:"加载失败 · 请检查网络后刷新"}
+#boot.err .msg{font-size:0}
+#boot.webgl-err .ring{animation:none;border-color:rgba(200,80,80,.5);border-top-color:#d36a6a}
+#boot.webgl-err .msg::after{content:"WebGL 不可用 · 请开启硬件加速后刷新"}
+#boot.webgl-err .msg{font-size:0}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  #boot .ring{animation:none}
+  .vb{transition:none}
+}
+
+@media (max-width:760px){
+  .desc{display:none}
+  .spec{margin-top:12px}
+  .spec span{font-size:9.5px;padding:3px 8px}
+  .hint{display:none}
+  .vb{padding:7px 11px;font-size:11px}
+}
+@media (max-width:420px){
+  .spec{display:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stage" role="img" aria-label="可拖拽旋转、滚轮缩放的佳能 EOS R50 三维相机模型">您的浏览器不支持 canvas，无法显示 3D 模型。</canvas>
+
+<header class="hud hud--top">
+  <div class="eyebrow">Canon EOS R50</div>
+  <h1>EOS <b>R50</b></h1>
+  <p class="desc">一台 2420 万像素的 APS-C 无反相机。全部零件由 WebGL 实时建模，从镁黑色的机身到镜片上的镀膜反光。</p>
+  <div class="spec">
+    <span>APS-C · 2420 万</span>
+    <span>RF 卡口</span>
+    <span>4K 30P</span>
+    <span>侧翻触摸屏</span>
+  </div>
+</header>
+
+<nav class="hud hud--bottom">
+  <div class="views">
+    <button class="vb" data-view="front">正面</button>
+    <button class="vb" data-view="back">背面</button>
+    <button class="vb" data-view="top">顶部</button>
+    <button class="vb on" data-view="hero">立体</button>
+    <button class="vb vb--spin on" id="spin" aria-pressed="true"><i></i>环绕</button>
+  </div>
+</nav>
+
+<div class="hint">拖拽旋转 · 滚轮缩放</div>
+
+<div id="boot"><div class="ring"></div><div class="msg">正在构建相机</div></div>
+
+<script>
+  setTimeout(function () {
+    var b = document.getElementById('boot');
+    if (b && !b.classList.contains('done')) b.classList.add('err');
+  }, 10000);
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+/* ═══════════════════════════════════════════
+   1 · 渲染器 / 场景 / 相机
+   ═══════════════════════════════════════════ */
+const canvas = document.getElementById('stage');
+const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({
+    canvas, antialias: true, alpha: true, powerPreference: 'high-performance'
+  });
+} catch (err) {
+  const boot = document.getElementById('boot');
+  if (boot) boot.classList.add('webgl-err');
+  throw err;
+}
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+renderer.setPixelRatio(DPR);
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const MAX_ANISO = renderer.capabilities.getMaxAnisotropy();
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 400);
+camera.position.set(15.5, 9.8, 20.5);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.rotateSpeed = 0.85;
+controls.zoomSpeed = 0.75;
+controls.enablePan = false;
+controls.minDistance = 15;
+controls.maxDistance = 50;
+controls.minPolarAngle = 0.12;
+controls.maxPolarAngle = Math.PI * 0.86;
+controls.target.set(0, 0.9, 0);
+controls.autoRotate = !REDUCE_MOTION;
+controls.autoRotateSpeed = 0.55;
+
+/* ═══════════════════════════════════════════
+   2 · 纹理工厂
+   ═══════════════════════════════════════════ */
+function makeCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  return c;
+}
+function texFromCanvas(c, { srgb = true, repeat = null, aniso = 8 } = {}) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.anisotropy = Math.min(aniso, MAX_ANISO);
+  if (repeat) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repeat[0], repeat[1]);
+  }
+  return t;
+}
+
+/* 手柄的橡胶粒面：细密噪点做凹凸 */
+const gripBump = (() => {
+  const S = 512, c = makeCanvas(S, S), g = c.getContext('2d');
+  g.fillStyle = '#3c3c3c';
+  g.fillRect(0, 0, S, S);
+  for (let i = 0; i < 15000; i++) {
+    const v = Math.random() < 0.5 ? 255 : 0;
+    g.fillStyle = `rgba(${v},${v},${v},${0.12 + Math.random() * 0.5})`;
+    g.beginPath();
+    g.arc(Math.random() * S, Math.random() * S, 0.6 + Math.random() * 1.9, 0, Math.PI * 2);
+    g.fill();
+  }
+  return texFromCanvas(c, { srgb: false, repeat: [4, 7] });
+})();
+
+/* 镜头橡胶环的滚花 */
+const knurlBump = (() => {
+  const W = 1024, H = 64, c = makeCanvas(W, H), g = c.getContext('2d');
+  g.fillStyle = '#4a4a4a';
+  g.fillRect(0, 0, W, H);
+  const N = 132, step = W / N;
+  for (let i = 0; i < N; i++) {
+    const x = i * step;
+    const grd = g.createLinearGradient(x, 0, x + step, 0);
+    grd.addColorStop(0, '#1c1c1c');
+    grd.addColorStop(0.5, '#e6e6e6');
+    grd.addColorStop(1, '#1c1c1c');
+    g.fillStyle = grd;
+    g.fillRect(x, 0, step, H);
+  }
+  return texFromCanvas(c, { srgb: false });
+})();
+
+/* 取景屏上的画面：黄昏山谷 + 绿色对焦框 + 参数 */
+const screenTex = (() => {
+  const W = 1024, H = 640;
+  const c = makeCanvas(W, H), g = c.getContext('2d');
+
+  const sky = g.createLinearGradient(0, 0, 0, H * 0.74);
+  sky.addColorStop(0, '#0e1824');
+  sky.addColorStop(0.42, '#33475b');
+  sky.addColorStop(0.72, '#8a7462');
+  sky.addColorStop(1, '#d9a271');
+  g.fillStyle = sky;
+  g.fillRect(0, 0, W, H);
+
+  const sx = W * 0.66, sy = H * 0.5;
+  const glow = g.createRadialGradient(sx, sy, 0, sx, sy, 280);
+  glow.addColorStop(0, 'rgba(255,236,198,.95)');
+  glow.addColorStop(0.22, 'rgba(255,206,144,.5)');
+  glow.addColorStop(1, 'rgba(255,190,120,0)');
+  g.fillStyle = glow;
+  g.fillRect(0, 0, W, H);
+
+  function ridge(baseY, amp, color, phase) {
+    g.beginPath();
+    g.moveTo(0, H);
+    g.lineTo(0, baseY);
+    for (let x = 0; x <= W; x += 6) {
+      const y = baseY
+        + Math.sin(x * 0.005 + phase) * amp
+        + Math.sin(x * 0.013 + phase * 2.3) * amp * 0.45;
+      g.lineTo(x, y);
+    }
+    g.lineTo(W, H);
+    g.closePath();
+    g.fillStyle = color;
+    g.fill();
+  }
+  ridge(H * 0.56, 34, '#2b3a48', 0.8);
+  ridge(H * 0.66, 26, '#1d2833', 2.1);
+  ridge(H * 0.79, 18, '#101821', 4.4);
+
+  // 绿色对焦框
+  const fx = W * 0.5 - 105, fy = H * 0.44 - 75, fw = 210, fh = 150, len = 36;
+  g.strokeStyle = 'rgba(126,255,158,.95)';
+  g.lineWidth = 5;
+  g.lineCap = 'square';
+  g.beginPath();
+  g.moveTo(fx, fy + len); g.lineTo(fx, fy); g.lineTo(fx + len, fy);
+  g.moveTo(fx + fw - len, fy); g.lineTo(fx + fw, fy); g.lineTo(fx + fw, fy + len);
+  g.moveTo(fx + fw, fy + fh - len); g.lineTo(fx + fw, fy + fh); g.lineTo(fx + fw - len, fy + fh);
+  g.moveTo(fx + len, fy + fh); g.lineTo(fx, fy + fh); g.lineTo(fx, fy + fh - len);
+  g.stroke();
+
+  g.strokeStyle = 'rgba(126,255,158,.5)';
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(fx + fw / 2 - 12, fy + fh / 2); g.lineTo(fx + fw / 2 + 12, fy + fh / 2);
+  g.moveTo(fx + fw / 2, fy + fh / 2 - 12); g.lineTo(fx + fw / 2, fy + fh / 2 + 12);
+  g.stroke();
+
+  // 上下黑边与参数
+  const topBar = g.createLinearGradient(0, 0, 0, 96);
+  topBar.addColorStop(0, 'rgba(0,0,0,.62)');
+  topBar.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = topBar;
+  g.fillRect(0, 0, W, 96);
+  const botBar = g.createLinearGradient(0, H - 110, 0, H);
+  botBar.addColorStop(0, 'rgba(0,0,0,0)');
+  botBar.addColorStop(1, 'rgba(0,0,0,.7)');
+  g.fillStyle = botBar;
+  g.fillRect(0, H - 110, W, 110);
+
+  g.font = '600 27px ui-monospace, "SFMono-Regular", Menlo, monospace';
+  g.fillStyle = 'rgba(255,255,255,.92)';
+  g.textBaseline = 'middle';
+  g.textAlign = 'left';
+  g.fillText('1/250   F5.6   ISO 400', 40, 56);
+  g.textAlign = 'right';
+  g.fillText('RAW', W - 40, 56);
+  g.textAlign = 'left';
+  g.fillStyle = 'rgba(126,255,158,.92)';
+  g.fillText('AF · ONE SHOT', 40, H - 42);
+  g.fillStyle = 'rgba(255,255,255,.8)';
+  g.textAlign = 'right';
+  g.fillText('18-45mm', W - 40, H - 42);
+
+  // 曝光标尺
+  g.fillStyle = 'rgba(255,255,255,.35)';
+  for (let i = 0; i < 11; i++) g.fillRect(W / 2 - 100 + i * 20, H - 20, 2, 8);
+  g.fillStyle = 'rgba(126,255,158,.9)';
+  g.fillRect(W / 2 - 1, H - 24, 3, 14);
+
+  return texFromCanvas(c, { aniso: 8 });
+})();
+
+/* 镜头铭文：一整圈圆柱贴图，只有顶部一段有白字 */
+const lensTextTex = (() => {
+  const W = 2048, H = 128;
+  const c = makeCanvas(W, H), g = c.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = 'rgba(232,234,238,.94)';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.font = '600 44px "Helvetica Neue", Arial, sans-serif';
+  g.fillText('RF-S 18-45mm  1:4.5-6.3  IS STM', W * 0.5, H * 0.42);
+  g.font = '500 32px "Helvetica Neue", Arial, sans-serif';
+  g.fillStyle = 'rgba(232,234,238,.72)';
+  g.fillText('CANON  Ø 49mm', W * 0.5, H * 0.82);
+  return texFromCanvas(c, { aniso: 8 });
+})();
+
+/* 机身正面的 Canon 标志（衬线体） */
+const canonLogoTex = (() => {
+  const W = 512, H = 160, c = makeCanvas(W, H), g = c.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#d3d6db';
+  g.font = '600 104px Georgia, "Times New Roman", serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.letterSpacing = '2px';
+  g.fillText('Canon', W / 2, H / 2 + 4);
+  return texFromCanvas(c);
+})();
+
+/* 型号铭牌 */
+const modelTex = (() => {
+  const W = 512, H = 128, c = makeCanvas(W, H), g = c.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#b9bec5';
+  g.font = '700 62px "Helvetica Neue", Arial, sans-serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.letterSpacing = '10px';
+  g.fillText('EOS R50', W / 2, H / 2 + 2);
+  return texFromCanvas(c);
+})();
+
+/* 小按钮的文字 / 图标 */
+function labelTex(text) {
+  const W = 256, H = 128, c = makeCanvas(W, H), g = c.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#cbd0d6';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  if (text === '▶') {
+    g.beginPath();
+    g.moveTo(W / 2 - 20, H / 2 - 30);
+    g.lineTo(W / 2 + 30, H / 2);
+    g.lineTo(W / 2 - 20, H / 2 + 30);
+    g.closePath();
+    g.fill();
+  } else {
+    g.font = '700 44px ui-monospace, Menlo, monospace';
+    g.letterSpacing = '2px';
+    g.fillText(text, W / 2, H / 2 + 2);
+  }
+  return texFromCanvas(c);
+}
+
+/* 镜片表面的弧形高光（影棚灯在玻璃上的样子） */
+const lensArcTex = (() => {
+  const S = 512, c = makeCanvas(S, S), g = c.getContext('2d');
+  g.clearRect(0, 0, S, S);
+  g.translate(S / 2, S / 2);
+  g.strokeStyle = 'rgba(255,255,255,.7)';
+  g.lineCap = 'round';
+  g.shadowColor = '#ffffff';
+  g.shadowBlur = 70;
+  g.lineWidth = 16;
+  g.beginPath();
+  g.arc(0, 0, S * 0.36, Math.PI * 1.06, Math.PI * 1.62);
+  g.stroke();
+  g.globalAlpha = 0.4;
+  g.lineWidth = 9;
+  g.beginPath();
+  g.arc(0, 0, S * 0.29, Math.PI * 0.18, Math.PI * 0.42);
+  g.stroke();
+  return texFromCanvas(c);
+})();
+
+/* 地面接触阴影的柔和 alpha */
+const softShadowTex = (() => {
+  const S = 512, c = makeCanvas(S, S), g = c.getContext('2d');
+  g.fillStyle = '#000';
+  g.fillRect(0, 0, S, S);
+  const rad = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+  rad.addColorStop(0, 'rgba(255,255,255,0.85)');
+  rad.addColorStop(0.4, 'rgba(255,255,255,0.45)');
+  rad.addColorStop(0.72, 'rgba(255,255,255,0.1)');
+  rad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = rad;
+  g.fillRect(0, 0, S, S);
+  return texFromCanvas(c, { srgb: false });
+})();
+
+/* ═══════════════════════════════════════════
+   3 · 影棚环境贴图（黑色机身的生命线）
+   ═══════════════════════════════════════════ */
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = (() => {
+  const W = 1024, H = 512;
+  const c = makeCanvas(W, H), g = c.getContext('2d');
+
+  const base = g.createLinearGradient(0, 0, 0, H);
+  base.addColorStop(0, '#21262e');
+  base.addColorStop(0.46, '#0d1015');
+  base.addColorStop(1, '#040507');
+  g.fillStyle = base;
+  g.fillRect(0, 0, W, H);
+
+  function box(cx, cy, rx, ry, rgb, a) {
+    g.save();
+    g.translate(cx, cy);
+    g.scale(1, ry / rx);
+    const rad = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+    rad.addColorStop(0, `rgba(${rgb},${a})`);
+    rad.addColorStop(0.5, `rgba(${rgb},${a * 0.45})`);
+    rad.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = rad;
+    g.beginPath();
+    g.arc(0, 0, rx, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+  }
+  box(280, 128, 310, 118, '255,255,255', 0.98);
+  box(766, 158, 108, 214, '188,214,255', 0.8);
+  box(520, 26, 430, 74, '255,248,236', 0.55);
+  box(112, 386, 270, 92, '86,108,140', 0.28);
+  box(946, 420, 180, 66, '255,228,188', 0.22);
+
+  const t = new THREE.CanvasTexture(c);
+  t.mapping = THREE.EquirectangularReflectionMapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
+scene.environment = pmrem.fromEquirectangular(envTex).texture;
+envTex.dispose();
+pmrem.dispose();
+
+/* ═══════════════════════════════════════════
+   4 · 灯光与地面
+   ═══════════════════════════════════════════ */
+const key = new THREE.DirectionalLight(0xfff3e2, 2.4);
+key.position.set(-10, 22, 11);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 1;
+key.shadow.camera.far = 80;
+key.shadow.camera.left = -16;
+key.shadow.camera.right = 16;
+key.shadow.camera.top = 16;
+key.shadow.camera.bottom = -16;
+key.shadow.bias = -0.0007;
+key.shadow.normalBias = 0.03;
+key.shadow.radius = 2.5;
+scene.add(key);
+
+const fillLight = new THREE.DirectionalLight(0x9dc2ff, 1.0);
+fillLight.position.set(16, 5, 12);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xdfe9ff, 2.2);
+rimLight.position.set(2, 9, -17);
+scene.add(rimLight);
+
+const frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
+frontLight.position.set(2, 4, 22);
+scene.add(frontLight);
+
+const bounce = new THREE.DirectionalLight(0x7f8ea3, 0.45);
+bounce.position.set(0, -12, 6);
+scene.add(bounce);
+
+// 背面的柔和轮廓光，让按键从黑里浮出来
+const backFill = new THREE.DirectionalLight(0xcfdcf0, 1.15);
+backFill.position.set(-7, 7, -20);
+scene.add(backFill);
+
+// 承接投影的平面
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(140, 140),
+  new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.36, transparent: true })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -4.05;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// 接触阴影：让相机不像悬空
+const contact = new THREE.Mesh(
+  new THREE.PlaneGeometry(26, 26),
+  new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: true,
+    opacity: 0.38,
+    alphaMap: softShadowTex,
+    depthWrite: false
+  })
+);
+contact.rotation.x = -Math.PI / 2;
+contact.position.y = -4.0;
+scene.add(contact);
+
+// 地面光池，暗背景里托一层暖光
+const pool = new THREE.Mesh(
+  new THREE.PlaneGeometry(34, 34),
+  new THREE.MeshBasicMaterial({
+    color: 0xc8a76a,
+    transparent: true,
+    opacity: 0.07,
+    alphaMap: softShadowTex,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+);
+pool.rotation.x = -Math.PI / 2;
+pool.position.y = -4.02;
+scene.add(pool);
+
+/* ═══════════════════════════════════════════
+   5 · 材质
+   ═══════════════════════════════════════════ */
+const M = {
+  body: new THREE.MeshPhysicalMaterial({
+    color: 0x212429, metalness: 0.3, roughness: 0.48,
+    clearcoat: 0.55, clearcoatRoughness: 0.42, envMapIntensity: 1.15
+  }),
+  top: new THREE.MeshPhysicalMaterial({
+    color: 0x23262c, metalness: 0.34, roughness: 0.44,
+    clearcoat: 0.7, clearcoatRoughness: 0.3, envMapIntensity: 1.2
+  }),
+  grip: new THREE.MeshPhysicalMaterial({
+    color: 0x1e2026, metalness: 0.12, roughness: 0.74,
+    bumpMap: gripBump, bumpScale: 0.024,
+    clearcoat: 0.3, clearcoatRoughness: 0.6, envMapIntensity: 1.1
+  }),
+  rubber: new THREE.MeshPhysicalMaterial({
+    color: 0x121316, metalness: 0.05, roughness: 0.8,
+    clearcoat: 0.2, clearcoatRoughness: 0.6, envMapIntensity: 0.7
+  }),
+  lens: new THREE.MeshPhysicalMaterial({
+    color: 0x1e2127, metalness: 0.24, roughness: 0.42,
+    clearcoat: 0.6, clearcoatRoughness: 0.32, envMapIntensity: 1.2,
+    side: THREE.DoubleSide
+  }),
+  lensRing: new THREE.MeshPhysicalMaterial({
+    color: 0x17181d, metalness: 0.06, roughness: 0.72,
+    bumpMap: knurlBump, bumpScale: 0.09,
+    clearcoat: 0.2, clearcoatRoughness: 0.6, envMapIntensity: 0.8,
+    side: THREE.DoubleSide
+  }),
+  metal: new THREE.MeshStandardMaterial({
+    color: 0xd6d9de, metalness: 1.0, roughness: 0.22, envMapIntensity: 1.35
+  }),
+  darkMetal: new THREE.MeshStandardMaterial({
+    color: 0x5a5e66, metalness: 1.0, roughness: 0.34, envMapIntensity: 1.1
+  }),
+  gold: new THREE.MeshStandardMaterial({
+    color: 0x6b591d, metalness: 1.0, roughness: 0.5, envMapIntensity: 0.55
+  }),
+  button: new THREE.MeshPhysicalMaterial({
+    color: 0x36393f, metalness: 0.35, roughness: 0.4,
+    clearcoat: 0.65, clearcoatRoughness: 0.28, envMapIntensity: 1.45
+  }),
+  crevice: new THREE.MeshStandardMaterial({ color: 0x05060a, roughness: 0.95, metalness: 0 }),
+  screenFrame: new THREE.MeshPhysicalMaterial({
+    color: 0x191b20, metalness: 0.3, roughness: 0.45,
+    clearcoat: 0.5, clearcoatRoughness: 0.4, envMapIntensity: 0.9
+  }),
+  innerDark: new THREE.MeshStandardMaterial({
+    color: 0x040507, roughness: 0.9, metalness: 0.1, side: THREE.BackSide
+  }),
+  glassFront: new THREE.MeshPhysicalMaterial({
+    color: 0x081019, metalness: 0.05, roughness: 0.012,
+    clearcoat: 1.0, clearcoatRoughness: 0.01,
+    iridescence: 1.0, iridescenceIOR: 1.36,
+    iridescenceThicknessRange: [180, 900],
+    transparent: true, opacity: 0.7,
+    envMapIntensity: 3.0, side: THREE.DoubleSide
+  }),
+  glassInner: new THREE.MeshPhysicalMaterial({
+    color: 0x10283a, metalness: 0.3, roughness: 0.05,
+    clearcoat: 1.0, clearcoatRoughness: 0.02,
+    iridescence: 0.95, iridescenceIOR: 1.32,
+    iridescenceThicknessRange: [120, 700],
+    envMapIntensity: 2.6
+  }),
+  screen: new THREE.MeshPhysicalMaterial({
+    map: screenTex,
+    emissive: 0xffffff,
+    emissiveMap: screenTex,
+    emissiveIntensity: 0.72,
+    metalness: 0.0, roughness: 0.2,
+    clearcoat: 1.0, clearcoatRoughness: 0.03,
+    envMapIntensity: 0.9
+  }),
+  red: new THREE.MeshPhysicalMaterial({
+    color: 0xa81f22, metalness: 0.1, roughness: 0.42,
+    clearcoat: 0.8, clearcoatRoughness: 0.25,
+    emissive: 0x3a0508, emissiveIntensity: 0.6
+  })
+};
+
+function decalMaterial(tex, { tint = 0xffffff, metalness = 0.55, roughness = 0.32 } = {}) {
+  return new THREE.MeshStandardMaterial({
+    map: tex, transparent: true, color: tint,
+    metalness, roughness,
+    depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    envMapIntensity: 1.3
+  });
+}
+
+/* 通用小工具 */
+function mesh(geo, mat) {
+  return new THREE.Mesh(geo, mat);
+}
+function rbox(w, h, d, r = 0.2, seg = 5) {
+  return new RoundedBoxGeometry(w, h, d, seg, r);
+}
+/* 圆环形壳体：外径 / 内径 / 起止 z（用于镜头橡胶环、金属环） */
+function ringShell(rOut, rIn, z0, z1, mat, seg = 96) {
+  const pts = [
+    new THREE.Vector2(rIn, z0),
+    new THREE.Vector2(rOut, z0),
+    new THREE.Vector2(rOut, z1),
+    new THREE.Vector2(rIn, z1),
+    new THREE.Vector2(rIn, z0)
+  ];
+  const geo = new THREE.LatheGeometry(pts, seg);
+  geo.rotateX(Math.PI / 2);
+  return new THREE.Mesh(geo, mat);
+}
+
+/* ═══════════════════════════════════════════
+   6 · 镜头（RF-S 18-45mm）
+   ═══════════════════════════════════════════ */
+function buildLens() {
+  const g = new THREE.Group();
+
+  // 筒身：一条闭合剖面，从前缘绕到后法兰
+  const profile = [
+    [2.48, 0.00], [2.92, 0.00], [2.96, 0.07],
+    [2.96, 4.36], [2.93, 4.50], [2.84, 4.58],
+    [2.58, 4.58], [2.52, 4.46], [2.49, 0.18], [2.48, 0.00]
+  ].map(p => new THREE.Vector2(p[0], p[1]));
+  const barrelGeo = new THREE.LatheGeometry(profile, 96);
+  barrelGeo.rotateX(Math.PI / 2);
+  const barrel = new THREE.Mesh(barrelGeo, M.lens);
+  g.add(barrel);
+
+  // 后法兰的金属圈
+  const flange = ringShell(2.99, 2.55, -0.02, 0.1, M.darkMetal, 96);
+  g.add(flange);
+
+  // 变焦环（宽，滚花橡胶）
+  const zoomRing = ringShell(3.06, 2.94, 0.34, 1.86, M.lensRing, 128);
+  g.add(zoomRing);
+
+  // 对焦环（窄）
+  const focusRing = ringShell(3.0, 2.9, 3.48, 3.92, M.lensRing, 128);
+  g.add(focusRing);
+
+  // 前端压圈（深色金属）
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(2.74, 0.075, 16, 96), M.darkMetal);
+  rim.position.z = 4.56;
+  g.add(rim);
+
+  // 前镜片：球冠，带镀膜彩虹
+  const glassGeo = new THREE.SphereGeometry(13, 72, 40, 0, Math.PI * 2, 0, 0.2);
+  glassGeo.rotateX(Math.PI / 2);
+  const frontGlass = new THREE.Mesh(glassGeo, M.glassFront);
+  frontGlass.position.z = 4.56 - 13;
+  g.add(frontGlass);
+
+  // 玻璃上的弧形反光
+  const glassArc = mesh(
+    new THREE.PlaneGeometry(4.9, 4.9),
+    new THREE.MeshBasicMaterial({
+      map: lensArcTex, transparent: true, opacity: 0.3,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  glassArc.position.z = 4.6;
+  g.add(glassArc);
+
+  // 镜筒内壁
+  const innerTube = mesh(new THREE.CylinderGeometry(2.5, 2.5, 1.7, 64, 1, true), M.innerDark);
+  innerTube.rotation.x = Math.PI / 2;
+  innerTube.position.z = 3.55;
+  g.add(innerTube);
+
+  // 内部第二片镜片
+  const innerGlass = mesh(new THREE.CircleGeometry(2.05, 64), M.glassInner);
+  innerGlass.position.z = 3.62;
+  g.add(innerGlass);
+
+  // 光圈叶片环
+  const iris = mesh(new THREE.RingGeometry(1.55, 2.4, 64), M.crevice);
+  iris.position.z = 3.3;
+  g.add(iris);
+
+  // 深处的镜片反光
+  const deep = mesh(
+    new THREE.CircleGeometry(1.05, 48),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x0a1a24, metalness: 0.6, roughness: 0.05,
+      iridescence: 1, iridescenceIOR: 1.4,
+      iridescenceThicknessRange: [200, 500],
+      envMapIntensity: 2.0
+    })
+  );
+  deep.position.z = 3.28;
+  g.add(deep);
+
+  // 铭文环：一整圈圆柱贴图，白字落在顶部
+  const labelGeo = new THREE.CylinderGeometry(2.972, 2.972, 0.4, 128, 1, true);
+  labelGeo.rotateX(Math.PI / 2);
+  const label = new THREE.Mesh(labelGeo, new THREE.MeshStandardMaterial({
+    map: lensTextTex, transparent: true, alphaTest: 0.25,
+    metalness: 0.2, roughness: 0.4, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2
+  }));
+  label.position.z = 2.62;
+  g.add(label);
+
+  // 侧面的对焦模式开关
+  const swBase = mesh(rbox(0.16, 1.0, 0.42, 0.06, 4), M.rubber);
+  swBase.position.set(-2.9, 0.2, 2.55);
+  g.add(swBase);
+  const swKnob = mesh(rbox(0.14, 0.34, 0.26, 0.05, 4), M.button);
+  swKnob.position.set(-3.0, 0.52, 2.55);
+  g.add(swKnob);
+
+  // 卡口红色对位点
+  const redDot = mesh(
+    new THREE.CylinderGeometry(0.085, 0.085, 0.05, 20),
+    new THREE.MeshStandardMaterial({ color: 0xb3202a, roughness: 0.35, metalness: 0.1 })
+  );
+  redDot.rotation.x = Math.PI / 2;
+  redDot.position.set(-0.9, 2.83, 0.02);
+  g.add(redDot);
+
+  return g;
+}
+
+/* ═══════════════════════════════════════════
+   7 · 机身
+   ═══════════════════════════════════════════ */
+function buildBody() {
+  const g = new THREE.Group();
+
+  /* ── 主体 ── */
+  const body = mesh(rbox(11.6, 7.36, 4.2, 0.5, 8), M.body);
+  body.position.set(0, 0.08, 0);
+  g.add(body);
+
+  /* ── 顶盖 ── */
+  const top = mesh(rbox(11.42, 0.74, 4.1, 0.34, 6), M.top);
+  top.position.set(0, 4.2, 0);
+  g.add(top);
+
+  /* ── 手柄：方盒 + 椭圆胶囊，前面鼓出（摄影者右手侧） ── */
+  const gripShell = mesh(rbox(3.6, 7.3, 2.0, 0.85, 8), M.grip);
+  gripShell.position.set(-3.9, 0.15, 1.7);
+  g.add(gripShell);
+
+  const bulgeGeo = new THREE.CapsuleGeometry(1.32, 5.0, 10, 40);
+  bulgeGeo.scale(1.28, 1, 1);
+  // 上下两端收窄，握把中部鼓起
+  const gp = bulgeGeo.attributes.position;
+  for (let i = 0; i < gp.count; i++) {
+    const k = 1 - 0.15 * Math.pow(Math.abs(gp.getY(i)) / 3.9, 2.2);
+    gp.setX(i, gp.getX(i) * k);
+    gp.setZ(i, gp.getZ(i) * k);
+  }
+  gp.needsUpdate = true;
+  bulgeGeo.computeVertexNormals();
+  const bulge = mesh(bulgeGeo, M.grip);
+  bulge.position.set(-4.0, 0.35, 2.2);
+  g.add(bulge);
+
+  // 手柄顶部的快门平台
+  const gripTop = mesh(rbox(3.66, 0.7, 2.45, 0.3, 6), M.top);
+  gripTop.position.set(-4.0, 4.2, 2.3);
+  g.add(gripTop);
+
+  /* ── 军舰部（弹出闪光灯所在的隆起） ── */
+  const hump = mesh(rbox(5.4, 1.35, 3.8, 0.55, 6), M.top);
+  hump.position.set(0, 4.9, 0.05);
+  g.add(hump);
+
+  // 闪光灯盖
+  const flashLid = mesh(rbox(4.9, 0.5, 2.2, 0.2, 5), M.body);
+  flashLid.position.set(0, 5.4, 0.92);
+  g.add(flashLid);
+  const flashSeam = mesh(new THREE.BoxGeometry(4.5, 0.05, 1.9), M.crevice);
+  flashSeam.position.set(0, 5.14, 0.92);
+  g.add(flashSeam);
+
+  /* ── 热靴 ── */
+  const shoeBase = mesh(rbox(3.4, 0.16, 2.0, 0.05, 4), M.rubber);
+  shoeBase.position.set(0, 5.62, -0.85);
+  g.add(shoeBase);
+  for (const dz of [-0.8, 0.8]) {
+    const rail = mesh(new THREE.BoxGeometry(3.2, 0.12, 0.22), M.darkMetal);
+    rail.position.set(0, 5.73, -0.85 + dz);
+    g.add(rail);
+  }
+  for (let i = 0; i < 4; i++) {
+    const p = mesh(new THREE.BoxGeometry(0.2, 0.06, 0.22), M.gold);
+    p.position.set(-0.36 + i * 0.24, 5.71, -1.05);
+    g.add(p);
+  }
+
+  /* ── 模式拨盘 ── */
+  const dial = new THREE.Group();
+  const dialBody = mesh(
+    new THREE.CylinderGeometry(1.15, 1.15, 0.6, 64),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x24272d, metalness: 0.4, roughness: 0.36,
+      bumpMap: knurlBump, bumpScale: 0.05,
+      clearcoat: 0.6, clearcoatRoughness: 0.3, envMapIntensity: 1.1
+    })
+  );
+  dial.add(dialBody);
+  const dialTop = mesh(new THREE.CylinderGeometry(0.96, 0.96, 0.04, 48), M.top);
+  dialTop.position.y = 0.3;
+  dial.add(dialTop);
+  const dialMark = mesh(
+    new THREE.BoxGeometry(0.1, 0.03, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0xd8dbe0, roughness: 0.4 })
+  );
+  dialMark.position.set(0, 0.325, 0.74);
+  dial.add(dialMark);
+  dial.position.set(-4.2, 4.85, -0.95);
+  g.add(dial);
+
+  /* ── 快门按钮 ── */
+  const shutterRing = mesh(
+    new THREE.CylinderGeometry(0.62, 0.66, 0.18, 48),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x1d2025, metalness: 0.5, roughness: 0.35,
+      clearcoat: 0.6, clearcoatRoughness: 0.3
+    })
+  );
+  shutterRing.position.set(-3.9, 4.6, 1.8);
+  g.add(shutterRing);
+
+  const shutterBtn = mesh(
+    new THREE.CylinderGeometry(0.38, 0.42, 0.24, 40),
+    M.button
+  );
+  shutterBtn.position.set(-3.9, 4.74, 1.8);
+  g.add(shutterBtn);
+
+  // 电源开关拨杆
+  const powerLever = mesh(rbox(0.7, 0.12, 0.26, 0.05, 4), M.button);
+  powerLever.position.set(-4.55, 4.65, 2.05);
+  powerLever.rotation.y = 0.28;
+  g.add(powerLever);
+
+  /* ── 录像按钮 ── */
+  const rec = mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.16, 32), M.red);
+  rec.position.set(-2.45, 4.62, 1.75);
+  g.add(rec);
+
+  /* ── ISO 按钮 ── */
+  const iso = mesh(new THREE.CylinderGeometry(0.26, 0.28, 0.13, 32), M.button);
+  iso.position.set(-3.9, 4.6, 0.4);
+  g.add(iso);
+
+  /* ── 麦克风孔 ── */
+  const micMat = new THREE.MeshStandardMaterial({ color: 0x05060a, roughness: 0.9 });
+  for (let i = 0; i < 9; i++) {
+    const hole = mesh(new THREE.CircleGeometry(0.035, 12), micMat);
+    hole.position.set(-0.72 + i * 0.18, 5.28, 1.952);
+    g.add(hole);
+  }
+
+  /* ── 卡口 ── */
+  const mount = mesh(
+    new THREE.CylinderGeometry(3.18, 3.18, 0.62, 96, 1, true),
+    M.darkMetal
+  );
+  mount.rotation.x = Math.PI / 2;
+  mount.position.set(0, 0.1, 2.0);
+  g.add(mount);
+
+  const mountFace = mesh(new THREE.RingGeometry(2.56, 3.18, 96), M.darkMetal);
+  mountFace.position.set(0, 0.1, 2.31);
+  g.add(mountFace);
+
+  const mountInner = mesh(new THREE.CylinderGeometry(2.56, 2.56, 0.7, 64, 1, true), M.crevice);
+  mountInner.rotation.x = Math.PI / 2;
+  mountInner.position.set(0, 0.1, 1.95);
+  g.add(mountInner);
+
+  // 镜头释放按钮
+  const release = mesh(rbox(0.5, 0.34, 0.12, 0.05, 4), M.button);
+  release.position.set(-2.62, -1.05, 2.12);
+  g.add(release);
+
+  /* ── 正面饰件 ── */
+  const logo = mesh(new THREE.PlaneGeometry(1.95, 0.6), decalMaterial(canonLogoTex, { metalness: 0.7, roughness: 0.3 }));
+  logo.position.set(4.0, 2.6, 2.112);
+  g.add(logo);
+
+  const model = mesh(new THREE.PlaneGeometry(1.55, 0.4), decalMaterial(modelTex, { metalness: 0.5, roughness: 0.36 }));
+  model.position.set(4.05, 1.5, 2.112);
+  g.add(model);
+
+  // AF 辅助灯
+  const afLamp = mesh(
+    rbox(0.62, 0.34, 0.06, 0.05, 4),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x0a0d12, metalness: 0.2, roughness: 0.12,
+      clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.5
+    })
+  );
+  afLamp.position.set(3.35, 3.42, 2.12);
+  g.add(afLamp);
+
+  /* ── 背面：翻转屏（铰链在相机左侧，按键在右侧） ── */
+  const screenGroup = new THREE.Group();
+  screenGroup.position.set(1.0, 0.42, -2.09);
+
+  const frame = mesh(rbox(7.9, 5.45, 0.42, 0.16, 5), M.screenFrame);
+  frame.position.z = -0.21;
+  screenGroup.add(frame);
+
+  const panel = mesh(new THREE.PlaneGeometry(7.44, 4.94), M.screen);
+  panel.rotation.y = Math.PI;
+  panel.position.z = -0.428;
+  screenGroup.add(panel);
+
+  // 侧翻铰链
+  const hinge = mesh(new THREE.CylinderGeometry(0.23, 0.23, 5.1, 24), M.screenFrame);
+  hinge.position.set(4.06, 0, -0.22);
+  screenGroup.add(hinge);
+  const hingeCap = mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.2, 24), M.button);
+  hingeCap.position.set(4.06, 2.62, -0.22);
+  screenGroup.add(hingeCap);
+  const hingeCap2 = hingeCap.clone();
+  hingeCap2.position.y = -2.62;
+  screenGroup.add(hingeCap2);
+
+  g.add(screenGroup);
+
+  /* ── 背面右侧按键 ── */
+  function backButton(x, y, r, label, textScale = 1) {
+    const grp = new THREE.Group();
+    const b = mesh(new THREE.CylinderGeometry(r, r * 1.02, 0.15, 32), M.button);
+    b.rotation.x = Math.PI / 2;
+    grp.add(b);
+    if (label) {
+      const t = new THREE.Mesh(
+        new THREE.PlaneGeometry(r * 1.55 * textScale, r * 0.78 * textScale),
+        decalMaterial(labelTex(label), { metalness: 0.2, roughness: 0.5 })
+      );
+      t.rotation.y = Math.PI;
+      t.position.z = -0.081;
+      grp.add(t);
+    }
+    grp.position.set(x, y, -2.1);
+    return grp;
+  }
+
+  g.add(backButton(-4.62, 2.85, 0.34, 'MENU', 0.92));
+  g.add(backButton(-4.62, 2.02, 0.31, 'INFO', 0.9));
+  g.add(backButton(-4.62, 1.24, 0.32, '▶', 0.8));
+
+  // 方向键 / 控制盘
+  const padRing = mesh(new THREE.TorusGeometry(0.86, 0.1, 12, 56), M.button);
+  padRing.position.set(-4.62, 0.02, -2.1);
+  g.add(padRing);
+
+  const padCenter = mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.16, 32), M.button);
+  padCenter.rotation.x = Math.PI / 2;
+  padCenter.position.set(-4.62, 0.02, -2.08);
+  g.add(padCenter);
+
+  const padSet = mesh(new THREE.PlaneGeometry(0.36, 0.18), decalMaterial(labelTex('SET'), { metalness: 0.2, roughness: 0.5 }));
+  padSet.rotation.y = Math.PI;
+  padSet.position.set(-4.62, 0.02, -2.165);
+  g.add(padSet);
+
+  // 四个方向的小凸点
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    const dot = mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.05, 12), M.button);
+    dot.rotation.x = Math.PI / 2;
+    dot.position.set(-4.62 + Math.cos(a) * 0.86, 0.02 + Math.sin(a) * 0.86, -2.09);
+    g.add(dot);
+  }
+
+  g.add(backButton(-4.62, -1.62, 0.28, 'DEL', 0.85));
+
+  /* ── 底部：三脚架孔与电池仓 ── */
+  const tripodRing = mesh(new THREE.TorusGeometry(0.42, 0.09, 12, 40), M.darkMetal);
+  tripodRing.rotation.x = Math.PI / 2;
+  tripodRing.position.set(0, -3.615, 0.15);
+  g.add(tripodRing);
+  const tripodHole = mesh(new THREE.CircleGeometry(0.36, 32), M.crevice);
+  tripodHole.rotation.x = Math.PI / 2;
+  tripodHole.position.set(0, -3.61, 0.15);
+  g.add(tripodHole);
+
+  const battDoor = mesh(rbox(6.4, 0.1, 2.9, 0.05, 4), M.body);
+  battDoor.position.set(1.4, -3.6, -0.2);
+  g.add(battDoor);
+  const battSeam = mesh(new THREE.BoxGeometry(6.5, 0.03, 0.05), M.crevice);
+  battSeam.position.set(1.4, -3.63, 1.2);
+  g.add(battSeam);
+
+  /* ── 背带环 ── */
+  for (const sx of [-1, 1]) {
+    const lug = mesh(rbox(0.28, 0.7, 0.5, 0.08, 4), M.body);
+    lug.position.set(sx * 5.72, 1.15, 0.1);
+    g.add(lug);
+
+    const ring = mesh(new THREE.TorusGeometry(0.21, 0.05, 10, 28), M.darkMetal);
+    ring.position.set(sx * 5.92, 1.15, 0.1);
+    ring.rotation.y = Math.PI / 2;
+    g.add(ring);
+  }
+
+  /* ── 侧面接口盖 ── */
+  const portCover = mesh(rbox(0.08, 1.5, 2.2, 0.05, 4), M.body);
+  portCover.position.set(-5.83, -0.9, 0.3);
+  g.add(portCover);
+  const portSeam = mesh(new THREE.BoxGeometry(0.03, 1.55, 0.04), M.crevice);
+  portSeam.position.set(-5.86, -0.9, 1.42);
+  g.add(portSeam);
+
+  return g;
+}
+
+/* ═══════════════════════════════════════════
+   8 · 组装
+   ═══════════════════════════════════════════ */
+const rig = new THREE.Group();
+rig.position.z = -2.06;
+scene.add(rig);
+
+rig.add(buildBody());
+
+const lens = buildLens();
+lens.position.set(0, 0.1, 2.05);
+rig.add(lens);
+
+rig.traverse(o => {
+  if (!o.isMesh) return;
+  o.receiveShadow = true;
+  // 透明贴片（logo、铭文、镜片）不投影，避免出现奇怪的黑块
+  o.castShadow = !(o.material && o.material.transparent);
+});
+
+/* ═══════════════════════════════════════════
+   9 · 交互
+   ═══════════════════════════════════════════ */
+const VIEWS = {
+  hero:  { pos: [15.5, 9.8, 20.5], tgt: [0, 0.9, 0] },
+  front: { pos: [1.0, 2.4, 30], tgt: [0, 0.7, 0.4] },
+  back:  { pos: [0.5, 2.6, -29], tgt: [0, 0.9, -0.4] },
+  top:   { pos: [-2.5, 26.5, 9], tgt: [-2.5, 0, 0.8] }
+};
+
+let tween = null;
+let spinWanted = !REDUCE_MOTION;
+let resumeTimer = null;
+
+const spinBtn = document.getElementById('spin');
+const viewBtns = Array.from(document.querySelectorAll('.vb[data-view]'));
+if (REDUCE_MOTION) {
+  spinBtn.classList.remove('on');
+  spinBtn.setAttribute('aria-pressed', 'false');
+}
+
+function goTo(name) {
+  const v = VIEWS[name];
+  if (!v) return;
+  tween = {
+    t: 0,
+    from: camera.position.clone(),
+    to: new THREE.Vector3(...v.pos),
+    tFrom: controls.target.clone(),
+    tTo: new THREE.Vector3(...v.tgt)
+  };
+  controls.autoRotate = false;
+  spinWanted = false;
+  spinBtn.classList.remove('on');
+  spinBtn.setAttribute('aria-pressed', 'false');
+  viewBtns.forEach(b => b.classList.toggle('on', b.dataset.view === name));
+  clearTimeout(resumeTimer);
+}
+
+viewBtns.forEach(btn => btn.addEventListener('click', () => goTo(btn.dataset.view)));
+
+spinBtn.addEventListener('click', () => {
+  spinWanted = !spinWanted;
+  controls.autoRotate = spinWanted;
+  spinBtn.classList.toggle('on', spinWanted);
+  spinBtn.setAttribute('aria-pressed', String(spinWanted));
+  if (spinWanted) viewBtns.forEach(b => b.classList.remove('on'));
+});
+
+controls.addEventListener('start', () => {
+  clearTimeout(resumeTimer);
+  tween = null;
+  controls.autoRotate = false;
+});
+controls.addEventListener('end', () => {
+  clearTimeout(resumeTimer);
+  resumeTimer = setTimeout(() => {
+    if (spinWanted && !tween) controls.autoRotate = true;
+  }, 2500);
+});
+
+/* ═══════════════════════════════════════════
+   10 · 渲染循环
+   ═══════════════════════════════════════════ */
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  // 极轻的悬浮，让静止的画面在呼吸；减弱动效时保持静止
+  if (!REDUCE_MOTION) rig.position.y = Math.sin(t * 0.72) * 0.09;
+
+  if (tween) {
+    tween.t = Math.min(1, tween.t + dt * 2.0);
+    const e = 1 - Math.pow(1 - tween.t, 3);
+    camera.position.lerpVectors(tween.from, tween.to, e);
+    controls.target.lerpVectors(tween.tFrom, tween.tTo, e);
+    if (tween.t >= 1) {
+      tween = null;
+      if (spinWanted) controls.autoRotate = true;
+    }
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(w, h, false);
+}
+window.addEventListener('resize', onResize);
+if (window.ResizeObserver) new ResizeObserver(onResize).observe(canvas);
+
+/* 首帧后淡出遮罩 */
+renderer.render(scene, camera);
+requestAnimationFrame(() => {
+  const boot = document.getElementById('boot');
+  if (boot) boot.classList.add('done');
+});
+animate();
+</script>
+</body>
+</html>
