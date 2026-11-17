@@ -311,6 +311,19 @@ function indexPage(cfg, years, tags) {
 
   const postCount = years.reduce(function (n, y) { return n + y.posts.length; }, 0);
   const bar = filterBar(tags || [], postCount);
+  const course = cfg.courseEntry;
+  const courseEntry = course ? [
+    '            <a class="course-entry" href="' + attr(course.href) + '">',
+    '                <span class="course-entry__icon" aria-hidden="true">AI</span>',
+    '                <span class="course-entry__body">',
+    '                    <span class="course-entry__kicker">课程 · COURSE</span>',
+    '                    <strong class="course-entry__title">' + md.escapeHtml(course.title) + '</strong>',
+    '                    <span class="course-entry__desc">' + md.escapeHtml(course.desc) + '</span>',
+    '                </span>',
+    '                <span class="course-entry__arrow" aria-hidden="true">→</span>',
+    '            </a>',
+    '',
+  ].join('\n') : null;
 
   return [
     '<!DOCTYPE html>',
@@ -341,6 +354,7 @@ function indexPage(cfg, years, tags) {
     '            </div>',
     '',
     bar,
+    courseEntry,
     '            <div class="article-list">',
     sections,
     '            </div>',

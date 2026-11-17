@@ -12,6 +12,13 @@ module.exports = {
   pageTitle: '文章目录',
   pageDesc: '在隆冬，我终于知道，我身上有一个不可战胜的夏天',
 
+  // 目录页课程入口（相对 doc/index.html）
+  courseEntry: {
+    href: 'course/index.html',
+    title: 'AI 通识学习台',
+    desc: '八章讲义 · 120 道真题 · 刷题模考与错题本',
+  },
+
   // 目录配置
   postsDir: path.join(TOOLS_DIR, 'posts'),     // Markdown 源文件
   themeDir: path.join(TOOLS_DIR, 'theme'),     // 静态主题资源（css/js）
