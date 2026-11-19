@@ -402,7 +402,7 @@
     document.getElementById('nsort').addEventListener('change', function () { noteUI.sort = this.value; noteUI.view = null; paintViews(); paintNotes(); });
     document.getElementById('nNew').addEventListener('click', function () { noteEditor(null, { ch: noteUI.ch === 'all' ? 0 : Number(noteUI.ch) }); });
     document.getElementById('nSaveView').addEventListener('click', saveViewDialog);
-    document.getElementById('nExport').addEventListener('click', exportNotes);
+    document.getElementById('nExport').addEventListener('click', function () { exportNotes(); });
   }
 
   function noteList() {
@@ -620,7 +620,26 @@
   }
 
   /* ============ 速查 ============ */
-  function cheats() {
+  var glossaryAll = null;
+  function allGlossary() {
+    if (glossaryAll) return glossaryAll;
+    var list = [], seen = Object.create(null);
+    function add(g) {
+      if (!g || !g.term || !g.def || !chById(g.ch)) return;
+      var key = String(g.term).toLowerCase() + '|' + g.ch;
+      if (seen[key]) return;
+      seen[key] = 1;
+      list.push(g);
+    }
+    ((window.STUDY && window.STUDY.terms) || []).forEach(add);
+    S.glossary.forEach(add);
+    glossaryAll = list;
+    return list;
+  }
+
+  function cheats(params, query) {
+    var glossary = allGlossary();
+    var kw = query && query.q ? query.q : '';
     var keyRows = A.CHAPTERS.map(function (ch) {
       var keys = ch.questions.map(function (q) { return q.n + '.' + A.correctText(q); }).join('　');
       return '<tr' + hueStyle(ch) + '><td class="num">' + ch.id + '</td><td>' + esc(ch.title) + '</td>' +
@@ -638,18 +657,24 @@
       '<section class="cheat-sec rv" style="--hue:#ffb020"><div class="k">答案串</div><h2>八章答案速查</h2>' +
       '<div class="prose"><p>按课程文档原顺序排列，题号与答案一一对应。</p></div>' +
       '<div class="tbl"><table class="key-table"><thead><tr><th>章</th><th>标题</th><th>题量</th><th>分值规则</th><th>答案</th></tr></thead><tbody>' + keyRows + '</tbody></table></div></section>' +
-      '<section class="cheat-sec rv" style="--hue:#8b5cf6"><div class="k">术语 ' + S.glossary.length + ' 条</div><h2>缩写与术语</h2>' +
-      '<div class="toolbar" style="margin:.8rem 0 1rem"><input class="inp grow" id="glq" type="search" placeholder="输入缩写或中文，例如 VLA、召回、隐私"></div>' +
+      '<section class="cheat-sec rv" id="sec-glossary" style="--hue:#8b5cf6"><div class="k">术语 ' + glossary.length + ' 条</div><h2>缩写与术语</h2>' +
+      '<div class="toolbar" style="margin:.8rem 0 1rem"><input class="inp grow" id="glq" type="search" placeholder="输入缩写或中文，例如 VLA、召回、隐私" value="' + esc(kw) + '"></div>' +
       '<div class="glossary" id="glList"></div></section></div>';
     A.render(html);
-    paintGlossary('');
+    paintGlossary(kw);
     document.getElementById('glq').addEventListener('input', function () { paintGlossary(this.value); });
+    if (kw) {
+      window.setTimeout(function () {
+        var sec = document.getElementById('sec-glossary');
+        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
   }
 
   function paintGlossary(kw) {
     var q = A.norm(kw);
-    var list = S.glossary.filter(function (g) {
-      return !q || A.norm(g.term + ' ' + g.full + ' ' + g.def).indexOf(q) >= 0;
+    var list = allGlossary().filter(function (g) {
+      return !q || A.norm(g.term + ' ' + (g.full || '') + ' ' + g.def).indexOf(q) >= 0;
     });
     var host = document.getElementById('glList');
     if (!list.length) { host.innerHTML = '<div class="empty" style="grid-column:1/-1"><h3>没有匹配的术语</h3><p>换个关键词试试。</p></div>'; return; }
@@ -681,8 +706,8 @@
         });
       });
     });
-    S.glossary.forEach(function (g) {
-      index.push({ kind: '术语', hue: chById(g.ch).hue, title: g.term + ' · ' + g.full, snip: g.def, href: '#/cheats', text: g.term + ' ' + g.full + ' ' + g.def });
+    allGlossary().forEach(function (g) {
+      index.push({ kind: '术语', hue: chById(g.ch).hue, title: g.term + ' · ' + (g.full || ''), snip: g.def, href: '#/cheats?q=' + encodeURIComponent(g.term), text: g.term + ' ' + (g.full || '') + ' ' + g.def + ' ' + (g.alias || []).join(' ') });
     });
     S.cheats.forEach(function (g) {
       var plain = g.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();

@@ -46,7 +46,8 @@ window.App = (function () {
         showTimer: true,
         density: 'cozy'
       },
-      lastPractice: null
+      lastPractice: null,
+      lastExam: null
     };
   }
 

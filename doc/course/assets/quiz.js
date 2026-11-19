@@ -10,11 +10,123 @@
       n: 10, order: 'seq', type: 'all', only: 'all'
     },
     seed: 1234, pool: [], full: 0, idx: 0,
-    answers: {}, locked: {}, optOrder: {},
+    answers: {}, locked: {}, cleared: {}, optOrder: {},
     fixed: null, elapsed: 0, mounted: false
   };
+  var saveTimer = 0;
 
   function settings() { return A.state.settings; }
+
+  function validKey(key) { return A.QMAP.has(key); }
+
+  function cleanMap(raw, onlyTrue) {
+    var out = {};
+    if (!raw || typeof raw !== 'object') return out;
+    Object.keys(raw).forEach(function (key) {
+      if (!validKey(key)) return;
+      var value = raw[key];
+      if (onlyTrue) { if (value) out[key] = true; }
+      else if (value != null) out[key] = value;
+    });
+    return out;
+  }
+
+  function cleanOptOrder(raw) {
+    var out = {};
+    if (!raw || typeof raw !== 'object') return out;
+    Object.keys(raw).forEach(function (key) {
+      var entry = A.QMAP.get(key);
+      var order = raw[key];
+      if (!entry || entry.q.type === 'blank' || !Array.isArray(order)) return;
+      if (order.length !== entry.q.opts.length) return;
+      var seen = {};
+      var ok = order.every(function (n) {
+        if (!Number.isInteger(n) || n < 0 || n >= entry.q.opts.length || seen[n]) return false;
+        seen[n] = true;
+        return true;
+      });
+      if (ok) out[key] = order.slice();
+    });
+    return out;
+  }
+
+  function applySaved(saved) {
+    if (!saved || saved.v !== 1) return false;
+    if (saved.cfg) {
+      var ids = Array.isArray(saved.cfg.chs) ? saved.cfg.chs.map(Number).filter(function (id) {
+        return A.CHAPTERS.some(function (c) { return c.id === id; });
+      }) : [];
+      if (Array.isArray(saved.cfg.chs)) P.cfg.chs = new Set(ids);
+      P.cfg.n = Math.max(1, Number(saved.cfg.n) || P.cfg.n);
+      if (['seq', 'rand', 'rev'].indexOf(saved.cfg.order) >= 0) P.cfg.order = saved.cfg.order;
+      if (['all', 'undone', 'wrong'].indexOf(saved.cfg.only) >= 0) P.cfg.only = saved.cfg.only;
+      if (['all', 'single', 'multi', 'blank'].indexOf(saved.cfg.type) >= 0) P.cfg.type = saved.cfg.type;
+    }
+    P.seed = Number(saved.seed) || P.seed;
+    P.answers = cleanMap(saved.answers, false);
+    P.locked = cleanMap(saved.locked, true);
+    P.cleared = cleanMap(saved.cleared, true);
+    P.optOrder = cleanOptOrder(saved.optOrder);
+    P.elapsed = Math.max(0, Number(saved.elapsed) || 0);
+    P.fixed = Array.isArray(saved.fixed) ? saved.fixed.filter(validKey) : null;
+    if (P.fixed && !P.fixed.length) P.fixed = null;
+    return true;
+  }
+
+  function restorePool(saved) {
+    var keys = Array.isArray(saved.pool) ? saved.pool.filter(validKey) : [];
+    if (!keys.length) return false;
+    P.pool = keys.map(function (key) {
+      var entry = A.QMAP.get(key);
+      return { q: entry.q, ch: entry.ch, key: entry.ch.id + '-' + entry.q.n, bonus: entry.bonus };
+    });
+    P.full = Math.max(P.pool.length, poolItems().length);
+    P.idx = Math.max(0, Math.min(Number(saved.idx) || 0, P.pool.length - 1));
+    return true;
+  }
+
+  function hydratePool() {
+    P.pool.forEach(function (x) {
+      if (P.cleared[x.key]) return;
+      var rec = A.state.records[x.key];
+      if (!rec) return;
+      var answered = rec.a != null && rec.a !== '' && (!Array.isArray(rec.a) || rec.a.length);
+      if (!answered) return;
+      if (P.answers[x.key] == null) P.answers[x.key] = rec.a;
+      if (!P.locked[x.key]) P.locked[x.key] = true;
+    });
+  }
+
+  function saveSession() {
+    window.clearTimeout(saveTimer);
+    A.state.lastPractice = {
+      v: 1,
+      cfg: {
+        chs: Array.from(P.cfg.chs),
+        n: P.cfg.n,
+        order: P.cfg.order,
+        type: P.cfg.type,
+        only: P.cfg.only
+      },
+      seed: P.seed,
+      fixed: P.fixed ? P.fixed.slice() : null,
+      pool: P.pool.map(function (x) { return x.key; }),
+      full: P.full,
+      idx: P.idx,
+      answers: cleanMap(P.answers, false),
+      locked: cleanMap(P.locked, true),
+      cleared: cleanMap(P.cleared, true),
+      optOrder: cleanOptOrder(P.optOrder),
+      elapsed: P.elapsed,
+      at: Date.now()
+    };
+    A.save();
+  }
+
+  function queueSave() {
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(saveSession, 300);
+  }
 
   function poolItems() {
     var items = [];
@@ -48,32 +160,54 @@
     });
     if (!keepIndex) P.idx = 0;
     P.idx = Math.max(0, Math.min(P.idx, Math.max(0, P.pool.length - 1)));
+    hydratePool();
   }
 
   function practice(params, query) {
+    query = query || {};
+    var saved = A.state.lastPractice;
+    var restored = false;
+    var keepPool = false;
+    var fromQuery = !!(query.keys || query.ch || query.bonus);
+    if (saved && applySaved(saved)) {
+      restored = true;
+      keepPool = !fromQuery && restorePool(saved);
+    }
     if (query.keys) {
       P.fixed = query.keys.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     } else {
-      P.fixed = null;
+      if (!keepPool) P.fixed = null;
       if (query.ch) {
         P.cfg.chs = new Set(query.ch.split(',').map(Number));
         P.cfg.n = 999;
       }
-      if (query.bonus) settings().withBonus = true;
+      if (query.bonus) { settings().withBonus = true; A.save(); }
     }
-    rebuild(false);
+    if (!keepPool) rebuild(false);
+    else hydratePool();
     P.mounted = true;
+    var doneCount = P.pool.filter(function (x) { return P.locked[x.key]; }).length;
     var html = '<div class="shell page"><div class="page-head rv">' +
       '<div class="page-kicker">PRACTICE</div><h1 class="page-title">刷题<em>训练场</em></h1>' +
-      '<p class="page-sub">右侧控制区随时可调，改动立刻生效。键盘 1–4 或 A–D 选项，Enter 提交或下一题，左右方向键翻题。</p></div>' +
+      '<p class="page-sub">右侧控制区随时可调，改动立刻生效；本组题目、作答与当前位置会自动记在本机，下次打开继续。键盘 1–4 或 A–D 选项，Enter 提交或下一题，左右方向键翻题。</p></div>' +
       (P.fixed ? '<div class="notice">当前练习的是指定的 ' + P.fixed.length + ' 道题。<button class="btn btn--sm" type="button" id="pFree" style="margin-left:.6rem">返回自由组卷</button></div>' : '') +
       '<div class="practice-layout"><div id="pMain"></div><aside class="rail" id="pRail"></aside></div></div>';
     A.render(html);
     paintRail();
     paintQuestion();
+    saveSession();
+    if (restored && !fromQuery && (doneCount > 0 || P.idx > 0)) {
+      A.toast('已恢复上次练习：第 ' + (P.idx + 1) + ' 题，已完成 ' + doneCount + ' / ' + P.pool.length);
+    }
     if (P.fixed) {
       document.getElementById('pFree').addEventListener('click', function () {
-        P.fixed = null; A.nav('/practice');
+        P.fixed = null;
+        P.cfg.chs = new Set(A.CHAPTERS.map(function (c) { return c.id; }));
+        P.cfg.n = 10;
+        P.idx = 0;
+        rebuild(false);
+        saveSession();
+        A.nav('/practice');
       });
     }
   }
@@ -120,8 +254,16 @@
       '<div class="ctrl"><div class="ctrl-label"><span>答题卡</span></div><div class="sheet" id="pSheet">' +
       P.pool.map(function (x, i) {
         var r = A.state.records[x.key];
-        var cls = i === P.idx ? 'is-cur' : P.locked[x.key] ? (r && r.ok ? 'is-right' : 'is-wrong') : (P.answers[x.key] != null ? 'is-done' : '');
-        return '<button type="button" class="' + cls + '" data-go="' + i + '" aria-label="第' + (i + 1) + '题">' + (i + 1) + '</button>';
+        var stateText = '未做';
+        var cls = i === P.idx ? 'is-cur' : '';
+        if (P.locked[x.key]) {
+          stateText = r && r.ok ? '已答对' : '已答错';
+          cls += r ? (r.ok ? ' is-right' : ' is-wrong') : ' is-done';
+        } else if (P.answers[x.key] != null) {
+          stateText = '已选择未提交';
+          cls += ' is-done';
+        }
+        return '<button type="button" class="' + cls + '" data-go="' + i + '" aria-label="第' + (i + 1) + '题，' + stateText + '">' + (i + 1) + '</button>';
       }).join('') + '</div></div>' +
 
       '<div class="rail-actions">' +
@@ -158,17 +300,17 @@
         var id = Number(v);
         if (P.cfg.chs.has(id)) P.cfg.chs.delete(id); else P.cfg.chs.add(id);
       }
-      P.fixed = null; rebuild(false); paintRail(); paintQuestion();
+      P.fixed = null; rebuild(false); saveSession(); paintRail(); paintQuestion();
     });
     host.querySelector('#cN').addEventListener('input', function () {
       P.cfg.n = Number(this.value); P.fixed = null; rebuild(true);
-      paintRail(); paintQuestion();
+      saveSession(); paintRail(); paintQuestion();
     });
     [['cOrder', 'order'], ['cOnly', 'only'], ['cType', 'type']].forEach(function (pair) {
       host.querySelector('#' + pair[0]).addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
         P.cfg[pair[1]] = b.getAttribute('data-v'); P.fixed = null; rebuild(false);
-        paintRail(); paintQuestion();
+        saveSession(); paintRail(); paintQuestion();
       });
     });
     host.querySelector('#cDensity').addEventListener('click', function (e) {
@@ -187,29 +329,36 @@
       host.querySelector('#' + pair[0]).addEventListener('change', function () {
         st[pair[1]] = this.checked; A.save();
         if (pair[1] === 'shuffleOpts' || pair[1] === 'withBonus') { rebuild(true); }
-        paintRail(); paintQuestion();
+        saveSession(); paintRail(); paintQuestion();
       });
     });
     host.querySelector('#pSheet').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
-      P.idx = Number(b.getAttribute('data-go')); paintRail(); paintQuestion();
+      P.idx = Number(b.getAttribute('data-go')); saveSession(); paintRail(); paintQuestion();
     });
     host.querySelector('#aReshuffle').addEventListener('click', function () {
       P.seed = Math.floor(Math.random() * 1e6) + 1;
-      P.optOrder = {}; P.answers = {}; P.locked = {}; P.elapsed = 0; P.fixed = null;
-      rebuild(false); paintRail(); paintQuestion(); A.toast('已重新组卷');
+      P.optOrder = {}; P.idx = 0; P.elapsed = 0; P.fixed = null;
+      rebuild(false); saveSession(); paintRail(); paintQuestion();
+      A.toast('已重新组卷，作答记录保留');
     });
     host.querySelector('#aRandom').addEventListener('click', function () {
       if (!P.pool.length) { A.toast('当前筛选没有题目'); return; }
-      P.idx = Math.floor(Math.random() * P.pool.length); paintRail(); paintQuestion();
+      P.idx = Math.floor(Math.random() * P.pool.length); saveSession(); paintRail(); paintQuestion();
     });
     host.querySelector('#aExport').addEventListener('click', exportSet);
     host.querySelector('#aClear').addEventListener('click', function () {
-      var backupA = Object.assign({}, P.answers), backupL = Object.assign({}, P.locked);
-      P.answers = {}; P.locked = {}; P.elapsed = 0;
-      paintRail(); paintQuestion();
+      var backupA = Object.assign({}, P.answers), backupL = Object.assign({}, P.locked), backupC = Object.assign({}, P.cleared), backupE = P.elapsed;
+      P.pool.forEach(function (x) {
+        delete P.answers[x.key];
+        delete P.locked[x.key];
+        P.cleared[x.key] = true;
+      });
+      P.elapsed = 0;
+      saveSession(); paintRail(); paintQuestion();
       A.toast('已清空本组作答', '撤销', function () {
-        P.answers = backupA; P.locked = backupL; paintRail(); paintQuestion();
+        P.answers = backupA; P.locked = backupL; P.cleared = backupC; P.elapsed = backupE;
+        saveSession(); paintRail(); paintQuestion();
       });
     });
   }
@@ -236,7 +385,7 @@
       host.querySelector('#pReset').addEventListener('click', function () {
         P.cfg.chs = new Set(A.CHAPTERS.map(function (c) { return c.id; }));
         P.cfg.type = 'all'; P.cfg.only = 'all'; P.cfg.order = 'seq'; P.cfg.n = 10; P.fixed = null;
-        rebuild(false); paintRail(); paintQuestion();
+        rebuild(false); saveSession(); paintRail(); paintQuestion();
       });
       return;
     }
@@ -331,7 +480,12 @@
     }
     var blank = host.querySelector('#qBlank');
     if (blank) {
-      blank.addEventListener('input', function () { P.answers[key] = this.value; });
+      blank.addEventListener('input', function () {
+        P.answers[key] = this.value;
+        delete P.cleared[key];
+        queueSave();
+      });
+      blank.addEventListener('blur', function () { paintRail(); });
       blank.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); commit(x); }
       });
@@ -345,7 +499,10 @@
     if (next) next.addEventListener('click', function () { go(1); });
     var retry = host.querySelector('#qRetry');
     if (retry) retry.addEventListener('click', function () {
-      delete P.locked[key]; delete P.answers[key]; paintRail(); paintQuestion();
+      delete P.locked[key];
+      delete P.answers[key];
+      P.cleared[key] = true;
+      saveSession(); paintRail(); paintQuestion();
     });
     var note = host.querySelector('#qNote');
     if (note) note.addEventListener('click', function () {
@@ -358,24 +515,30 @@
     var again = host.querySelector('#qAgain');
     if (again) again.addEventListener('click', function () {
       P.seed = Math.floor(Math.random() * 1e6) + 1;
-      P.answers = {}; P.locked = {}; P.elapsed = 0;
-      rebuild(false); paintRail(); paintQuestion();
+      P.pool.forEach(function (item) {
+        delete P.answers[item.key];
+        delete P.locked[item.key];
+        P.cleared[item.key] = true;
+      });
+      P.elapsed = 0; P.idx = 0;
+      rebuild(false); saveSession(); paintRail(); paintQuestion();
     });
   }
 
   function pick(x, letter, order) {
     var q = x.q, key = x.key;
+    delete P.cleared[key];
     if (q.type === 'multi') {
       var cur = Array.isArray(P.answers[key]) ? P.answers[key].slice() : [];
       var i = cur.indexOf(letter);
       if (i >= 0) cur.splice(i, 1); else cur.push(letter);
       P.answers[key] = cur;
-      paintQuestion();
+      queueSave(); paintQuestion(); paintRail();
       return;
     }
     P.answers[key] = letter;
     if (settings().instant) commit(x);
-    else { paintQuestion(); paintRail(); }
+    else { queueSave(); paintQuestion(); paintRail(); }
   }
 
   function commit(x) {
@@ -384,13 +547,14 @@
     if (a == null || a === '' || (Array.isArray(a) && !a.length)) { A.toast('先选择一个答案'); return; }
     var ok = A.judge(q, a);
     P.locked[key] = true;
+    delete P.cleared[key];
     var prev = A.state.records[key];
     A.state.records[key] = { a: a, ok: ok, at: Date.now(), tries: (prev ? prev.tries : 0) + 1 };
     if (!ok) {
       var w = A.state.wrong[key];
       A.state.wrong[key] = { times: (w ? w.times : 0) + 1, last: Date.now() };
     }
-    A.save();
+    saveSession();
     V.syncBadge();
     paintRail(); paintQuestion();
     if (ok && settings().autoNext && P.idx < P.pool.length - 1) {
@@ -401,7 +565,7 @@
   function go(d) {
     var n = P.idx + d;
     if (n < 0 || n >= P.pool.length) return;
-    P.idx = n; paintRail(); paintQuestion();
+    P.idx = n; saveSession(); paintRail(); paintQuestion();
     var card = document.querySelector('.q-card');
     if (card) {
       var top = card.getBoundingClientRect().top + window.scrollY - 84;
@@ -437,11 +601,102 @@
     cfg: { chs: new Set(A.CHAPTERS.map(function (c) { return c.id; })), n: 20, min: 20, pass: 60, shuffleOpts: false, review: true },
     active: null, remain: 0, phase: 'config', result: null, seed: 7
   };
+  var examSaveTimer = 0;
+
+  function examCfgSnapshot() {
+    return {
+      chs: Array.from(E.cfg.chs).map(Number).sort(function (a, b) { return a - b; }),
+      n: E.cfg.n, min: E.cfg.min, pass: E.cfg.pass,
+      shuffleOpts: !!E.cfg.shuffleOpts, review: !!E.cfg.review
+    };
+  }
+
+  function applyExamCfg(raw) {
+    if (!raw || typeof raw !== 'object') return;
+    var ids = Array.isArray(raw.chs) ? raw.chs.map(Number).filter(function (id) {
+      return A.CHAPTERS.some(function (c) { return c.id === id; });
+    }) : [];
+    if (ids.length) E.cfg.chs = new Set(ids);
+    E.cfg.n = Math.max(1, Math.min(999, Number(raw.n) || E.cfg.n));
+    E.cfg.min = Math.max(5, Math.min(120, Number(raw.min) || E.cfg.min));
+    E.cfg.pass = Math.max(50, Math.min(95, Number(raw.pass) || E.cfg.pass));
+    E.cfg.shuffleOpts = !!raw.shuffleOpts;
+    E.cfg.review = raw.review !== false;
+  }
+
+  function saveExam() {
+    window.clearTimeout(examSaveTimer);
+    var s = E.active;
+    var active = null;
+    if (s) {
+      active = {
+        id: s.id, at: s.at,
+        scope: s.scope.slice(),
+        items: s.items.map(function (it) {
+          return { key: it.key, a: Array.isArray(it.a) ? it.a.slice() : it.a, mark: !!it.mark };
+        }),
+        idx: s.idx, pass: s.pass, shuffleOpts: s.shuffleOpts, review: s.review,
+        dur: s.dur, optOrder: cleanOptOrder(s.optOrder)
+      };
+    }
+    A.state.lastExam = {
+      v: 1,
+      cfg: examCfgSnapshot(),
+      active: active,
+      remain: E.remain,
+      at: Date.now()
+    };
+    A.save();
+  }
+
+  function queueExamSave() {
+    window.clearTimeout(examSaveTimer);
+    examSaveTimer = window.setTimeout(saveExam, 300);
+  }
+
+  function applyExamSaved(saved) {
+    if (!saved || saved.v !== 1) return false;
+    applyExamCfg(saved.cfg);
+    var a = saved.active;
+    if (!a || !Array.isArray(a.items)) { E.phase = 'config'; return false; }
+    var items = a.items.map(function (it) {
+      if (!it || !validKey(it.key)) return null;
+      return { key: it.key, a: Array.isArray(it.a) ? it.a.slice() : it.a, mark: !!it.mark };
+    }).filter(Boolean);
+    if (!items.length) { E.phase = 'config'; return false; }
+    var scope = (Array.isArray(a.scope) ? a.scope : []).map(Number).filter(function (id) {
+      return A.CHAPTERS.some(function (c) { return c.id === id; });
+    });
+    if (!scope.length) {
+      var set = {};
+      items.forEach(function (it) { set[A.QMAP.get(it.key).ch.id] = 1; });
+      scope = Object.keys(set).map(Number);
+    }
+    var dur = Math.max(60, Number(a.dur) || 1200);
+    E.active = {
+      id: a.id || ('x' + Date.now()), at: Number(a.at) || Date.now(),
+      scope: scope, items: items,
+      idx: Math.max(0, Math.min(Number(a.idx) || 0, items.length - 1)),
+      pass: Math.max(50, Math.min(95, Number(a.pass) || 60)),
+      shuffleOpts: !!a.shuffleOpts, review: a.review !== false,
+      dur: dur, optOrder: cleanOptOrder(a.optOrder)
+    };
+    E.phase = 'running';
+    E.remain = Math.max(0, Math.min(dur, Number(saved.remain) || 0));
+    return true;
+  }
 
   function exam(params, query) {
     P.mounted = false;
+    if (!E.active && E.phase !== 'running') {
+      var saved = A.state.lastExam;
+      if (saved) applyExamSaved(saved);
+    }
+    if (E.phase === 'running' && E.active) {
+      if (E.remain <= 0) { submitExam(true); return; }
+      paintExamRunning(); return;
+    }
     if (query.ch) E.cfg.chs = new Set(query.ch.split(',').map(Number));
-    if (E.phase === 'running' && E.active) { paintExamRunning(); return; }
     if (E.phase === 'result' && E.result) { paintResult(); return; }
     paintExamConfig();
   }
@@ -511,6 +766,7 @@
         A.toast('已删除这条成绩', '撤销', function () { A.state.exams.push(backup); A.save(); paintExamConfig(true); });
       });
     });
+    saveExam();
   }
 
   function examPool() {
@@ -559,6 +815,7 @@
         E.cfg[pair[1]] = Number(this.value);
         this.previousElementSibling.querySelector('.ctrl-val').textContent =
           pair[1] === 'min' ? E.cfg.min + ' 分钟' : pair[1] === 'pass' ? E.cfg.pass + ' 分' : Math.min(E.cfg.n, maxN) + ' / ' + maxN;
+        queueExamSave();
       });
     });
     host.querySelector('#eFont').addEventListener('input', function () {
@@ -567,8 +824,8 @@
       this.previousElementSibling.querySelector('.ctrl-val').textContent = settings().font + 'px';
       A.save();
     });
-    host.querySelector('#eShuf').addEventListener('change', function () { E.cfg.shuffleOpts = this.checked; });
-    host.querySelector('#eRev').addEventListener('change', function () { E.cfg.review = this.checked; });
+    host.querySelector('#eShuf').addEventListener('change', function () { E.cfg.shuffleOpts = this.checked; queueExamSave(); });
+    host.querySelector('#eRev').addEventListener('change', function () { E.cfg.review = this.checked; queueExamSave(); });
     host.querySelector('#eStart2').addEventListener('click', startExam);
   }
 
@@ -590,6 +847,7 @@
     E.remain = E.active.dur;
     E.phase = 'running';
     E.result = null;
+    saveExam();
     paintExamRunning();
     A.toast('考试开始，共 ' + picked.length + ' 题，限时 ' + E.cfg.min + ' 分钟');
   }
@@ -617,7 +875,9 @@
         var done = it.a != null && it.a !== '' && !(Array.isArray(it.a) && !it.a.length);
         var cls = i === s.idx ? 'is-cur' : done ? 'is-done' : '';
         if (it.mark) cls += ' is-mark';
-        return '<button type="button" class="' + cls + '" data-go="' + i + '">' + (i + 1) + '</button>';
+        var stateText = done ? '已作答' : '未作答';
+        if (it.mark) stateText += '，已标记';
+        return '<button type="button" class="' + cls + '" data-go="' + i + '" aria-label="第' + (i + 1) + '题，' + stateText + '">' + (i + 1) + '</button>';
       }).join('') + '</div></div>' +
       '<div class="ctrl"><div class="ctrl-label"><span>正文字号</span><span class="ctrl-val">' + settings().font + 'px</span></div>' +
       '<input type="range" id="xFont" min="14" max="24" step="1" value="' + settings().font + '"></div>' +
@@ -632,7 +892,7 @@
       '</div>';
     host.querySelector('#xSheet').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
-      s.idx = Number(b.getAttribute('data-go')); paintExamRail(); paintExamQuestion();
+      s.idx = Number(b.getAttribute('data-go')); saveExam(); paintExamRail(); paintExamQuestion();
     });
     host.querySelector('#xFont').addEventListener('input', function () {
       settings().font = Number(this.value);
@@ -641,11 +901,12 @@
       A.save();
     });
     host.querySelector('#xMark').addEventListener('change', function () {
-      s.items[s.idx].mark = this.checked; paintExamRail();
+      s.items[s.idx].mark = this.checked; saveExam(); paintExamRail();
     });
     host.querySelector('#xPass').addEventListener('input', function () {
       s.pass = Number(this.value);
       this.previousElementSibling.querySelector('.ctrl-val').textContent = s.pass + ' 分';
+      queueExamSave();
     });
     host.querySelector('#xPrev').addEventListener('click', function () { examGo(-1); });
     host.querySelector('#xNext').addEventListener('click', function () { examGo(1); });
@@ -656,7 +917,8 @@
         '<button class="btn btn--ghost" id="qNo" type="button">继续考试</button></div>', function (h) {
         h.querySelector('#qNo').addEventListener('click', A.closeDrawer);
         h.querySelector('#qYes').addEventListener('click', function () {
-          A.closeDrawer(); E.active = null; E.phase = 'config'; paintExamConfig(); A.toast('已放弃本场考试');
+          A.closeDrawer(); E.active = null; E.phase = 'config'; E.remain = 0;
+          saveExam(); paintExamConfig(); A.toast('已放弃本场考试');
         });
       });
     });
@@ -705,11 +967,11 @@
       } else {
         it.a = L;
       }
-      paintExamRail(); paintExamQuestion();
+      saveExam(); paintExamRail(); paintExamQuestion();
     });
     var bl = host.querySelector('#xBlank');
     if (bl) {
-      bl.addEventListener('input', function () { it.a = this.value; paintExamRail(); });
+      bl.addEventListener('input', function () { it.a = this.value; queueExamSave(); paintExamRail(); });
       bl.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); examGo(1); } });
       bl.focus();
     }
@@ -723,7 +985,7 @@
     var s = E.active;
     var n = s.idx + d;
     if (n < 0 || n >= s.items.length) return;
-    s.idx = n; paintExamRail(); paintExamQuestion();
+    s.idx = n; saveExam(); paintExamRail(); paintExamQuestion();
   }
 
   function submitExam(auto) {
@@ -747,15 +1009,18 @@
     var detail = s.items.map(function (it) {
       var e = A.QMAP.get(it.key);
       var pts = A.scoreOf(e.q, e.ch);
-      var ok = A.judge(e.q, it.a);
+      var answered = it.a != null && it.a !== '' && (!Array.isArray(it.a) || it.a.length);
+      var ok = answered && A.judge(e.q, it.a);
       full += pts;
       if (ok) { got += pts; right++; }
-      else {
+      else if (answered) {
         var w = A.state.wrong[it.key];
         A.state.wrong[it.key] = { times: (w ? w.times : 0) + 1, last: Date.now() };
       }
-      var prev = A.state.records[it.key];
-      A.state.records[it.key] = { a: it.a, ok: ok, at: Date.now(), tries: (prev ? prev.tries : 0) + 1 };
+      if (answered) {
+        var prev = A.state.records[it.key];
+        A.state.records[it.key] = { a: it.a, ok: ok, at: Date.now(), tries: (prev ? prev.tries : 0) + 1 };
+      }
       return { k: it.key, a: it.a, ok: ok, pts: pts };
     });
     var pct = full ? Math.round(got / full * 1000) / 10 : 0;
@@ -764,11 +1029,11 @@
       got: got, full: full, pct: pct, pass: s.pass, review: s.review, items: detail
     };
     A.state.exams.push(rec);
-    A.save();
-    V.syncBadge();
     E.result = rec;
     E.active = null;
     E.phase = 'result';
+    saveExam();
+    V.syncBadge();
     paintResult();
     A.toast(auto ? '时间到，已自动交卷' : '已交卷，得分 ' + A.fmtScore(got) + ' / ' + A.fmtScore(full));
   }
@@ -851,12 +1116,14 @@
     if (pc && P.mounted) {
       P.elapsed++;
       if (settings().showTimer) pc.textContent = A.clock(P.elapsed);
+      if (P.elapsed % 10 === 0) saveSession();
     }
     var ec = document.getElementById('examClock');
     if (ec && E.active && E.phase === 'running') {
       E.remain--;
       ec.textContent = A.clock(E.remain);
       ec.classList.toggle('is-low', E.remain < 60);
+      if (E.remain % 10 === 0) saveExam();
       if (E.remain <= 0) submitExam(true);
     }
   }, 1000);
@@ -892,7 +1159,22 @@
   });
 
   window.addEventListener('hashchange', function () {
-    P.mounted = window.location.hash.replace(/^#/, '').split('?')[0].split('/').filter(Boolean)[0] === 'practice';
+    var parts = window.location.hash.replace(/^#/, '').split('?')[0].split('/').filter(Boolean);
+    var route = parts[0] || 'home';
+    if (P.mounted && route !== 'practice') saveSession();
+    P.mounted = route === 'practice';
+    if (E.phase === 'running' && E.active && route !== 'exam') saveExam();
+  });
+
+  window.addEventListener('pagehide', function () {
+    if (P.mounted) saveSession();
+    if (E.phase === 'running' && E.active) saveExam();
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) return;
+    if (P.mounted) saveSession();
+    if (E.phase === 'running' && E.active) saveExam();
   });
 
   window.Quiz = { practice: practice, exam: exam };
