@@ -166,20 +166,21 @@
       '<aside class="toc" id="toc">' + toc + '</aside><div>' +
       '<div class="ch-hero rv"><span class="ch-glyph">' + esc(ch.glyph) + '</span>' +
       '<h1>' + esc(ch.title) + '</h1><div class="ch-sub">' + esc(ch.subtitle) + '</div>' +
-      '<p class="lead">' + esc(ch.lead) + '</p>' +
+      '<p class="lead" data-annotate>' + esc(ch.lead) + '</p>' +
       '<div class="ch-hero-meta"><span class="pill pill--hue">' + esc(ch.exam.name) + '</span>' +
       '<span class="pill">' + esc(ch.exam.rule) + '</span>' +
       '<span class="pill ' + (info.past ? '' : info.urgent ? 'pill--danger' : 'pill--warn') + '">' + esc(info.past ? '已截止' : '剩余 ' + info.text) + '</span>' +
       '<span class="pill pill--ok">已练 ' + s.done + '/' + s.total + '</span></div>' +
+      '<p class="term-hint"><svg class="term-lens" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="6.8" cy="6.8" r="4.5"></circle><path d="M10.2 10.2 L14 14"></path></svg>正文中带放大镜标记的词语，点开可以查看术语注释。</p>' +
       (ch.exam.note ? '<div class="note note--warn" style="margin-bottom:0">' + esc(ch.exam.note) + '</div>' : '') +
-      '</div>' + secs +
+      '</div><div class="study-annotated" data-annotate>' + secs +
       '<section class="study-sec rv" id="sec-exam" data-sec="exam"><h2><span class="kicker">考核</span>本章题目与答案</h2>' +
       '<div class="prose"><p>共 ' + ch.questions.length + ' 题。答案与解析全部来自课程文档，点右侧「练」进入单题练习。</p></div>' +
       '<div class="tbl"><table class="key-table"><thead><tr><th>题号</th><th>题型</th><th>分值</th><th>答案</th><th>考点</th><th>练习</th></tr></thead><tbody>' + keyRows + '</tbody></table></div>' +
       '<div class="q-actions"><a class="btn btn--primary" href="#/practice?ch=' + ch.id + '">刷本章全部题目</a>' +
       '<a class="btn" href="#/exam?ch=' + ch.id + '">用本章组卷模考</a>' +
       (ch.id < 8 ? '<a class="btn btn--ghost" href="#/chapter/' + (ch.id + 1) + '">下一章：' + esc(chById(ch.id + 1).title) + '</a>' : '<a class="btn btn--ghost" href="#/cheats">去速查手册</a>') +
-      '</div></section></div></div></div>';
+      '</div></section></div></div></div></div>';
 
     A.render(html);
     bindToc(ch);
@@ -356,9 +357,10 @@
       '<div class="ch-meta"><span class="pill pill--hue">' + esc(ch.title) + '</span><span class="pill">' + typeName(q.type) + '</span>' +
       '<span class="pill">' + A.fmtScore(A.scoreOf(q, ch)) + ' 分</span>' +
       (rec ? '<span class="pill ' + (rec.ok ? 'pill--ok' : 'pill--danger') + '">上次作答 ' + esc(A.answerText(q, rec.a)) + '</span>' : '') + '</div>' +
-      '<p class="q-stem">' + esc(q.stem) + '</p>' + (q.figure || '') + opts +
+      '<p class="q-stem" data-annotate data-ch="' + ch.id + '">' + esc(q.stem) + '</p>' +
+      (q.figure ? '<div class="q-figure prose" data-annotate data-ch="' + ch.id + '">' + q.figure + '</div>' : '') + opts +
       '<div class="verdict verdict--ok"><div class="verdict-head"><span class="tag">答案</span>' + esc(A.correctText(q)) + '</div>' +
-      '<div class="verdict-body">' + q.why + '</div>' +
+      '<div class="verdict-body" data-annotate data-ch="' + ch.id + '">' + q.why + '</div>' +
       '<div class="verdict-meta"><span class="pill pill--hue">' + esc(q.point || '') + '</span>' +
       (q.anchor ? '<span class="pill">' + esc(q.anchor) + '</span>' : '') + '</div></div>' +
       '<div class="q-actions"><a class="btn btn--primary btn--sm" href="#/practice?keys=' + k + '">重练这题</a>' +

@@ -277,7 +277,7 @@
       verdict = '<div class="verdict ' + (rec.ok ? 'verdict--ok' : 'verdict--no') + '">' +
         '<div class="verdict-head"><span class="tag">' + (rec.ok ? '答对' : '答错') + '</span>' +
         '正确答案 ' + esc(A.correctText(q)) + ' · 你的答案 ' + esc(A.answerText(q, rec.a)) + '</div>' +
-        '<div class="verdict-body">' + q.why + '</div>' +
+        '<div class="verdict-body" data-annotate data-ch="' + ch.id + '">' + q.why + '</div>' +
         '<div class="verdict-meta"><span class="pill pill--hue">' + esc(q.point || '') + '</span>' +
         (q.anchor ? '<span class="pill">' + esc(q.anchor) + '</span>' : '') +
         (q.reconstructed ? '<span class="pill pill--warn">题干据课程文档整理</span>' : '') +
@@ -302,8 +302,8 @@
       '<span class="pill">' + A.fmtScore(A.scoreOf(q, ch)) + ' 分</span>' +
       (A.state.wrong[x.key] ? '<span class="pill pill--danger">错题本</span>' : '') +
       '</div>' +
-      '<p class="q-stem">' + esc(q.stem) + '</p>' +
-      (q.figure ? '<div class="q-figure prose">' + q.figure + '</div>' : '') +
+      '<p class="q-stem" data-annotate data-ch="' + ch.id + '">' + esc(q.stem) + '</p>' +
+      (q.figure ? '<div class="q-figure prose" data-annotate data-ch="' + ch.id + '">' + q.figure + '</div>' : '') +
       body + verdict +
       '<div class="q-actions">' +
       '<button class="btn btn--sm" type="button" id="qPrev"' + (P.idx === 0 ? ' disabled' : '') + '>上一题</button>' +
@@ -315,6 +315,7 @@
       '</div>' + summary + '</article>';
 
     A.mathify(host);
+    if (window.Terms) window.Terms.annotate(host);
     bindQuestion(host, x, order);
     if (window.FX) window.FX.afterRender(host);
   }
@@ -684,13 +685,14 @@
       '<span class="pill">' + V.typeName(q.type) + '</span>' +
       '<span class="pill">' + A.fmtScore(A.scoreOf(q, ch)) + ' 分</span>' +
       (it.mark ? '<span class="pill pill--warn">已标记</span>' : '') + '</div>' +
-      '<p class="q-stem">' + esc(q.stem) + '</p>' +
-      (q.figure ? '<div class="q-figure prose">' + q.figure + '</div>' : '') + body +
+      '<p class="q-stem" data-annotate data-ch="' + ch.id + '">' + esc(q.stem) + '</p>' +
+      (q.figure ? '<div class="q-figure prose" data-annotate data-ch="' + ch.id + '">' + q.figure + '</div>' : '') + body +
       '<div class="q-actions"><button class="btn btn--sm" type="button" id="xPrev2"' + (s.idx === 0 ? ' disabled' : '') + '>上一题</button>' +
       '<button class="btn btn--sm btn--primary" type="button" id="xNext2"' + (s.idx >= s.items.length - 1 ? ' disabled' : '') + '>下一题</button>' +
       '<button class="btn btn--sm btn--ghost" type="button" id="xSkip">跳过</button>' +
       '<span class="q-progress">' + (s.idx + 1) + ' / ' + s.items.length + '</span></div></article>';
     A.mathify(host);
+    if (window.Terms) window.Terms.annotate(host);
     var opts = host.querySelector('#xOpts');
     if (opts) opts.addEventListener('click', function (ev) {
       var b = ev.target.closest('.opt'); if (!b) return;
@@ -786,8 +788,8 @@
         '<span class="pill ' + (it.ok ? 'pill--ok' : 'pill--danger') + '">' + (it.ok ? '+' + A.fmtScore(it.pts) : '0') + ' 分</span>' +
         '<span class="pill">你的答案 ' + esc(A.answerText(q, it.a)) + '</span>' +
         '<span class="pill">正确答案 ' + esc(A.correctText(q)) + '</span></div>' +
-        '<p class="q-stem" style="font-size:1rem">' + esc(q.stem) + '</p>' +
-        (it.ok ? '' : '<div class="verdict verdict--no"><div class="verdict-body">' + q.why + '</div>' +
+        '<p class="q-stem" style="font-size:1rem" data-annotate data-ch="' + ch.id + '">' + esc(q.stem) + '</p>' +
+        (it.ok ? '' : '<div class="verdict verdict--no"><div class="verdict-body" data-annotate data-ch="' + ch.id + '">' + q.why + '</div>' +
           '<div class="verdict-meta"><span class="pill pill--hue">' + esc(q.point || '') + '</span></div></div>') +
         '<div class="q-actions"><a class="btn btn--sm" href="#/practice?keys=' + it.k + '">重练</a>' +
         '<a class="btn btn--sm btn--ghost" href="#/chapter/' + ch.id + '">讲义</a></div></div>';

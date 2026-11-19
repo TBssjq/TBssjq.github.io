@@ -239,6 +239,7 @@ window.App = (function () {
       el.addEventListener('click', closeDrawer);
     });
     mathify(host);
+    if (window.Terms) window.Terms.annotate(host);
     if (onMount) onMount(host);
   }
   function closeDrawer() {
@@ -300,6 +301,7 @@ window.App = (function () {
     var view = document.getElementById('view');
     view.innerHTML = html;
     mathify(view);
+    if (window.Terms) window.Terms.annotate(view);
     document.documentElement.style.setProperty('--read-size', state.settings.font + 'px');
     view.setAttribute('data-density', state.settings.density);
     if (!opts || !opts.keepScroll) window.scrollTo({ top: 0, behavior: 'instant' });
