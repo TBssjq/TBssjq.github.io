@@ -647,6 +647,57 @@
             font-size: .82rem; color: var(--text-muted);
         }
 
+        /* 矢量示意图 */
+        :root {
+            --svg-bg: #e8edf4;
+            --svg-card: #f5f8fc;
+            --svg-line: #94a3b8;
+            --svg-text: #334155;
+            --svg-muted: #64748b;
+            --svg-accent: #f97316;
+            --svg-soft: rgba(249, 115, 22, 0.14);
+            --svg-green: #16a34a;
+            --svg-blue: #2563eb;
+        }
+        .dark {
+            --svg-bg: #141c2c;
+            --svg-card: #1e293b;
+            --svg-line: #475569;
+            --svg-text: #e2e8f0;
+            --svg-muted: #94a3b8;
+            --svg-accent: #fb923c;
+            --svg-soft: rgba(251, 146, 60, 0.16);
+            --svg-green: #4ade80;
+            --svg-blue: #60a5fa;
+        }
+        .prose .svg-figure { margin: 2.25rem 0; }
+        .prose .svg-figure svg {
+            display: block; width: 100%; height: auto;
+            border-radius: 16px;
+            box-shadow: 8px 8px 20px rgba(163, 177, 198, .45), -5px -5px 15px rgba(255, 255, 255, .6);
+        }
+        .dark .prose .svg-figure svg {
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, .32), -5px -5px 15px rgba(40, 52, 76, .18);
+        }
+        .prose figcaption {
+            margin-top: .7rem; text-align: center;
+            font-size: .82rem; color: var(--text-muted); text-indent: 0;
+        }
+        .svg-figure .sv-bg { fill: var(--svg-bg); }
+        .svg-figure .sv-card { fill: var(--svg-card); stroke: var(--svg-line); stroke-width: 1.4; }
+        .svg-figure .sv-card-acc { fill: var(--svg-soft); stroke: var(--svg-accent); stroke-width: 1.6; }
+        .svg-figure .sv-line { fill: none; stroke: var(--svg-line); stroke-width: 1.6; }
+        .svg-figure .sv-line-acc { fill: none; stroke: var(--svg-accent); stroke-width: 2.2; }
+        .svg-figure .sv-line-dash { fill: none; stroke: var(--svg-line); stroke-width: 1.4; stroke-dasharray: 5 4; }
+        .svg-figure .sv-txt { fill: var(--svg-text); font-family: 'Noto Serif SC', system-ui, sans-serif; font-size: 13px; }
+        .svg-figure .sv-txt-s { fill: var(--svg-muted); font-family: 'Noto Serif SC', system-ui, sans-serif; font-size: 11px; }
+        .svg-figure .sv-txt-b { fill: var(--svg-text); font-family: 'Noto Serif SC', system-ui, sans-serif; font-size: 15px; font-weight: 700; }
+        .svg-figure .sv-txt-acc { fill: var(--svg-accent); font-family: 'Noto Serif SC', system-ui, sans-serif; font-size: 12px; font-weight: 700; }
+        .svg-figure .sv-dot { fill: var(--svg-accent); }
+        .svg-figure .sv-dot-g { fill: var(--svg-green); }
+        .svg-figure .sv-dot-b { fill: var(--svg-blue); }
+        .svg-figure .sv-mono { fill: var(--svg-text); font-family: ui-monospace, monospace; font-size: 11px; }
+
         /* 行内补充元素 */
         .prose del { color: var(--text-muted); }
         .prose mark { background: rgba(249, 115, 22, 0.18); color: inherit; padding: 0 .2em; border-radius: 4px; }
