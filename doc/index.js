@@ -46,9 +46,27 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 
     const canFlip = typeof gsap !== 'undefined' && typeof Flip !== 'undefined' &&
         !safeMatchMedia('(prefers-reduced-motion: reduce)');
+    const list = document.querySelector('.article-list');
+    let filterToken = 0;
+
+    function clearFilterStyles() {
+        if (!canFlip) return;
+        gsap.killTweensOf(cards);
+        cards.forEach((card) => {
+            gsap.set(card, {
+                clearProps: 'transform,opacity,visibility,position,top,left,width,height,display'
+            });
+            gsap.set(card, { transformPerspective: 800, transformOrigin: 'center' });
+        });
+    }
 
     // 支持 URL hash 直达某个分类：#随笔
     function applyFilter(value) {
+        const token = ++filterToken;
+        if (canFlip) {
+            clearFilterStyles();
+            if (list) list.classList.add('is-filtering');
+        }
         const state = canFlip ? Flip.getState(cards, { props: 'opacity' }) : null;
 
         let shown = 0;
@@ -77,11 +95,24 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
                 duration: 0.5,
                 ease: 'power2.inOut',
                 scale: true,
-                absolute: true,
+                absoluteOnLeave: true,
                 onEnter: (els) => gsap.fromTo(els, { autoAlpha: 0, scale: 0.85 },
                     { autoAlpha: 1, scale: 1, duration: 0.4, ease: 'back.out(1.7)' }),
                 onLeave: (els) => gsap.to(els, { autoAlpha: 0, scale: 0.85, duration: 0.28 }),
+                onComplete: () => {
+                    if (token !== filterToken) return;
+                    clearFilterStyles();
+                    if (list) list.classList.remove('is-filtering');
+                },
+                onInterrupt: () => {
+                    if (token !== filterToken) return;
+                    clearFilterStyles();
+                    if (list) list.classList.remove('is-filtering');
+                }
             });
+        } else if (canFlip) {
+            clearFilterStyles();
+            if (list) list.classList.remove('is-filtering');
         }
     }
 
@@ -167,6 +198,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
         const invalidate = () => states.forEach((s) => { s.rect = null; });
 
         const onOver = (e) => {
+            if (host.classList.contains('is-filtering')) return;
             const card = e.target.closest('.article-card');
             if (!card || !states.has(card) || active === card) return;
             active = card;
@@ -174,7 +206,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
         };
 
         const onMove = (e) => {
-            if (!active) return;
+            if (!active || host.classList.contains('is-filtering')) return;
             const s = states.get(active);
             if (!s.rect) s.rect = active.getBoundingClientRect();
             const r = s.rect;
