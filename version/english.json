@@ -1,6 +1,6 @@
 {
   "latestVersion": "2.5",
-  "downloadUrl": "https://gitee.com/ssjq/English/releases/latest/download/app-release.apk",
+  "downloadUrl": "https://gitee.com/ssjq/English/releases/download/v2.5/app-release.apk",
   "forceUpdate": false,
   "changelog": "1. 疯狂刷题新增题型多选，可只练勾选的题型，至少保留一种\n2. 题型列表补充说明文字，英选中、听音拼写等模式更容易区分\n3. 选择题型与题量改为液态玻璃弹窗，内容较多时可在弹窗内滚动\n4. 题型选择贯穿路由、出题引擎与断点校验，续做时不会混入已取消的题型"
 }
